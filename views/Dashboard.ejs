@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link
+			href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+			rel="stylesheet"
+			integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+			crossorigin="anonymous"
+		/>
+		<script
+			defer
+			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+			integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+			crossorigin="anonymous"
+		></script>
+        <script defer
+			src="https://kit.fontawesome.com/ae360af17e.js"
+			crossorigin="anonymous"
+		></script>
+        <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script defer src="/js/charts.js"></script>
+        <script defer src="/js/toggler.js"></script>
+        <link rel="stylesheet" type="text/css" href="/css/styles.css">
+		<title>Dashboard</title>
+		
+	</head>
+	<body>
+		<div class="wrapper">
+			<!-- Sidebar -->
+			<aside id="sidebar">
+				<div class="h-50">
+					<div class="sidebar-logo">
+						<a href="">
+							<img
+								src="/img/logo.png"
+								class="img-thumbnail border-0"
+								alt="logo"
+							/>
+						</a>
+					</div>
+					<hr class="mx-4 mt-0" style="width: 13rem" />
+					<div class="container my-2">
+						<div class="row">
+							<div class="col-md-4 mx-2">
+								<img
+									src="/img/pain.jpg"
+									class="img-fluid img-thumbnail"
+									alt="..."
+								/>
+							</div>
+							<div class="col-md-6">
+								<p class="my-0" style="font-size: 15px">Carlos Ching</p>
+								<span class="badge rounded-pill text-bg-info my-0 fw-normal"
+									>System Admin</span
+								>
+							</div>
+						</div>
+					</div>
+					<!-- Sidebar Navigation -->
+					<ul class="sidebar-nav">
+						<li class="sidebar-item">
+							<a
+								href=""
+								class="sidebar-link collapsed"
+								data-bs-target="#dashboard"
+								aria-expanded="false"
+								aria-controls="dashboard"
+								data-menuitem="dashboard"
+							>
+								<i class="fa-solid fa-sliders pe-2"></i>
+								Dashboard
+							</a>
+						</li>
+						<li class="sidebar-item">
+							<a
+								href="/accounts"
+								class="sidebar-link"
+								aria-expanded="false"
+								aria-controls="users"
+								data-menuitem="accounts"
+							>
+								<i class="fa-solid fa-user pe-2"></i>
+								Account Management
+							</a>
+						</li>
+						<li class="sidebar-item">
+							<a
+								href="/records"
+								class="sidebar-link"
+								aria-expanded="false"
+								aria-controls="pages"
+								data-menuitem="records"
+							>
+								<i class="fa-regular fa-file-lines pe-2"></i>
+								Records Management
+							</a>
+						</li>
+						<li class="sidebar-item">
+							<a
+								href="/archives"
+								class="sidebar-link"
+								aria-expanded="false"
+								data-menuitem="archives"
+							>
+								<i class="fa-regular fa-user pe-2"></i>
+								Archives
+							</a>
+						</li>
+						<li class="sidebar-item">
+							<a
+								href="/calendar"
+								class="sidebar-link collapsed"
+								data-bs-target="#dashboard"
+								aria-expanded="false"
+								data-menuitem="calendar"
+							>
+								<i class="fa-regular fa-calendar pe-2"></i>
+								Calendar
+							</a>
+						</li>
+						<li class="sidebar-item">
+							<a
+								href="/reports"
+								class="sidebar-link collapsed"
+								data-bs-target="#dashboard"
+								aria-expanded="false"
+								aria-controls="dashboard"
+								data-menuitem="reports"
+							>
+								<i class="fa-regular fa-flag pe-2"></i>
+								Reports
+							</a>
+						</li>
+					</ul>
+				</div>
+			</aside>
+			<!-- Main Component -->
+			<div class="main">
+				<nav class="navbar navbar-expand-lg px-1 border-bottom">
+					<!-- Button for sidebar toggle -->
+					<div class="container-fluid">
+						<button class="btn" type="button" data-bs-theme="light">
+							<span class="navbar-toggler-icon"></span>
+						</button>
+						<ul class="navbar-nav">
+							<!-- Added this ul element for right-aligned items -->
+							<li class="nav-item dropdown">
+								<a
+									class="nav-link dropdown-toggle"
+									href="#"
+									role="button"
+									data-bs-toggle="dropdown"
+									aria-expanded="false"
+								>
+									<span class="fa-solid fa-user pe-2"></span>
+								</a>
+								<ul class="dropdown-menu dropdown-menu-lg-end">
+									<li>
+										<a
+											class="dropdown-item"
+											href="../sys-admin-ui/admin-profile.html"
+											>View Profile</a
+										>
+									</li>
+									<li>
+										<a
+											class="dropdown-item"
+											href="../sys-admin-ui/history-logs.html"
+											>History Logs</a
+										>
+									</li>
+									<li><hr class="dropdown-divider" /></li>
+									<li>
+										<a class="dropdown-item" href="../login-page.html"
+											>Logout</a
+										>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</nav>
+				<div class="container-lg position-relative">
+					<h2 class="mt-2">Dashboard</h2>
+					<p
+						id="time"
+						class="text-end position-absolute top-0 end-0 pe-3 pt-4"
+						style="font-size: 24px; font-weight: medium; padding-top: 0"
+					></p>
+					<hr />
+					<div class="row d-flex justify-content-center my-4 grid gap-5">
+						<div class="card custom-card" style="width: 18rem; height: 130px">
+							<div class="card-body">
+								<h5 class="card-title position-relative">
+									Accounts
+									<span
+										class="badge text-bg-secondary position-absolute top-0 end-0"
+										>10</span
+									>
+								</h5>
+								<p class="card-text">View list of users accounts</p>
+								<a
+									href="/accounts"
+									class="card-link"
+									>View Accounts</a
+								>
+							</div>
+						</div>
+
+						<div class="card custom-card" style="width: 18rem; height: 130px">
+							<div class="card-body">
+								<h5 class="card-title position-relative">
+									Records
+									<span
+										class="badge text-bg-secondary position-absolute top-0 end-0"
+										>50</span
+									>
+								</h5>
+								<p class="card-text">List of active records</p>
+								<a
+									href="/records"
+									class="card-link"
+									>View Records</a
+								>
+							</div>
+						</div>
+
+						<div class="card custom-card" style="width: 18rem; height: 130px">
+							<div class="card-body">
+								<h5 class="card-title position-relative">
+									Archives
+									<span
+										class="badge text-bg-secondary position-absolute top-0 end-0"
+										>40</span
+									>
+								</h5>
+								<p class="card-text">List of Archived records.</p>
+								<a href="/archives" class="card-link"
+									>View Archives</a
+								>
+							</div>
+						</div>
+					</div>
+					<div class="container-lg">
+						<div class="card text-center my-2 border-0 custom-card-2">
+							<div class="card-header">Analytics</div>
+							<div class="card-body">
+								<div class="d-flex justify-content-center p-0 w-100">
+									<canvas id="myChart" height="60px"></canvas>
+								</div>
+							</div>
+							<div class="card-footer text-body-secondary">
+								Number of students
+							</div>
+						</div>
+					</div>
+					<!-- <div class="container-fluid">
+                    <div class="chart-container">
+                        <canvas id="chart1" width="400" height="100" aria-label="Hello ARIA World" role="img"></canvas></canvas>
+                    </div>
+                </div> -->
+					<div class="container-lg d-flex justify-content-center grid gap-3">
+						<div
+							class="card text-center p-0 mx-2 mb-2 custom-card-2 border-0"
+							style="width: 70rem"
+						>
+							<div class="card-header">Upcoming events</div>
+							<div class="card-body mx-1">
+								<h5 class="card-title">This week</h5>
+								<p class="card-text">
+									Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+									Consectetur labore, fugiat quam placeat corporis, accusantium
+									dignissimos saepe libero cum molestiae facere ducimus maxime
+									laboriosam nobis dicta exercitationem deserunt quod
+									repudiandae.
+								</p>
+								<a href="calendar.html" class="btn btn-primary"
+									>View Calendar</a
+								>
+							</div>
+							<div class="card-footer text-body-secondary">5 days left</div>
+						</div>
+						<div
+							class="card my-1 text-center p-0 border-0 mb-2 custom-card-2"
+							style="max-width: 18rem"
+						>
+							<div class="card-header">Announcement</div>
+							<div class="card-body text-primary">
+								<h5 class="card-title">Parent-Teacher Meeting</h5>
+								<p class="card-text">
+									Date: Oct 1, 2023 <br />
+									Time: 8:00am to 10:00am <br />
+									Location: Bethany Christian Academy - Address
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

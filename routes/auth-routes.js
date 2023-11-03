@@ -1,8 +1,100 @@
 const router = require('express').Router();
+const User = require('../models/user.model');
+const { body, validationResult } = require('express-validator');
+const passport = require('passport');
 
-// auth login
-router.get('/login', (req, res) => {
-    res.render('/login');
-})
+// login
+
+router.get('/login', async (req, res, next) => {
+	res.render('auth/login');
+});
+
+router.post(
+	'/login',
+	passport.authenticate('local', {
+		successRedirect: '/systemAdmin/dashboard',
+		failureRedirect: '/auth/login',
+		failureFlash: true,
+	}),
+	(req, res, next) => {
+		// Redirect the user to the dashboard
+		res.redirect('/systemAdmin/dashboard');
+	}
+);
+
+// register
+
+router.get('/register', async (req, res, next) => {
+	// req.flash('error', "Registration error")
+	// req.flash('success', 'Registration success')
+	// req.flash('key', 'some key')
+	// const messages = req.flash();
+
+	res.render('auth/register');
+});
+
+router.post(
+	'/register',
+	[
+		body('email')
+			.trim()
+			.isEmail()
+			.withMessage('Input valid email')
+			.normalizeEmail()
+			.toLowerCase(),
+		body('password')
+			.trim()
+			.isLength(10)
+			.withMessage('Password must be atleast 10 characters!'),
+		body('password2').custom((value, { req }) => {
+			if (value !== req.body.password) {
+				throw new Error('Password do not match!');
+			}
+			return true;
+		}),
+	],
+	async (req, res, next) => {
+		try {
+			const errors = validationResult(req);
+			if (!errors.isEmpty()) {
+				errors.array().forEach((error) => {
+					req.flash('error', error.msg);
+				});
+				res.render('auth/register', {
+					email: req.body.email,
+					messages: req.flash(),
+				});
+				return;
+			}
+
+			const { email } = req.body;
+			const doesExist = await User.findOne({ email });
+			if (doesExist) {
+				res.render('auth/register', {
+					email: req.body.email,
+					messages: req.flash(),
+					error: 'User already exists.',
+				});
+				return;
+			}
+
+			const user = new User(req.body);
+			await user.save();
+			req.flash('success', `${user.email} is succesfully registered`);
+			res.redirect('/auth/register');
+		} catch (error) {
+			res.render('auth/register', {
+				email: req.body.email,
+				messages: req.flash(),
+				error: error.message,
+			});
+		}
+	}
+);
+
+router.get('/logout', async (req, res, next) => {
+	req.logOut();
+	res.redirect('/');
+});
 
 module.exports = router;

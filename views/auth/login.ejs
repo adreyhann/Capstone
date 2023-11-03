@@ -25,9 +25,10 @@
 		<div
 			class="container-sm min-vh-100 d-flex justify-content-center align-items-center"
 		>
-			<div class="card" style="width: 22rem">
+			<div class="card custom-card-2" style="width: 22rem; border: 0;">
 				<div class="card-body">
-					<form>
+					
+					<form action="/auth/login" method="post">
 						<div class="text-center mb-3 sidebar-logo">
 							<img
 								src="/img/logo.png"
@@ -37,53 +38,43 @@
 								alt="..."
 							/>
 						</div>
-						<div
-							class="alert alert-danger"
-							role="alert"
-							id="alert-danger"
-							style="display: none"
-						>
-							Invalid input
-						</div>
+						<% try { %>
+							<%- include('flash-message.ejs') %>
+						  <% } catch (error) { %>
+							<div>Error: <%= error.message %></div>
+						  <% } %>
 						<div class="mb-3">
-							<label for="exampleInputEmail1" class="form-label"
+							<label for="email" class="form-label"
 								>Email address</label
 							>
 							<input
 								type="email"
 								class="form-control"
-								id="username"
-								aria-describedby="emailHelp"
+								id="email"
+								name="email"
 							/>
-							<div id="emailHelp" class="form-text">Enter valid email.</div>
+							<div id="email" class="form-text">Enter valid email.</div>
 						</div>
 						<div class="mb-3">
-							<label for="exampleInputPassword1" class="form-label"
+							<label for="password" class="form-label"
 								>Password</label
 							>
 							<input
 								type="password"
 								class="form-control"
 								id="password"
-								aria-describedby="passwordhelp"
+								name="password"
 							/>
-							<div id="passwordhelp" class="form-text">
+							<div id="" class="form-text">
 								Enter valid password
 							</div>
 						</div>
 
 						<div class="text-center">
-							<button
-								type="submit"
-								id="button"
-								onclick="location.href = '/'"
-								class="btn btn-primary w-100"
-							>
-								Login
-							</button>
+							<input class="btn btn-primary w-100" type="submit" value="Login" />
 						</div>
 						<div class="text-center my-2">
-							<a href="forgot-password.html">Forgot your password?</a>
+							<a href="/">Forgot your password?</a>
 						</div>
 					</form>
 				</div>

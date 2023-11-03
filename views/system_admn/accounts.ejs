@@ -63,7 +63,7 @@
 					<ul class="sidebar-nav">
 						<li class="sidebar-item">
 							<a
-								href="/Dashboard"
+								href="/systemAdmin/dashboard"
 								class="sidebar-link collapsed"
 								data-bs-target="#dashboard"
 								aria-expanded="false"
@@ -75,7 +75,7 @@
 						</li>
 						<li class="sidebar-item">
 							<a
-								href="/accounts"
+								href="/systemAdmin/accounts"
 								class="sidebar-link"
 								data-bs-target="#"
 								aria-expanded="false"
@@ -87,7 +87,7 @@
 						</li>
 						<li class="sidebar-item">
 							<a
-								href="/records"
+								href="/systemAdmin/records"
 								class="sidebar-link"
 								aria-expanded="false"
 								aria-controls="pages"
@@ -98,7 +98,7 @@
 						</li>
 						<li class="sidebar-item">
 							<a
-								href="/archives"
+								href="/systemAdmin/archives"
 								class="sidebar-link"
 								aria-expanded="false"
 								aria-controls="auth"
@@ -109,7 +109,7 @@
 						</li>
 						<li class="sidebar-item">
 							<a
-								href="/calendar"
+								href="/systemAdmin/calendar"
 								class="sidebar-link collapsed"
 								data-bs-target="#dashboard"
 								aria-expanded="false"
@@ -121,7 +121,7 @@
 						</li>
 						<li class="sidebar-item">
 							<a
-								href="/reports"
+								href="/systemAdmin/reports"
 								class="sidebar-link collapsed"
 								data-bs-target="#dashboard"
 								aria-expanded="false"
@@ -173,9 +173,7 @@
 					<div class="container w-100">
 						<a
 							class="btn btn-success my-2"
-							data-bs-toggle="modal"
-							data-bs-target="#reg-modal"
-							href=""
+							href="/auth/register"
 							>Add users</a
 						>
 						
@@ -218,7 +216,7 @@
 						</table>
 					</div>
 						
-						<div
+						<!-- <div
 						class="modal fade modal-lg"
 						id="reg-modal"
 						data-bs-backdrop="static" 
@@ -234,42 +232,23 @@
 									<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>
 								</div>
 								<div class="modal-body">
-									<form>
-										<div class="container my-0">
-											<h4></h4>
-											<img
-											id="profile-image"
-											src="img/default_user_logo.jpg"
-											alt="Profile Picture"
-											class="img-thumbnail img-fluid my-2 rounded"
-											style="width: 100px; height: 100px; border: none"
-										/>
-						
-										<a
-											href="#"
-											class="btn btn-primary btn-sm"
-											style="margin-top: 4rem"
-											id="change-profile-btn"
-											><i class="fa-solid fa-camera"></i
-										></a>
-										<input type="file" id="file-input" style="display: none" />
-
-										</div>
+									<form >
+										
 										<div class="row">
 											<div class="col">
 												<label for="modal-email" class="form-label mt-2">Enter email address</label>
-												<input type="email" class="form-control" id="modal-email" placeholder="@example.com" required>
+												<input type="email" class="form-control" id="modal-email" name="email-address" placeholder="@example.com" required>
 											</div>
 										
 										</div>
 										<div class="row my-2">
 											<div class="col-6">
 												<label for="pass m-0" class="form-label">Create password</label>
-												<input type="text" class="form-control" id="pass" placeholder="Create password" required>
+												<input type="text" class="form-control" id="pass" name="pass" placeholder="Create password" required>
 											</div>
 											<div class="col-6">
 												<label for="con-pass m-0" class="form-label">Confirm Password</label>
-												<input type="text" class="form-control" id="con-pass" placeholder="Confirm password" required>
+												<input type="text" class="form-control" id="con-pass" name="con-pass" placeholder="Confirm password" required>
 											</div>
 										</div>
 										<hr>
@@ -277,15 +256,15 @@
 											<h5 class="mb-3">Personal Information</h5>
 											<div class="col-6">
 												<label for="lname m-0" class="form-label">Last Name</label>
-												<input type="text" class="form-control" id="lname" placeholder="Last Name" required>
+												<input type="text" class="form-control" id="lname" name="lname" placeholder="Last Name" required>
 											</div>
 											<div class="col-6">
-												<label for="lname m-0" class="form-label">First Name</label>
-												<input type="text" class="form-control" id="lname" placeholder="First Name" required>
+												<label for="fname m-0" class="form-label">First Name</label>
+												<input type="text" class="form-control" id="fname" name="fname" placeholder="First Name" required>
 											</div>
 											<div class="col-6 mt-2">
 												<label for="gender" class="form-label">Gender</label>
-												<select class="form-select" id="gender" aria-label="Default select example">
+												<select class="form-select" id="gender" name="gender" aria-label="Default select example">
 													<option disabled selected>Choose Gender</option>
 													<option value="male">Male</option>
 													<option value="female">Female</option>
@@ -293,11 +272,11 @@
 											</div>
 											<div class="col-6 mt-2">
 												<label for="contact-num m-0" class="form-label">Contact Number</label>
-												<input type="number" class="form-control" id="contact-num" placeholder="Phone number" required>
+												<input type="number" class="form-control" id="contact-num" name="contact-num" placeholder="Phone number" required>
 											</div>
 											<div class="col-6 mt-3">
 												<label for="validationDefault04" class="form-label">Subject Advisory</label>
-												<select class="form-select" id="validationDefault04" required>
+												<select class="form-select" id="validationDefault04" name="subjects" required>
 													<option value="" disabled selected>Select subject</option>
 													<option value="">Filipino</option>
 													<option value="">AP</option>
@@ -312,7 +291,7 @@
 											</div>
 											<div class="col-6 mt-3">
 												<label for="validationDefault04" class="form-label">Role</label>
-												<select class="form-select" id="validationDefault04" required>
+												<select class="form-select" id="validationDefault04" name="role" required>
 													<option value="" disabled selected>Select role</option>
 													<option>Admin</option>
 													<option value="">Class Advisor</option>
@@ -326,40 +305,14 @@
 												</select>
 											</div>
 										</div>
-										<!-- <label for="modal-username m-0" class="form-label">Enter Account Name</label>
-										<input type="text" class="form-control" id="modal-username" placeholder="" required>
-										<label for="modal-email" class="form-label mt-2">Enter email</label>
-										<input type="email" class="form-control" id="modal-email" placeholder="@example.com" required>
-										<label for="modal-password" class="form-label mt-2">Enter password</label>
-										<input type="password" class="form-control" id="modal-password" placeholder="*******" required>
-										<label for="modal-text" class="form-label mt-2">Enter Gender</label>
-										<input type="text" class="form-control" id="modal-text" placeholder="">
-										<label for="modal-number" class="form-label mt-2">Enter Contact number</label>
-										<input type="number" class="form-control" id="modal-number" placeholder="">
-										<label for="modal-subject" class="form-label mt-2">Subject Advisory</label>
-										<input type="text" class="form-control" id="modal-subject" placeholder="">
-										<div class="col md-6">
-											<label for="validationDefault04" class="form-label">Role</label>
-											<select class="form-select" id="validationDefault04" required>
-												<option value="" disabled selected>Select role</option>
-												<option>Admin</option>
-												<option>Class Advisor <p class="text-info">(kinder)</p></option>
-												<option>Class Advisor <p class="text-info">(year 1)</option>
-												<option>Class Advisor <p class="text-info">(year 2)</option>
-												<option>Class Advisor <p class="text-info">(year 3)</option>
-												<option>Class Advisor <p class="text-info">(year 4)</option>
-												<option>Class Advisor <p class="text-info">(year 5)</small></option>
-												<option>Class Advisor <p class="text-info">(year 6)</option>
-											</select> -->
-										<!-- </div> -->
 									</form>
 								</div>
 								<div class="modal-footer">
-									<button type="submit" class="btn btn-success">Save</button>
+									<input class="btn btn-success" type="submit" value="register">
 								</div>
 							</div>
 						</div>
-					</div>
+					</div> -->
 					
 				</div>
 			</div>

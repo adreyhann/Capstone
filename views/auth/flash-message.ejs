@@ -1,0 +1,23 @@
+<% if (messages.error && messages.error.length > 0) { %>
+  <div class="alert alert-danger d-flex align-items-center" role="alert" style="padding: 1px;">
+    <% messages.error.forEach((message) => { %>
+      <p class="m-2"><%= message %></p>
+    <% }) %>
+  </div>
+<% } %>
+
+<% if (messages.success && messages.success.length > 0) { %>
+  <div class="alert alert-success d-flex align-items-center" role="alert" style="padding: 1px;">
+    <% messages.success.forEach((message) => { %>
+      <p class="m-2"><%= message %></p>
+    <% }) %>
+  </div>
+<% } %>
+
+<% if (messages.key && messages.key.length > 0) { %>
+  <div class="alert alert-info d-flex align-items-center" role="alert" style="padding: 1px;">
+    <% messages.key.forEach((message) => { %>
+      <p class="m-2"><%= message %></p>
+    <% }) %>
+  </div>
+<% } %>

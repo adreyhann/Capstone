@@ -13,7 +13,7 @@ passport.use(
 				const user = await User.findOne({ email });
 				if (!user) {
 					return done(null, false, {
-						message: "This email is not registered!",
+						message: 'This email is not registered!',
 					});
 				}
 				const isMatch = await user.isValidPassword(password);
@@ -21,19 +21,19 @@ passport.use(
 				return isMatch
 					? done(null, user)
 					: done(null, false, { message: 'Incorrect password' });
-			} catch (error) {
-				done(error);
+			} catch(error) {
+				done(error);	
 			}
 		}
 	)
 );
 
 passport.serializeUser(function (user, done) {
-	done(null, user.id);
+	done(null, User.id);
 });
 
-passport.deserializeUser(function (id, done) {
-	User.findById(id, function (err, user) {
-		done(err, user);
+passport.deserializeUser((id, done) => {
+	User.findById(id, (err, user) => {
+	  done(err, user);
 	});
-});
+  });

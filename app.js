@@ -7,16 +7,19 @@ const session = require('express-session');
 const connectFlash = require('connect-flash');
 const passport = require('passport');
 
+
 const app = express();
-
-const PORT = process.env.PORT || 3000;
-
-app.use(morgan('dev'));
-
-app.set('view engine', 'ejs');
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(morgan('dev'));
+app.set('view engine', 'ejs');
+
+app.use(express.static('public'));
+app.use('/css', express.static(__dirname + '/public/css'));
+app.use('/img', express.static(__dirname + '/public/img'));
+app.use('/js', express.static(__dirname + '/public/js'));
+
+
 
 app.use(
 	session({
@@ -45,11 +48,6 @@ app.use('/', require('./routes/index.route'));
 app.use('/auth', require('./routes/auth-routes'));
 app.use('/systemAdmin', require('./routes/system.admin.route'));
 
-app.use(express.static('public'));
-app.use('/css', express.static(__dirname + 'public/css'));
-app.use('/img', express.static(__dirname + 'public/img'));
-app.use('/js', express.static(__dirname + 'public/js'));
-
 // error handler (404)
 app.use((req, res, next) => {
 	next(createHttpError.NotFound());
@@ -60,6 +58,8 @@ app.use((error, req, res, next) => {
 	res.status(error.status);
 	res.render('error_40x', { error });
 });
+
+const PORT = process.env.PORT || 3000;
 
 mongoose
 	.connect(process.env.MONGO_URI, {

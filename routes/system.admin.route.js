@@ -4,12 +4,13 @@ const router = require('express').Router();
 //     res.render('Dashboard')
 // })
 
-router.get('/accounts', async(req, res, next) => {
-	res.render('system_admn/accounts');
-});
 
 router.get('/dashboard', async(req, res, next) => {
 	res.render('system_admn/dashboard');
+});
+
+router.get('/accounts', async(req, res, next) => {
+	res.render('system_admn/accounts');
 });
 
 router.get('/records', async(req, res, next) => {
@@ -26,6 +27,10 @@ router.get('/calendar', async(req, res, next) => {
 
 router.get('/reports', async(req, res, next) => {
 	res.render('system_admn/reports');
+});
+
+router.get('/addRecords', async(req, res, next) => {
+	res.render('system_admn/addRecords');
 });
 
 module.exports = router;

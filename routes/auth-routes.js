@@ -3,35 +3,13 @@ const User = require('../models/user.model');
 const { body, validationResult } = require('express-validator');
 const passport = require('passport');
 
-// login
 
-router.get('/login', async (req, res, next) => {
-	res.render('auth/login');
-});
 
-router.post(
-	'/login',
-	passport.authenticate('local', {
-		successRedirect: '/systemAdmin/dashboard',
-		failureRedirect: '/auth/login',
-		failureFlash: true,
-	}),
-	(req, res, next) => {
-		// Redirect the user to the dashboard
-		res.redirect('/systemAdmin/dashboard');
-	}
-);
-
-// register
 
 router.get('/register', async (req, res, next) => {
-	// req.flash('error', "Registration error")
-	// req.flash('success', 'Registration success')
-	// req.flash('key', 'some key')
-	// const messages = req.flash();
-
 	res.render('auth/register');
 });
+  
 
 router.post(
 	'/register',
@@ -45,7 +23,7 @@ router.post(
 		body('password')
 			.trim()
 			.isLength(10)
-			.withMessage('Password must be atleast 10 characters!'),
+			.withMessage('Password must be atleast 8 characters!'),
 		body('password2').custom((value, { req }) => {
 			if (value !== req.body.password) {
 				throw new Error('Password do not match!');
@@ -92,9 +70,22 @@ router.post(
 	}
 );
 
+router.get('/login', async (req, res, next) => {
+	res.render('auth/login');
+});
+
+router.post(
+	'/login',
+	passport.authenticate('local', {
+		successRedirect: "/systemAdmin/dashboard",
+		failureRedirect: "/auth/login",
+		failureFlash: true,
+	})
+);
+
 router.get('/logout', async (req, res, next) => {
 	req.logOut();
-	res.redirect('/');
+	res.redirect('/auth/login');
 });
 
 module.exports = router;

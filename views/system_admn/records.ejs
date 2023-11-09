@@ -170,8 +170,7 @@
 					</h2>
 					<hr>
 					<div class="container w-100 position-relative">
-						<a id="addRow" class="btn btn-success my-2" data-bs-toggle="modal"
-						data-bs-target="#reg-modal" href="">Create new record</a>
+						<a id="addRow" class="btn btn-success my-2" href="/systemAdmin/addRecords">Create new record</a>
 						<a class="icon-link position-absolute top-0 end-0" style="padding-top: 1rem; padding-right: 11px;" href="#">
                             <span class="material-symbols-outlined">
 								settings_backup_restore
@@ -193,15 +192,7 @@
 								</tr>
 							</thead>
 							<tbody>
-								<tr>
-									<td>36896806743</td>
-									<td>Zean Toledo</td>
-									<td>Male</td>
-									<td>Grade 2</td>
-									<td>
-										<a class="btn btn-primary btn-sm" href="../sys-admin-ui/stud-details.html">Manage</a>
-									</td>
-								</tr>
+								
 							</tbody>
 							<tfoot class="table-info">
 								<tr>
@@ -214,57 +205,6 @@
 							</tfoot>
 						</table>
 					</div>
-					<div
-						class="modal fade"
-						id="reg-modal"
-						tabindex="-1"
-						aria-labelledby="modal-title"
-						aria-hidden="true"
-					>
-						<div class="modal-dialog modal-dialog-scrollable">
-							<div class="modal-content">
-								<div class="modal-header">
-									<h5 class="modal-title" id="modal-title">Add new record</h5>
-									<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>
-								</div>
-								<div class="modal-body">
-									<label for="modal-studNum m-0" class="form-label">LRN</label>
-									<input type="number" class="form-control" id="modal-studNum" placeholder="" min="1000000" required>
-									<label for="modal-lastName m-0" class="form-label">Last Name</label>
-									<input type="text" class="form-control" id="modal-lastName" placeholder="Last Name" required>
-									<label for="modal-firstName" class="form-label mt-2">First Name</label>
-									<input type="text" class="form-control" id="modal-firstName" placeholder="First Name" required>
-									<label for="modal-gender" class="form-label mt-2">Gender</label>
-									<select name="gender" id="modal-gender" class="form-select">
-										<option disabled>Select Gender</option>
-										<option value="">Male</option>
-										<option value="">Female</option>
-									</select>
-									<label for="modal-yearLevel" class="form-label mt-2">Grade Level</label>
-									<select name="grade_level" id="grade_level" class="form-select">
-										<option disabled>Grade level</option>
-										<option value="">Kinder</option>
-										<option value="">Grade 1</option>
-										<option value="">Grade 2</option>
-										<option value="">Grade 3</option>
-										<option value="">Grade 4</option>
-										<option value="">Grade 5</option>
-										<option value="">Grade 6</option>
-									</select>
-									<hr class="mt-4">
-									<h5 class="text-center">Documents</h5>
-									
-									<div class="my-2">
-										<label for="formFileSm" class="form-label">Upload files</label>
-										<input class="form-control form-control-sm" id="formFileSm" type="file" accept=".pdf">
-									</div>
-									
-								</div>
-								<div class="modal-footer">
-									<button type="button" class="btn btn-success">Save</button>
-								</div>
-							</div>
-						</div>
 				</div>
 			</div>
 		</div>

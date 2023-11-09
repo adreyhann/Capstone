@@ -1,9 +1,5 @@
 const router = require('express').Router();
 
-// router.get('/dashboard', async(req, res, next) => {
-//     res.render('Dashboard')
-// })
-
 
 router.get('/dashboard', async(req, res, next) => {
 	res.render('system_admn/dashboard');

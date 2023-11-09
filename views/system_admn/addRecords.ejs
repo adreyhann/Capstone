@@ -202,7 +202,7 @@
                                 
 								<form action="/" method="post">
 									<% try { %>
-										<%- include('../auth/flash-message.ejs') %>
+										<%- include('../credentials/flash-message.ejs') %>
 									  <% } catch (error) { %>
 										<div>Error: <%= error.message %></div>
 									  <% } %>

@@ -4,10 +4,8 @@ const { body, validationResult } = require('express-validator');
 const passport = require('passport');
 
 
-
-
 router.get('/register', async (req, res, next) => {
-	res.render('auth/register');
+	res.render('credentials/register');
 });
   
 
@@ -22,7 +20,7 @@ router.post(
 			.toLowerCase(),
 		body('password')
 			.trim()
-			.isLength(10)
+			.isLength(8)
 			.withMessage('Password must be atleast 8 characters!'),
 		body('password2').custom((value, { req }) => {
 			if (value !== req.body.password) {
@@ -38,7 +36,7 @@ router.post(
 				errors.array().forEach((error) => {
 					req.flash('error', error.msg);
 				});
-				res.render('auth/register', {
+				res.render('credentials/register', {
 					email: req.body.email,
 					messages: req.flash(),
 				});
@@ -48,7 +46,7 @@ router.post(
 			const { email } = req.body;
 			const doesExist = await User.findOne({ email });
 			if (doesExist) {
-				res.render('auth/register', {
+				res.render('/credentials/register', {
 					email: req.body.email,
 					messages: req.flash(),
 					error: 'User already exists.',
@@ -61,7 +59,7 @@ router.post(
 			req.flash('success', `${user.email} is succesfully registered`);
 			res.redirect('/auth/register');
 		} catch (error) {
-			res.render('auth/register', {
+			res.render('credentials/register', {
 				email: req.body.email,
 				messages: req.flash(),
 				error: error.message,
@@ -71,7 +69,7 @@ router.post(
 );
 
 router.get('/login', async (req, res, next) => {
-	res.render('auth/login');
+	res.render('credentials/login');
 });
 
 router.post(
@@ -85,7 +83,7 @@ router.post(
 
 router.get('/logout', async (req, res, next) => {
 	req.logOut();
-	res.redirect('/auth/login');
+	res.redirect('/credentials/login');
 });
 
 module.exports = router;

@@ -21,19 +21,23 @@ passport.use(
 				return isMatch
 					? done(null, user)
 					: done(null, false, { message: 'Incorrect password' });
-			} catch(error) {
-				done(error);	
+			} catch (error) {
+				done(error);
 			}
 		}
 	)
 );
 
 passport.serializeUser(function (user, done) {
-	done(null, User.id);
+	done(null, user.id);
 });
 
-passport.deserializeUser((id, done) => {
-	User.findById(id, (err, user) => {
-	  done(err, user);
-	});
-  });
+passport.deserializeUser(async (id, done) => {
+	try {
+		const user = await User.findById(id);
+		done(null, user);
+	} catch (err) {
+		console.error(err);
+		done(err);
+	}
+});

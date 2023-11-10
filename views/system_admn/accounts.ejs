@@ -55,8 +55,8 @@
 								<img src="../img/pain.jpg" class="img-fluid img-thumbnail" alt="...">
 							</div>
 							<div class="col-md-6">
-								<p class="my-0" style="font-size: 15px;">Carlos Ching</p>
-								<span class="badge rounded-pill text-bg-info my-0">System Admin</span>
+								<p class="my-0" style="font-size: 15px;"><%= person.name %></p>
+								<span class="badge rounded-pill text-bg-info my-0"><%= person.role %></span>
 							</div>
 						</div>
 					</div>
@@ -157,10 +157,10 @@
 									<span class="fa-solid fa-user pe-2"></span>
 								</a>
 								<ul class="dropdown-menu dropdown-menu-lg-end">
-									<li><a class="dropdown-item" href="../sys-admin-ui/admin-profile.html">View Profile</a></li>
-									<li><a class="dropdown-item" href="../sys-admin-ui/history-logs.html">History logs</a></li>
+									<li><a class="dropdown-item" href="/systemAdmin/profile">View Profile</a></li>
+									<li><a class="dropdown-item" href="/systemAdmin/historyLogs">History logs</a></li>
 									<li><hr class="dropdown-divider" /></li>
-									<li><a class="dropdown-item" href="../login-page.html">Logout</a></li>
+									<li><a class="dropdown-item" href="/auth/logout">Logout</a></li>
 								</ul>
 							</li>
 						</ul>
@@ -187,23 +187,33 @@
 								<tr>
 									<th>Account Name</th>
 									<th>Role</th>
+									<th>Class Advisory</th>
 									<th>Subject Advisory</th>
 									<th>Email</th>
-									<th>Action</th>
+									<!-- <th>Action</th> -->
 								</tr>
 							</thead>
 							<tbody>
-							
-
+								<% users.forEach(user => { %>
+									<tr>
+										<td><%= user.name %></td>
+										<td><%= user.role %></td>
+										<td><%= user.classAdvisory %></td>
+										<td><%= user.subjectAdvisory %></td>
+										<td><%= user.email %></td>
+										<!-- Add more cells based on your user schema -->
+									</tr>
+								<% }); %>
 								
 							</tbody>
 							<tfoot class="table-info">
 								<tr>
 									<th>Account Name</th>
 									<th>Role</th>
+									<th>Class Advisory</th>
 									<th>Subject Advisory</th>
 									<th>Email</th>
-									<th>Action</th>
+									<!-- <th>Action</th> -->
 								</tr>
 							</tfoot>
 						</table>

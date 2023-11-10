@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const createHttpError = require('http-errors');
+// const { roles, ClassAdvisor, ClassAdvisory, SubjectAdvisory } = require('../utils/constants');
 
 const UserSchema = new mongoose.Schema({
 	email: {
@@ -24,6 +25,7 @@ const UserSchema = new mongoose.Schema({
 	classAdvisory: {
 		type: String,
 		required: true,
+	
 	},
 	subjectAdvisory: {
 		type: String,
@@ -40,6 +42,7 @@ UserSchema.pre('save', async function (next) {
 		}
 		next();
 	} catch (error) {
+		console.error('Error during user save:', error);
 		next(error);
 	}
 });

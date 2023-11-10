@@ -3,14 +3,13 @@ const User = require('../models/user.model');
 const { body, validationResult } = require('express-validator');
 const passport = require('passport');
 
-
-router.get('/register', async (req, res, next) => {
+router.get('/register', ensureAuthenticated, async (req, res, next) => {
 	res.render('credentials/register');
 });
-  
 
 router.post(
 	'/register',
+	ensureAuthenticated,
 	[
 		body('email')
 			.trim()
@@ -46,11 +45,8 @@ router.post(
 			const { email } = req.body;
 			const doesExist = await User.findOne({ email });
 			if (doesExist) {
-				res.render('/credentials/register', {
-					email: req.body.email,
-					messages: req.flash(),
-					error: 'User already exists.',
-				});
+				req.flash('error', 'Username/email already exists');
+				res.redirect('/auth/register');
 				return;
 			}
 
@@ -68,22 +64,43 @@ router.post(
 	}
 );
 
-router.get('/login', async (req, res, next) => {
+router.get('/login', ensureNotAuthenticated, async (req, res, next) => {
 	res.render('credentials/login');
 });
 
 router.post(
 	'/login',
+	ensureNotAuthenticated,
 	passport.authenticate('local', {
-		successRedirect: "/systemAdmin/dashboard",
-		failureRedirect: "/auth/login",
-		failureFlash: true,
+		successRedirect: '/systemAdmin/dashboard', // Redirect to the dashboard on successful login
+		failureRedirect: '/auth/login', // Redirect to the login page on failed login
+		failureFlash: true, // Enable flash messages for error handling
 	})
 );
 
-router.get('/logout', async (req, res, next) => {
-	req.logOut();
-	res.redirect('/credentials/login');
+router.get('/logout', ensureAuthenticated, async (req, res, next) => {
+	req.logout(function (err) {
+		if (err) {
+			return next(err);
+		}
+		res.redirect('/');
+	});
 });
 
 module.exports = router;
+
+function ensureAuthenticated(req, res, next) {
+	if (req.isAuthenticated()) {
+		next();
+	} else {
+		res.redirect('/auth/login');
+	}
+}
+
+function ensureNotAuthenticated(req, res, next) {
+	if (req.isAuthenticated()) {
+		res.redirect('/systemAdmin/dashboard');
+	} else {
+		next();
+	}
+}

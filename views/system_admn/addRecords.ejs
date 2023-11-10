@@ -64,7 +64,7 @@
 								/>
 							</div>
 							<div class="col-md-6">
-								<p class="my-0" style="font-size: 15px">Carlos Ching</p>
+								<p class="my-0" style="font-size: 15px"><%= person.name %></p>
 								<span class="badge rounded-pill text-bg-info my-0"
 									>System Admin</span
 								>
@@ -171,20 +171,20 @@
 									<li>
 										<a
 											class="dropdown-item"
-											href="../sys-admin-ui/admin-profile.html"
+											href="/systemAdmin/profile"
 											>View Profile</a
 										>
 									</li>
 									<li>
 										<a
 											class="dropdown-item"
-											href="../sys-admin-ui/history-logs.html"
+											href="/systemAdmin/historyLogs"
 											>History logs</a
 										>
 									</li>
 									<li><hr class="dropdown-divider" /></li>
 									<li>
-										<a class="dropdown-item" href="../login-page.html"
+										<a class="dropdown-item" href="/auth/logout"
 											>Logout</a
 										>
 									</li>
@@ -200,7 +200,7 @@
 						<div class="card custom-card-2 border-0">
 							<div class="card-body">
                                 
-								<form action="/" method="post">
+								<form action="/systemAdmin/submit-form" method="post" enctype="multipart/form-data">
 									<% try { %>
 										<%- include('../credentials/flash-message.ejs') %>
 									  <% } catch (error) { %>
@@ -230,32 +230,32 @@
 									</div>
                                     
                                     <div class="form-floating mb-3">
-                                        <select class="form-select" name="Gender" id="Gender" required>
+                                        <select class="form-select" name="gender" id="gender" required>
                                             <option disabled>Select gender</option>
-                                            <option value="male">Male</option>
-                                            <option value="female">Female</option>
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
                                         </select>
-                                        <label for="Gender">Gender</label>
+                                        <label for="gender">Gender</label>
                                     </div>
 									<div class="form-floating mb-3">
                                         <select class="form-select" name="gradeLevel" id="gradeLevel" required>
                                             <option disabled>Select Grade level</option>
-                                            <option value="kinder">Kinder</option>
-                                            <option value="grade1">Grade 1</option>
-											<option value="grade2">Grade 2</option>
-                                            <option value="grade3">Grade 3</option>
-											<option value="grade4">Grade 4</option>
-                                            <option value="grade5">Grade 5</option>
-											<option value="grade6">Grade 6</option>
+                                            <option value="Kinder">Kinder</option>
+                                            <option value="Grade 1">Grade 1</option>
+											<option value="Grade 2">Grade 2</option>
+                                            <option value="Grade 3">Grade 3</option>
+											<option value="Grade 4">Grade 4</option>
+                                            <option value="Grade 5">Grade 5</option>
+											<option value="Grade 6">Grade 6</option>
                                         </select>
                                         <label for="gradeLevel">Grade level</label>
                                     </div>
 									<div class="input-group mb-3">
-										<input type="file" class="form-control" id="inputGroupFile02">
-										<label class="input-group-text" for="inputGroupFile02">Upload</label>
+										<input type="file" class="form-control" name="pdfFile" id="pdfFile" accept=".pdf">
+										<label class="input-group-text" for="pdfFile">Upload</label>
 									  </div>
                                     <div class="card-footer">
-                                        <input class="btn btn-success" type="submit" value="Register" />
+                                        <input class="btn btn-success" type="submit" value="Submit" />
                                     </div>
 								</form>
 							</div>

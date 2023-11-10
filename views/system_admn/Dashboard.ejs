@@ -51,9 +51,9 @@
 								/>
 							</div>
 							<div class="col-md-6">
-								<p class="my-0" style="font-size: 15px">Carlos Ching</p>
+								<p class="my-0" style="font-size: 15px"><%= person.name %></p>
 								<span class="badge rounded-pill text-bg-info my-0 fw-normal"
-									>System Admin</span
+									><%= person.role %></span
 								>
 							</div>
 						</div>
@@ -160,20 +160,20 @@
 									<li>
 										<a
 											class="dropdown-item"
-											href="../sys-admin-ui/admin-profile.html"
+											href="/systemAdmin/profile"
 											>View Profile</a
 										>
 									</li>
 									<li>
 										<a
 											class="dropdown-item"
-											href="../sys-admin-ui/history-logs.html"
+											href="/systemAdmin/historyLogs"
 											>History Logs</a
 										>
 									</li>
 									<li><hr class="dropdown-divider" /></li>
 									<li>
-										<a class="dropdown-item" href="/auth/login"
+										<a class="dropdown-item" href="/auth/logout"
 											>Logout</a
 										>
 									</li>
@@ -197,7 +197,7 @@
 									Accounts
 									<span
 										class="badge text-bg-secondary position-absolute top-0 end-0"
-										>10</span
+										><%= users.length %></span
 									>
 								</h5>
 								<p class="card-text">View list of users accounts</p>
@@ -215,7 +215,7 @@
 									Records
 									<span
 										class="badge text-bg-secondary position-absolute top-0 end-0"
-										>50</span
+										><%= records.length %></span
 									>
 								</h5>
 								<p class="card-text">List of active records</p>
@@ -233,7 +233,7 @@
 									Archives
 									<span
 										class="badge text-bg-secondary position-absolute top-0 end-0"
-										>40</span
+										>0</span
 									>
 								</h5>
 								<p class="card-text">List of Archived records.</p>

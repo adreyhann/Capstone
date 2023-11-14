@@ -8,11 +8,16 @@ const connectFlash = require('connect-flash');
 const passport = require('passport');
 const MongoStore = require('connect-mongo')
 const MongoClient = require('mongodb').MongoClient
+const path = require('path')
+const cors = require('cors');
+
 // const { roles, ClassAdvisory, SubjectAdvisory } = require('./utils/constants');
 
 const app = express();
+
+app.use(cors()); 
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 app.set('view engine', 'ejs');
 
@@ -20,6 +25,7 @@ app.use(express.static('public'));
 app.use('/css', express.static(__dirname + '/public/css'));
 app.use('/img', express.static(__dirname + '/public/img'));
 app.use('/js', express.static(__dirname + '/public/js'));
+app.use('/uploads', express.static(path.join(__dirname + '/public/uploads')));
 
 
 const client = new MongoClient(process.env.MONGO_URI);
@@ -59,25 +65,6 @@ app.use('/', require('./routes/index.route'));
 app.use('/auth', require('./routes/auth-routes'));
 app.use('/systemAdmin', ensureAuthenticated, require('./routes/system.admin.route'));
 
-// const newData = {
-//     lrn: 123456789,
-//     studentName: 'John Doe',
-//     gender: 'Male',
-//     gradeLevel: 'Grade 6',
-// };
-
-// const newRecord = new Records(newData);
-
-// newRecord.save()
-//     .then(savedRecord => {
-//         console.log('Record saved successfully:', savedRecord);
-//     })
-//     .catch(error => {
-//         console.error('Error saving record:', error);
-//     })
-//     .finally(() => {
-//         mongoose.connection.close();
-//     });
 
 // error handler (404)
 app.use((req, res, next) => {

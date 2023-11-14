@@ -25,6 +25,7 @@ const RecordsSchema = new mongoose.Schema({
     },
 })
 
+
 const Records = mongoose.model('Records', RecordsSchema);
 
 module.exports = Records;

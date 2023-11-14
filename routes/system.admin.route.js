@@ -1,6 +1,8 @@
 const router = require('express').Router();
 const multer = require('multer');
-const path = require('path');
+const path = require('path')
+const fs = require('fs');
+const { PDFDocument } = require('pdf-lib');
 const User = require('../models/user.model');
 const Records = require('../models/records.model');
 
@@ -39,8 +41,6 @@ router.get('/reports', async (req, res, next) => {
 	res.render('system_admn/reports', { person });
 });
 
-
-
 router.get('/profile', async (req, res, next) => {
 	const person = req.user;
 	res.render('system_admn/profile', { person });
@@ -60,13 +60,18 @@ router.get('/users', async (req, res, next) => {
 	}
 });
 
+router.get('/addRecords', async (req, res, next) => {
+	const person = req.user;
+	res.render('system_admn/addRecords', { person });
+});
+
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'public/uploads'); 
     },
     filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() + '.pdf');
+        cb(null, file.originalname);
     },
 });
 
@@ -82,20 +87,34 @@ const upload = multer({
         }
     },
 });
-
-
-router.get('/view-files/:studentId', async (req, res, next) => {
+router.get('/view-files/:id', async (req, res, next) => {
     try {
-        const studentId = req.params.lrn;
+        const studentId = req.params.id;
         const student = await Records.findById(studentId);
 
-        res.render('system_admn/view-files', { student });
+		console.log('Student:', student);
+
+		if (!student) {
+            res.status(404).send('Record not found');
+            return;
+        }
+
+		 const filename = path.basename(student.pdfFilePath);
+		 
+		 const pdfData = fs.readFileSync(student.pdfFilePath);
+
+		 const pdfDoc = await PDFDocument.load(pdfData);
+
+		 const pdfBytes = await pdfDoc.save();
+		 const base64PDF = Buffer.from(pdfBytes).toString('base64');
+
+		const person = req.user;
+        res.render('system_admn/view-files', { student, person, base64PDF, filename });
     } catch (error) {
+		console.error('Error:', error); 
         next(error);
     }
 });
-
-
 
 router.post('/submit-form', upload.single('pdfFile'), async (req, res, next) => {
 	try {
@@ -104,7 +123,14 @@ router.post('/submit-form', upload.single('pdfFile'), async (req, res, next) => 
 		const file = req.file;
         const filePath = file ? file.path : null;
 
-	
+		if (!filePath) {
+			req.flash('error', 'Uploading a file is required. Please select a PDF file to upload.');
+			res.redirect('/systemAdmin/addRecords');
+			return;
+		  }
+
+		console.log('Attempting to serve file:', filePath);
+		
 		const newRecord = new Records({
 			lrn: parseInt(lrn),
 			studentName: name,
@@ -117,7 +143,8 @@ router.post('/submit-form', upload.single('pdfFile'), async (req, res, next) => 
 		const savedRecord = await newRecord.save();
 
 		req.flash('success', `${savedRecord.studentName} is succesfully saved`);
-		res.redirect('/systemAdmin/addRecords'); 
+		res.redirect('/systemAdmin/addRecords');
+		res.redirect(`/systemAdmin/view-files/${savedRecord._id}`); 
 	} catch (error) {
 		if (
 			error.code === 11000 &&
@@ -131,9 +158,12 @@ router.post('/submit-form', upload.single('pdfFile'), async (req, res, next) => 
 		}
 	}
 });
-router.get('/addRecords', async (req, res, next) => {
-	const person = req.user;
-	res.render('system_admn/addRecords', { person });
-});
+
+
+
+
+
+
+
 
 module.exports = router;

@@ -200,6 +200,33 @@ router.post('/addFile/:recordId', upload.single('pdfFile'), async (req, res, nex
     }
 });
 
+router.post('/deleteFile/:recordId/:index', async (req, res, next) => {
+    try {
+        const recordId = req.params.recordId;
+        const index = req.params.index;
+
+        // Find the record by ID
+        const record = await Records.findById(recordId);
+
+        if (!record) {
+            res.status(404).send('Record not found');
+            return;
+        }
+
+        // Check if the index is valid
+        if (index >= 0 && index < record.pdfFilePath.length) {
+            // Remove the file path at the specified index
+            record.pdfFilePath.splice(index, 1);
+            await record.save();
+        }
+
+        // Redirect back to the view-files page
+        res.redirect(`/systemAdmin/view-files/${recordId}`);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
 
 
 

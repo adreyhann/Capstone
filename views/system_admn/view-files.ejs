@@ -186,26 +186,34 @@
 				<h2 class="mt-2">Documents</h2>
 				<hr />
 				<div class="container-lg">
-					<% try { %>
-						<%- include('../credentials/flash-message.ejs') %>
-					  <% } catch (error) { %>
-						<div>Error: <%= error.message %></div>
-					  <% } %>
-					<p>Student Name: <%= student.studentName %></p>
+					<div class="row">
+						<div class="col-3">
+							<p>LRN: <span style="font-weight: bold;"><%= student.lrn %></span> </p>
+						</div>
+						<div class="col-3">
+							<p>Student Name: <span style="font-weight: bold;"><%= student.studentName %></span> </p>
+						</div>
+						
+					</div>
+					
 					
 					<!-- Form to upload additional files -->
 					<form action="/systemAdmin/addFile/<%= student._id %>" method="post" enctype="multipart/form-data" class="mb-3">
 						<div class="row">
-							<input class="form-control mb-3" type="file" name="pdfFile" accept=".pdf">
-							<button type="submit" class="btn btn-primary">Add File</button>
+							<input class="form-control mb-3" type="file" name="pdfFile" accept=".pdf" required>
+							<button type="submit" class="btn btn-primary">Upload new File</button>
 						</div>
 					</form>
 				
 					<!-- Loop to display PDF files -->
 					<% for (let i = 0; i < filename.length; i++) { %>
-						<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">
+						<div class="card mb-3 custom-card-2 border-0 position-relative" style="height: 100vh">
 							<div class="card-header text-center bg-info">
 								<%= filename[i] %>
+								<!-- Add a delete button for each PDF file -->
+								<form action="/systemAdmin/deleteFile/<%= student._id %>/<%= i %>" method="post">
+									<button type="submit" class="btn btn-danger btn-sm m-1 position-absolute top-0 end-0"">Delete</button>
+								</form>
 							</div>
 							<div class="card-body">
 								<!-- Display the PDF for each file -->
@@ -214,6 +222,7 @@
 						</div>
 					<% } %>
 				</div>
+				
 				
 			</div>
 		</div>

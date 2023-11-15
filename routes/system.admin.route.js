@@ -4,14 +4,15 @@ const path = require('path')
 const fs = require('fs');
 const { PDFDocument } = require('pdf-lib');
 const User = require('../models/user.model');
-const Records = require('../models/records.model');
+const {Records, Archives} = require('../models/records.model');
 
 router.get('/dashboard', async (req, res, next) => {
 	// console.log(req.user)
 	const person = req.user;
 	const users = await User.find();
 	const records = await Records.find();
-	res.render('system_admn/dashboard', { person, users, records });
+    const archives = await Archives.find();
+	res.render('system_admn/dashboard', { person, users, records, archives });
 });
 
 router.get('/accounts', async (req, res, next) => {
@@ -28,7 +29,8 @@ router.get('/records', async (req, res, next) => {
 
 router.get('/archives', async (req, res, next) => {
 	const person = req.user;
-	res.render('system_admn/archives', { person });
+    const archivedRecord = await Archives.find();
+	res.render('system_admn/archives', { person, archivedRecord});
 });
 
 router.get('/calendar', async (req, res, next) => {
@@ -284,8 +286,82 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
     }
 });
 
+// Add this route for moving records to the archive
+router.post('/move-to-archive/:recordId', async (req, res, next) => {
+    try {
+        const recordId = req.params.recordId;
 
+        // Find the record by ID
+        const record = await Records.findById(recordId);
 
+        if (!record) {
+            res.status(404).send('Record not found');
+            return;
+        }
 
+        // Move the record to the ArchivedRecords collection
+        const archivedRecord = new Archives({
+            lrn: record.lrn,
+            studentName: record.studentName,
+            gender: record.gender,
+            dateAddedToArchive: new Date(),
+            pdfFilePath: record.pdfFilePath, // Check if you need to handle PDF files
+        });
+
+        // Save the archived record
+        await archivedRecord.save();
+
+        // Delete the record from the original collection
+        await Records.findByIdAndDelete(recordId);
+
+        req.flash('success', 'Record moved to archive successfully');
+        res.redirect('/systemAdmin/records');
+    } catch (error) {
+        console.error('Error:', error);
+        // Handle errors appropriately, e.g., flash an error message
+        req.flash('error', 'Failed to move record to archive');
+        res.redirect('/systemAdmin/records');
+    }
+});
+
+// Add this route for viewing files of an archived record
+router.get('/archived-files/:recordId', async (req, res, next) => {
+    try {
+        const recordId = req.params.recordId;
+        const student = await Archives.findById(recordId);
+        // Find the archived record by ID
+        const archivedRecord = await Archives.findById(recordId);
+
+        if (!archivedRecord) {
+            res.status(404).send('Archived Record not found');
+            return;
+        }
+
+        const base64PDF = await Promise.all(
+			student.pdfFilePath.map(async (filePath) => {
+				if (filePath) {
+					const pdfData = await fs.promises.readFile(filePath);
+					const pdfDoc = await PDFDocument.load(pdfData);
+					const pdfBytes = await pdfDoc.save();
+					return Buffer.from(pdfBytes).toString('base64');
+				} else {
+					return null; // or handle the case where filePath is null
+				}
+			})
+		);
+		
+		// Assuming pdfFilePath is an array of file paths
+		const filename = base64PDF.map((_, index) => {
+			return student.pdfFilePath[index] ? path.basename(student.pdfFilePath[index]) : null;
+		});
+
+		const person = req.user;
+
+        res.render('system_admn/archived-files', { archivedRecord, student, person, base64PDF, filename }); // Adjust the view name as needed
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
 
 module.exports = router;

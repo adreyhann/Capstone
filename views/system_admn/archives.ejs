@@ -213,19 +213,35 @@
 									<th>LRN</th>
 									<th>Student Name</th>
 									<th>Gender</th>
-									<th>Batch</th>
+									<th>Date Added</th>
 									<th>Action</th>
 								</tr>
 							</thead>
 							<tbody>
-								
+								<% archivedRecord.forEach(record => { %>
+								<tr>
+									<td><%= record.lrn %></td>
+									<td><%= record.studentName %></td>
+									<td><%= record.gender %></td>
+									<td><%= new Date(record.dateAddedToArchive).toLocaleString() %></td>
+									<td>
+										<a
+											class="btn btn-info btn-sm"
+											href="/systemAdmin/archived-files/<%= record._id %>"
+											>View Files</a
+										>
+									</td>
+									<!-- Add more cells based on your schema -->
+								</tr>
+								<% }); %>
 							</tbody>
-							<tfoot>
+							
+							<tfoot class="table-info">
 								<tr>
 									<th>LRN</th>
 									<th>Student Name</th>
 									<th>Gender</th>
-									<th>Batch</th>
+									<th>Date Added</th>
 									<th>Action</th>
 								</tr>
 							</tfoot>

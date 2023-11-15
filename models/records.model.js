@@ -20,8 +20,8 @@ const RecordsSchema = new mongoose.Schema({
         required: true,
     },
     pdfFilePath: {
-        type: String,
-        required: true,
+        type: [String],
+        default: [],
     },
 })
 

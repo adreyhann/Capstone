@@ -99,14 +99,23 @@ router.get('/view-files/:id', async (req, res, next) => {
             return;
         }
 
-		 const filename = path.basename(student.pdfFilePath);
-		 
-		 const pdfData = fs.readFileSync(student.pdfFilePath);
-
-		 const pdfDoc = await PDFDocument.load(pdfData);
-
-		 const pdfBytes = await pdfDoc.save();
-		 const base64PDF = Buffer.from(pdfBytes).toString('base64');
+		const base64PDF = await Promise.all(
+			student.pdfFilePath.map(async (filePath) => {
+				if (filePath) {
+					const pdfData = await fs.promises.readFile(filePath);
+					const pdfDoc = await PDFDocument.load(pdfData);
+					const pdfBytes = await pdfDoc.save();
+					return Buffer.from(pdfBytes).toString('base64');
+				} else {
+					return null; // or handle the case where filePath is null
+				}
+			})
+		);
+		
+		// Assuming pdfFilePath is an array of file paths
+		const filename = base64PDF.map((_, index) => {
+			return student.pdfFilePath[index] ? path.basename(student.pdfFilePath[index]) : null;
+		});
 
 		const person = req.user;
         res.render('system_admn/view-files', { student, person, base64PDF, filename });
@@ -159,6 +168,37 @@ router.post('/submit-form', upload.single('pdfFile'), async (req, res, next) => 
 	}
 });
 
+router.post('/addFile/:recordId', upload.single('pdfFile'), async (req, res, next) => {
+    try {
+        const recordId = req.params.recordId;
+
+        // Find the record by ID
+        const record = await Records.findById(recordId);
+
+        if (!record) {
+            res.status(404).send('Record not found');
+            return;
+        }
+
+        // Check if a file was uploaded
+        if (req.file) {
+            const newPdfPath = req.file.path;
+
+            // Update the existing record with the new file path
+            record.pdfFilePath.push(newPdfPath);
+            await record.save();
+
+            // Redirect back to the view-files page
+			req.flash('success', 'Successfully uploaded');
+            res.redirect(`/systemAdmin/view-files/${recordId}`);
+        } else {
+            res.status(400).send('No file uploaded');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
 
 
 

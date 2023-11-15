@@ -186,21 +186,35 @@
 				<h2 class="mt-2">Documents</h2>
 				<hr />
 				<div class="container-lg">
+					<% try { %>
+						<%- include('../credentials/flash-message.ejs') %>
+					  <% } catch (error) { %>
+						<div>Error: <%= error.message %></div>
+					  <% } %>
 					<p>Student Name: <%= student.studentName %></p>
-						<form action="/systemAdmin/addFile/<%= student._id %>" method="post" enctype="multipart/form-data" class="mb-3">
-							<!-- Ensure to include the student ID in the form action -->
-							<div class="row">
-								<input class="form-control mb-3" type="file" name="pdfFile" accept=".pdf">
-								<button type="submit" class="btn btn-primary">Add File</button>
+					
+					<!-- Form to upload additional files -->
+					<form action="/systemAdmin/addFile/<%= student._id %>" method="post" enctype="multipart/form-data" class="mb-3">
+						<div class="row">
+							<input class="form-control mb-3" type="file" name="pdfFile" accept=".pdf">
+							<button type="submit" class="btn btn-primary">Add File</button>
+						</div>
+					</form>
+				
+					<!-- Loop to display PDF files -->
+					<% for (let i = 0; i < filename.length; i++) { %>
+						<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">
+							<div class="card-header text-center bg-info">
+								<%= filename[i] %>
 							</div>
-						</form>
-						<div class="card mb-3" style="height: 100vh">
-							<div class="card-header"><%= filename %></div>
 							<div class="card-body">
-								<embed src="data:application/pdf;base64, <%= base64PDF %>" width="100%" height="100%" />
+								<!-- Display the PDF for each file -->
+								<embed src="data:application/pdf;base64, <%= base64PDF[i] %>" width="100%" height="100%" />
 							</div>
 						</div>
+					<% } %>
 				</div>
+				
 			</div>
 		</div>
 	</div>

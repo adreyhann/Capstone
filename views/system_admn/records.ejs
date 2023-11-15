@@ -382,10 +382,10 @@
 		
 					if (response.ok) {
 						// Optionally, you can update the UI or show a success message
-						console.log('Record moved to archive successfully');
+						alert('Record moved to archive successfully');
 						location.reload(); // Refresh the page to reflect the changes
 					} else {
-						console.error('Failed to move record to archive');
+						alert('Failed to move record to archive');
 						// Handle error, show a message, etc.
 					}
 				} catch (error) {

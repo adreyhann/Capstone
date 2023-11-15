@@ -26,7 +26,7 @@
 			defer
 			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
 		></script>
-		
+
 		<script
 			defer
 			src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"
@@ -191,22 +191,18 @@
 					<h2 class="my-1">Records Management</h2>
 					<hr />
 					<div class="container w-100 position-relative">
+						<% try { %>
+							<%- include('../credentials/flash-message.ejs') %>
+						  <% } catch (error) { %>
+							<div>Error: <%= error.message %></div>
+						  <% } %>
 						<a
 							id="addRow"
 							class="btn btn-success my-2"
 							href="/systemAdmin/addRecords"
 							>Create new record</a
 						>
-						<a
-							class="icon-link position-absolute top-0 end-0"
-							style="padding-top: 1rem; padding-right: 11px"
-							href="#"
-						>
-							<span class="material-symbols-outlined">
-								settings_backup_restore
-							</span>
-							Backup
-						</a>
+						
 						<table
 							id="example"
 							class="table table-striped hover"
@@ -217,6 +213,7 @@
 									<th>LRN</th>
 									<th>Student Name</th>
 									<th>Gender</th>
+									<th>Transferee</th>
 									<th>Grade level</th>
 									<th>Action</th>
 								</tr>
@@ -227,10 +224,26 @@
 									<td><%= record.lrn %></td>
 									<td><%= record.studentName %></td>
 									<td><%= record.gender %></td>
+									<td><%= record.transferee %></td>
 									<td><%= record.gradeLevel %></td>
 									<td>
-										<a class="btn btn-info btn-sm" href="/systemAdmin/view-files/<%= record._id %>" >View Files</a>
+										<a
+											class="btn btn-info btn-sm"
+											href="/systemAdmin/view-files/<%= record._id %>"
+											>View Files</a
+										>
+										<button
+											type="button"
+											class="btn btn-sm btn-warning"
+											data-bs-toggle="modal"
+											data-bs-target="#editRecordModal"
+											onclick="populateEditForm('<%= record._id %>', '<%= record.lrn %>', '<%= record.studentName %>', '<%= record.gender %>', '<%= record.transferee %>', '<%= record.gradeLevel %>')"
+										>
+											Edit
+										</button>
+										<button type="button" class="btn btn-danger btn-sm">Add to archive</button>
 									</td>
+
 									<!-- Add more cells based on your user schema -->
 								</tr>
 								<% }); %>
@@ -240,32 +253,119 @@
 									<th>LRN</th>
 									<th>Student Name</th>
 									<th>Gender</th>
+									<th>Transferee</th>
 									<th>Grade level</th>
 									<th>Action</th>
 								</tr>
 							</tfoot>
 						</table>
 					</div>
-					
 				</div>
 			</div>
-			
 		</div>
-		<!-- Add this modal at the end of your HTML body -->
-		<!-- <div class="modal fade" id="pdfviewer" tabindex="-1" aria-labelledby="pdfviewer" aria-hidden="true">
-			<div class="modal-dialog modal-lg">
-			  <div class="modal-content">
-				<div class="modal-header">
-				  <h1 class="modal-title fs-5" id="pdfviewer">View File</h1>
-				  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		<!-- Add a modal for editing records -->
+		<div
+			class="modal fade"
+			id="editRecordModal"
+			tabindex="-1"
+			aria-labelledby="editRecordModalLabel"
+			aria-hidden="true"
+		>
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="editRecordModalLabel">Edit Record</h5>
+						<button
+							type="button"
+							class="btn-close"
+							data-bs-dismiss="modal"
+							aria-label="Close"
+						></button>
+					</div>
+					<div class="modal-body">
+						<!-- Form for editing records -->
+						<form id="editRecordForm" method="post">
+							<div class="form-floating mb-3">
+								<input
+									type="number"
+									class="form-control"
+									name="editLrn"
+									id="editLrn"
+									placeholder="Learner Reference Number(LRN)"
+									required
+								/>
+								<label for="editLrn">Learner Reference Number (LRN)</label>
+							</div>
+							<div class="form-floating mb-3">
+								<input
+									type="text"
+									class="form-control"
+									name="editName"
+									id="editName"
+									placeholder="Full Name"
+									required
+								/>
+								<label for="editName">Full Name</label>
+							</div>
+
+							<div class="form-floating mb-3">
+								<select class="form-select" name="editGender" id="editGender" required>
+									<option disabled>Select gender</option>
+									<option value="Male">Male</option>
+									<option value="Female">Female</option>
+								</select>
+								<label for="editGender">Gender</label>
+							</div>
+							<div class="form-floating mb-3">
+								<select class="form-select" name="editTransferee" id="editTransferee" required>
+									<option disabled>Is student transferee</option>
+									<option value="Yes">Yes</option>
+									<option value="No">No</option>
+								</select>
+								<label for="editTransferee">Is student transferee?</label>
+							</div>
+							<div class="form-floating mb-3">
+								<select class="form-select" name="editGradeLevel" id="editGradeLevel" required>
+									<option disabled>Select Grade level</option>
+									<option value="Kinder">Kinder</option>
+									<option value="Grade 1">Grade 1</option>
+									<option value="Grade 2">Grade 2</option>
+									<option value="Grade 3">Grade 3</option>
+									<option value="Grade 4">Grade 4</option>
+									<option value="Grade 5">Grade 5</option>
+									<option value="Grade 6">Grade 6</option>
+								</select>
+								<label for="editGradeLevel">Grade level</label>
+							</div>
+							<div class="d-flex justify-content-end">
+								<button type="submit" class="btn btn-success">
+									Save Changes
+								</button>
+							</div>
+						</form>
+					</div>
 				</div>
-				<div class="modal-body">
-				</div>
-				<div class="modal-footer">
-				  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-				</div>
-			  </div>
 			</div>
-		</div> -->
+		</div>
+		<script>
+			// JavaScript function to populate the edit form
+			function populateEditForm(
+				recordId,
+				lrn,
+				name,
+				gender,
+				transferee,
+				gradeLevel
+			) {
+				document
+					.getElementById('editRecordForm')
+					.setAttribute('action', `/systemAdmin/edit-record/${recordId}`);
+				document.getElementById('editLrn').value = lrn;
+				document.getElementById('editName').value = name;
+				document.getElementById('editGender').value = gender;
+				document.getElementById('editTransferee').value = transferee;
+				document.getElementById('editGradeLevel').value = gradeLevel;
+			}
+		</script>
 	</body>
 </html>

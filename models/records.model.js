@@ -15,6 +15,10 @@ const RecordsSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    transferee: {
+        type: String,
+        required: true,
+    },
     gradeLevel: {
         type: String,
         required: true,

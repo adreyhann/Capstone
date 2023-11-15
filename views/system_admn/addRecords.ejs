@@ -238,6 +238,14 @@
                                         <label for="gender">Gender</label>
                                     </div>
 									<div class="form-floating mb-3">
+                                        <select class="form-select" name="transferee" id="transferee" required>
+                                            <option disabled>Is student transferee</option>
+                                            <option value="Yes">Yes</option>
+                                            <option value="No">No</option>
+                                        </select>
+                                        <label for="gender">Is student transferee?</label>
+                                    </div>
+									<div class="form-floating mb-3">
                                         <select class="form-select" name="gradeLevel" id="gradeLevel" required>
                                             <option disabled>Select Grade level</option>
                                             <option value="Kinder">Kinder</option>
@@ -251,7 +259,7 @@
                                         <label for="gradeLevel">Grade level</label>
                                     </div>
 									<div class="input-group mb-3">
-										<input type="file" class="form-control" name="pdfFile" id="pdfFile" accept=".pdf">
+										<input type="file" class="form-control" name="pdfFile" id="pdfFile" accept=".pdf" multiple>
 									  </div>
                                     <div class="card-footer">
                                         <input class="btn btn-success" type="submit" value="Upload" />

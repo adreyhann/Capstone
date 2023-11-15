@@ -125,27 +125,35 @@ router.get('/view-files/:id', async (req, res, next) => {
     }
 });
 
-router.post('/submit-form', upload.single('pdfFile'), async (req, res, next) => {
+router.post('/submit-form', upload.array('pdfFile'), async (req, res, next) => {
 	try {
-		const { lrn, name, gender, gradeLevel } = req.body;
+		const { lrn, name, gender, transferee, gradeLevel } = req.body;
 
-		const file = req.file;
-        const filePath = file ? file.path : null;
+		const files = req.files;
 
-		if (!filePath) {
-			req.flash('error', 'Uploading a file is required. Please select a PDF file to upload.');
-			res.redirect('/systemAdmin/addRecords');
-			return;
-		  }
+		if (files.length > 2) {
+			// Display a flash message for exceeding the maximum allowed files
+			req.flash('error', 'You can only upload up to 2 files.');
+			return res.redirect('/systemAdmin/addRecords'); // Redirect to the upload page or handle it as needed
+		}
 
-		console.log('Attempting to serve file:', filePath);
+        const filePaths = files.map(file => file.path);
+
+		if (!filePaths || filePaths.length === 0) {
+            req.flash('error', 'Uploading at least one file is required. Please select PDF files to upload.');
+            res.redirect('/systemAdmin/addRecords');
+            return;
+        }
+
+		console.log('Attempting to serve file:', filePaths);
 		
 		const newRecord = new Records({
 			lrn: parseInt(lrn),
 			studentName: name,
 			gender: gender,
+			transferee: transferee,
 			gradeLevel: gradeLevel,
-			pdfFilePath: filePath,
+			pdfFilePath: filePaths,
 		});
 
 		
@@ -182,22 +190,31 @@ router.post('/addFile/:recordId', upload.single('pdfFile'), async (req, res, nex
 
         // Check if a file was uploaded
         if (req.file) {
-            const newPdfPath = req.file.path;
+            // Check if the number of files is less than 2
+            if (record.pdfFilePath.length < 2) {
+                const newPdfPath = req.file.path;
 
-            // Update the existing record with the new file path
-            record.pdfFilePath.push(newPdfPath);
-            await record.save();
+                // Update the existing record with the new file path
+                record.pdfFilePath.push(newPdfPath);
+                await record.save();
 
-            // Redirect back to the view-files page
-			req.flash('success', 'Successfully uploaded');
-            res.redirect(`/systemAdmin/view-files/${recordId}`);
+                // Redirect back to the view-files page
+                req.flash('success', 'Successfully uploaded');
+                res.redirect(`/systemAdmin/view-files/${recordId}`);
+            } else {
+                // Display a flash message for exceeding the maximum allowed files
+                req.flash('error', 'You can only upload up to 2 files.');
+                res.redirect(`/systemAdmin/view-files/${recordId}`);
+            }
         } else {
+            req.flash('error', 'No file uploaded');
             res.status(400).send('No file uploaded');
         }
     } catch (error) {
         console.error('Error:', error);
         next(error);
     }
+
 });
 
 router.post('/deleteFile/:recordId/:index', async (req, res, next) => {
@@ -209,7 +226,8 @@ router.post('/deleteFile/:recordId/:index', async (req, res, next) => {
         const record = await Records.findById(recordId);
 
         if (!record) {
-            res.status(404).send('Record not found');
+            req.flash('error', 'Record not found');
+            res.redirect(`/systemAdmin/view-files/${recordId}`); // Redirect to an error route
             return;
         }
 
@@ -218,7 +236,13 @@ router.post('/deleteFile/:recordId/:index', async (req, res, next) => {
             // Remove the file path at the specified index
             record.pdfFilePath.splice(index, 1);
             await record.save();
-        }
+
+			// Set success flash message
+            req.flash('success', 'File successfully deleted');
+        } else {
+			// Set error flash message for an invalid file index
+            req.flash('error', 'Invalid file index');
+		}
 
         // Redirect back to the view-files page
         res.redirect(`/systemAdmin/view-files/${recordId}`);
@@ -228,6 +252,37 @@ router.post('/deleteFile/:recordId/:index', async (req, res, next) => {
     }
 });
 
+// Add this route for handling record updates
+router.post('/edit-record/:recordId', async (req, res, next) => {
+    try {
+        const recordId = req.params.recordId;
+
+        // Find the record by ID
+        const record = await Records.findById(recordId);
+
+        if (!record) {
+            res.status(404).send('Record not found');
+            return;
+        }
+
+        // Update the record with new values
+		record.lrn = req.body.editLrn;
+        record.studentName = req.body.editName;
+        record.gender = req.body.editGender;
+		record.transferee = req.body.editTransferee;
+        record.gradeLevel = req.body.editGradeLevel;
+
+        // Save the updated record
+        await record.save();
+
+        // Redirect back to the records page
+        req.flash('success', 'Record updated successfully');
+        res.redirect('/systemAdmin/records');
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
 
 
 

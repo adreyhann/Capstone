@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<script
+			src="https://kit.fontawesome.com/ae360af17e.js"
+			crossorigin="anonymous"
+		></script>
+		<link
+			href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+			rel="stylesheet"
+			integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+			crossorigin="anonymous"
+		/>
+		<script
+			defer
+			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+		></script>
+		<script defer src="https://code.jquery.com/jquery-3.7.0.js"></script>
+		<script
+			defer
+			src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"
+		></script>
+		<script
+			defer
+			src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"
+		></script>
+		<!-- <script defer src="/js/calendar.js"></script> -->
+		<script defer src="/js/toggler.js"></script>
+		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
+		<title>Calendar</title>
+	</head>
+	<body>
+		<div class="wrapper">
+			<aside id="sidebar">
+				<div class="h-50">
+					<div class="sidebar-logo">
+						<a href="">
+							<img
+								src="/img/logo.png"
+								class="img-thumbnail border-0"
+								alt="BCA"
+							/>
+						</a>
+					</div>
+					<hr class="mx-4 mt-0" style="width: 13rem" />
+					<div class="container my-2">
+						<div class="row">
+							<div class="col-md-4 mx-2">
+								<img
+									src="/img/pain.jpg"
+									class="img-fluid img-thumbnail"
+									alt="..."
+								/>
+							</div>
+							<div class="col-md-6">
+								<p class="my-0" style="font-size: 15px"><%= person.name %></p>
+								<span class="badge rounded-pill text-bg-info my-0"
+									>System Admin</span
+								>
+							</div>
+						</div>
+					</div>
+					<!-- Sidebar Navigation -->
+					<ul class="sidebar-nav">
+						<li class="sidebar-item">
+							<a
+								href="/classAdvisor/dashboard"
+								class="sidebar-link collapsed"
+								data-bs-target="#dashboard"
+								aria-expanded="false"
+								aria-controls="dashboard"
+							>
+								<i class="fa-solid fa-sliders pe-2"></i>
+								Dashboard
+							</a>
+						</li>
+						<li class="sidebar-item">
+							<a
+								href="/classAdvisor/records"
+								class="sidebar-link"
+								aria-expanded="false"
+								aria-controls="pages"
+							>
+								<i class="fa-regular fa-file-lines pe-2"></i>
+								Records Management
+							</a>
+						</li>
+						<li class="sidebar-item">
+							<a
+								href="/classAdvisor/archives"
+								class="sidebar-link"
+								aria-expanded="false"
+								aria-controls="auth"
+							>
+								<i class="fa-regular fa-user pe-2"></i>
+								Archives
+							</a>
+						</li>
+						<li class="sidebar-item">
+							<a
+								href="/classAdvisor/calendar"
+								class="sidebar-link"
+								data-bs-target="#dashboard"
+								aria-expanded="false"
+								aria-controls="dashboard"
+							>
+								<i class="fa-regular fa-calendar pe-2"></i>
+								Calendar
+							</a>
+						</li>
+					</ul>
+				</div>
+			</aside>
+
+			<div class="main">
+				<nav class="navbar navbar-expand-lg px-1 border-bottom">
+					<!-- Button for sidebar toggle -->
+					<div class="container-fluid">
+						<button class="btn" type="button" data-bs-theme="light">
+							<span class="navbar-toggler-icon"></span>
+						</button>
+
+						<ul class="navbar-nav">
+							<!-- Added this ul element for right-aligned items -->
+							<li class="nav-item dropdown">
+								<a
+									class="nav-link dropdown-toggle"
+									href="#"
+									role="button"
+									data-bs-toggle="dropdown"
+									aria-expanded="false"
+								>
+									<span class="fa-solid fa-user pe-2"></span>
+								</a>
+								<ul class="dropdown-menu dropdown-menu-lg-end">
+									<li>
+										<a class="dropdown-item" href="/classAdvisor/profile"
+											>View Profile</a
+										>
+									</li>
+									<li><hr class="dropdown-divider" /></li>
+									<li>
+										<a class="dropdown-item" href="/auth/logout">Logout</a>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</nav>
+				<div class="container">
+					<h2 class="mt-2">Calendar</h2>
+					<hr>
+				
+					<div class="container mt-2" id='calendar'></div>
+				
+					<script>
+					  var events = JSON.stringify(events); // Replace with actual events data
+				
+					  document.addEventListener('DOMContentLoaded', function () {
+						var calendarEl = document.getElementById('calendar');
+						var calendar = new FullCalendar.Calendar(calendarEl, {
+						  selectable: true,
+						  headerToolbar: {
+							left: 'prev,next today',
+							center: 'title',
+							right: 'dayGridMonth,timeGridWeek,timeGridDay'
+						  },
+						  dateClick: function (info) {
+							var eventData = prompt('Enter event title:');
+							if (eventData) {
+							  var event = {
+								title: eventData,
+								start: info.date,
+								allDay: true
+							  };
+				
+							  // Send the event to the server to save
+							  fetch('/events', {
+								method: 'POST',
+								headers: {
+								  'Content-Type': 'application/json'
+								},
+								body: JSON.stringify(event)
+							  })
+								.then(response => response.json())
+								.then(data => {
+								  event.id = data.id;
+								  calendar.addEvent(event);
+								})
+								.catch(err => {
+								  console.error(err);
+								});
+							}
+						  },
+						  eventClick: function (info) {
+							var action = prompt('Edit or Delete event (e/d)?');
+							if (action === 'e') {
+							  var newEventData = prompt('Edit event title:', info.event.title);
+							  if (newEventData) {
+								var event = info.event;
+								event.title = newEventData;
+				
+								// Update the event on the server
+								fetch('/events/' + event.id, {
+								  method: 'PUT',
+								  headers: {
+									'Content-Type': 'application/json'
+								  },
+								  body: JSON.stringify(event)
+								})
+								  .then(response => response.json())
+								  .then(data => {
+									calendar.updateEvent(event);
+								  })
+								  .catch(err => {
+									console.error(err);
+								  });
+							  }
+							} else if (action === 'd') {
+							  var deleteConfirmation = confirm('Are you sure you want to delete this event?');
+							  if (deleteConfirmation) {
+								// Delete the event from the server
+								fetch('/events/' + info.event.id, {
+								  method: 'DELETE'
+								})
+								  .then(response => response.json())
+								  .then(data => {
+									if (data.deleted) {
+									  calendar.removeEvent(info.event);
+									}
+								  })
+								  .catch(err => {
+									console.error(err);
+								  });
+							  }
+							}
+						  },
+						  events: events
+						});
+				
+						calendar.render();
+					  });
+					</script>
+				  </div>
+			</div>
+		</div>
+	</body>
+</html>

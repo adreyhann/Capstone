@@ -63,8 +63,9 @@ app.use((req, res, next) => {
 // this handle all the routes
 app.use('/', require('./routes/index.route'));
 app.use('/auth', require('./routes/auth-routes'));
-app.use('/systemAdmin', ensureAuthenticated, require('./routes/system.admin.route'));
-
+app.use('/systemAdmin', ensureAuthenticated, ensureSystemAdmin, require('./routes/system.admin.route'));
+app.use('/classAdvisor', ensureAuthenticated, require('./routes/advisor.route'));
+app.use('/admin', ensureAuthenticated, require('./routes/admin.route'));
 
 // error handler (404)
 app.use((req, res, next) => {
@@ -74,7 +75,6 @@ app.use((req, res, next) => {
 app.use((error, req, res, next) => {
 	error.status = error.status || 500;
 	res.status(error.status);
-	// res.render('error_40x', { error });
 	res.json({ error: error.message });
 });
 
@@ -99,10 +99,13 @@ function ensureAuthenticated(req, res, next) {
 	}
 }
 
-// function ensureSystemAdmin(req, res, next) {
-// 	if(req.user.role === roles.systemAdmin) {
-// 		next()
-// 	} else{
-// 		res.status(403).send('Access Forbidden: You are not a system administrator.');
-// 	}
-// }
+function ensureSystemAdmin(req, res, next) {
+	if (req.user && req.user.role === 'System Admin') {
+	  // User is a system administrator, allow access
+	  next();
+	} else {
+	  // User is not a system administrator, deny access
+	  res.status(403).send('Access Forbidden: You are not a system administrator.');
+	}
+  }
+  

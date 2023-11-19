@@ -4,7 +4,9 @@ const { body, validationResult } = require('express-validator');
 const passport = require('passport');
 
 router.get('/register', ensureAuthenticated, async (req, res, next) => {
-	res.render('credentials/register');
+	const person = req.user;
+	const currentUserRole = req.user.role;
+	res.render('credentials/register', {person, currentUserRole});
 });
 
 router.post(
@@ -35,7 +37,9 @@ router.post(
 				errors.array().forEach((error) => {
 					req.flash('error', error.msg);
 				});
+				const person = req.user;
 				res.render('credentials/register', {
+					person,
 					email: req.body.email,
 					messages: req.flash(),
 				});
@@ -55,7 +59,9 @@ router.post(
 			req.flash('success', `${user.email} is succesfully registered`);
 			res.redirect('/auth/register');
 		} catch (error) {
+			const person = req.user;
 			res.render('credentials/register', {
+				person,
 				email: req.body.email,
 				messages: req.flash(),
 				error: error.message,
@@ -68,15 +74,48 @@ router.get('/login', ensureNotAuthenticated, async (req, res, next) => {
 	res.render('credentials/login');
 });
 
+// router.post(
+// 	'/login',
+// 	ensureNotAuthenticated,
+// 	passport.authenticate('local', {
+// 		successRedirect: '/systemAdmin/dashboard', // Redirect to the dashboard on successful login
+// 		failureRedirect: '/auth/login', // Redirect to the login page on failed login
+// 		failureFlash: true, // Enable flash messages for error handling
+// 	})
+// );
+
 router.post(
 	'/login',
 	ensureNotAuthenticated,
 	passport.authenticate('local', {
-		successRedirect: '/systemAdmin/dashboard', // Redirect to the dashboard on successful login
-		failureRedirect: '/auth/login', // Redirect to the login page on failed login
-		failureFlash: true, // Enable flash messages for error handling
-	})
-);
+	  failureRedirect: '/auth/login',
+	  failureFlash: true,
+	}),
+	(req, res) => {
+	  // Redirect logic based on user role
+	  const userRole = req.user.role;
+  
+	  switch (userRole) {
+		case 'System Admin':
+		  res.redirect('/systemAdmin/dashboard');
+		  break;
+		case 'Class Advisor':
+		  res.redirect('/classAdvisor/dashboard');
+		  break;
+		case 'Admin':
+		  res.redirect('/admin/dashboard');
+		  break;
+		// Add more cases for other roles as needed
+		default:
+		  res.redirect('/auth/login');
+	  }
+	}
+  );
+  
+
+
+  
+  
 
 router.get('/logout', ensureAuthenticated, async (req, res, next) => {
 	req.logout(function (err) {

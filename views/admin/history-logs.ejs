@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		
+        <link
+			href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+			rel="stylesheet"
+			integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+			crossorigin="anonymous"
+		/>
+		<script
+			defer
+			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+			integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+			crossorigin="anonymous"
+		></script>
+        <script
+            defer
+			src="https://kit.fontawesome.com/ae360af17e.js"
+			crossorigin="anonymous"
+		></script>
+        <script defer src="/js/toggler.js"></script>
+        <link rel="stylesheet" type="text/css" href="/css/styles.css">
+		<title>Profile</title>
+	</head>
+	<body>
+		<div class="wrapper">
+			<!-- Sidebar -->
+			<aside id="sidebar">
+				<div class="h-50">
+					<div class="sidebar-logo">
+						<a href="">
+							<img
+								src="/img/logo.png"
+								class="img-thumbnail border-0"
+								alt="BCA"
+							/>
+						</a>
+					</div>
+					<hr class="mx-4 mt-0" style="width: 13rem; ">
+					<div class="container my-2">
+						<div class="row">
+							<div class="col-md-4 mx-2">
+								<img src="../img/pain.jpg" class="img-fluid img-thumbnail" alt="...">
+							</div>
+							<div class="col-md-6">
+								<p class="my-0" style="font-size: 15px;"><%= person.name %></p>
+								<span class="badge rounded-pill text-bg-info my-0">System Admin</span>
+							</div>
+						</div>
+					</div>
+					<!-- Sidebar Navigation -->
+					<ul class="sidebar-nav">
+						<li class="sidebar-item">
+							<a
+								href="/admin/dashboard"
+								class="sidebar-link collapsed"
+								data-bs-target="#dashboard"
+								aria-expanded="false"
+								aria-controls="dashboard"
+							>
+								<i class="fa-solid fa-sliders pe-2"></i>
+								Dashboard
+							</a>
+						</li>
+						<li class="sidebar-item">
+							<a
+								href="/admin/accounts"
+								class="sidebar-link"
+								aria-expanded="false"
+								aria-controls="users"
+							>
+								<i class="fa-solid fa-user pe-2"></i>
+								Account Management
+							</a>
+						</li>
+						<li class="sidebar-item">
+							<a
+								href="/admin/records"
+								class="sidebar-link"
+								aria-expanded="false"
+								aria-controls="pages"
+							>
+								<i class="fa-regular fa-file-lines pe-2"></i>
+								Records Management
+							</a>
+						</li>
+						<li class="sidebar-item">
+							<a
+								href="/admin/archives"
+								class="sidebar-link"
+								aria-expanded="false"
+								aria-controls="auth"
+							>
+								<i class="fa-regular fa-user pe-2"></i>
+								Archives
+							</a>
+						</li>
+						<li class="sidebar-item">
+							<a
+								href="/admin/calendar"
+								class="sidebar-link collapsed"
+								data-bs-target="#dashboard"
+								aria-expanded="false"
+								aria-controls="dashboard"
+							>
+								<i class="fa-regular fa-calendar pe-2"></i>
+								Calendar
+							</a>
+						</li>
+						<li class="sidebar-item">
+							<a
+								href="/admin/reports"
+								class="sidebar-link collapsed"
+								data-bs-target="#dashboard"
+								aria-expanded="false"
+								aria-controls="dashboard"
+							>
+								<i class="fa-regular fa-flag pe-2"></i>
+								Reports
+							</a>
+						</li>
+					</ul>
+				</div>
+			</aside>
+			<!-- Main Component -->
+			<div class="main">
+				<nav class="navbar navbar-expand-lg px-1 border-bottom">
+					<!-- Button for sidebar toggle -->
+					<div class="container-fluid">
+						<button class="btn" type="button" data-bs-theme="light">
+							<span class="navbar-toggler-icon"></span>
+						</button>
+						<ul class="navbar-nav">
+							<!-- Added this ul element for right-aligned items -->
+							<li class="nav-item dropdown">
+								<a
+									class="nav-link dropdown-toggle"
+									href="#"
+									role="button"
+									data-bs-toggle="dropdown"
+									aria-expanded="false"
+								>
+									<span class="fa-solid fa-user pe-2"></span>
+								</a>
+								<ul class="dropdown-menu dropdown-menu-lg-end">
+									<li><a class="dropdown-item" href="/admin/profile">View Profile</a></li>
+									<li><a class="dropdown-item" href="/admin/historyLogs">History Logs</a></li>
+									<li><hr class="dropdown-divider" /></li>
+									<li>
+										<a class="dropdown-item" href="/auth/logout">Logout</a>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</nav>
+				<div class="container-lg position-relative">
+					<h2 class="mt-2">History logs</h2>
+					
+					<hr />
+					<div class="dropdown position-absolute top-0 end-0" style="padding-top: 20px; margin-right: 10px;">
+						<button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+						  Filter by user
+						</button>
+						<ul class="dropdown-menu">
+						  <li><a class="dropdown-item" href="#">All users</a></li>
+						  <li><a class="dropdown-item" href="#">Adrian Melibo</a></li>
+						  <li><a class="dropdown-item" href="#">Ryan Montemayor</a></li>
+						</ul>
+					</div>
+					<!-- <div class="dropdown position-absolute top-0 end-0" style="padding-top: 20px; padding-right: 8rem; margin-right: 10px;">
+						<button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+						  Filter by action
+						</button>
+						<ul class="dropdown-menu">
+						  <li><a class="dropdown-item" href="#">Upload</a></li>
+						  <li><a class="dropdown-item" href="#">Archived</a></li>
+						  <li><a class="dropdown-item" href="#">Modify</a></li>
+						  <li><a class="dropdown-item" href="#">Log in</a></li>
+						  <li><a class="dropdown-item" href="#">Log out</a></li>
+						</ul>
+					</div> -->
+					<div class="card my-2 custom-card-2 border-0">
+						<div class="card-body position-relative">
+							<p class="m-0 fs-5 fw-medium">Ryan uploaded a document.</p>
+							<p class="m-0" style="color: #72726e">Today 12:30pm</p>
+							<p
+								class="d-inline-flex gap-1 mb-0 position-absolute top-0 end-0 translate-middle"
+								style="padding-top: 80px"
+							>
+								<a
+									class="btn btn-primary "
+									data-bs-toggle="collapse"
+									href="#collapseExample"
+									role="button"
+									aria-expanded="false"
+									aria-controls="collapseExample"
+								>
+									View details
+								</a>
+							</p>
+							<div class="collapse" id="collapseExample">
+								<div class="card card-body">
+									Lorem, ipsum dolor sit amet consectetur adipisicing elit.
+									Ipsam dolorem ratione odit aspernatur enim saepe repudiandae,
+									corrupti, rerum quibusdam laboriosam eveniet deserunt, unde
+									dicta ad inventore modi fuga tempore nobis!
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="card my-2 custom-card-2 border-0">
+						<div class="card-body">
+							<p class="m-0 fs-5">Ryan logged in.</p>
+							<p class="m-0" style="color: #72726e">Today 11:00am</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

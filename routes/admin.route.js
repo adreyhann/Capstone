@@ -5,67 +5,76 @@ const fs = require('fs');
 const { PDFDocument } = require('pdf-lib');
 const User = require('../models/user.model');
 const { Records, Archives } = require('../models/records.model');
-const Event = require('../models/events.model');
 
 router.get('/dashboard', async (req, res, next) => {
 	// console.log(req.user)
 	const person = req.user;
+    const currentUserRole = req.user.role;
 	const users = await User.find();
 	const records = await Records.find();
 	const archives = await Archives.find();
-	res.render('system_admn/dashboard', { person, users, records, archives });
+    function countAdminRecords(records) {
+        // Your logic to count records for Admin
+        return records.filter(record => record.role === 'Admin').length;
+      }
+	res.render('admin/dashboard', { person, users, records, archives, currentUserRole, countAdminRecords });
 });
+
+
 
 router.get('/accounts', async (req, res, next) => {
 	const person = req.user;
+    const currentUserRole = req.user.role;
 	const users = await User.find();
-	res.render('system_admn/accounts', { person, users });
+	res.render('admin/accounts', { person, users, currentUserRole });
 });
 
 router.get('/records', async (req, res, next) => {
 	const person = req.user;
 	const records = await Records.find();
-	res.render('system_admn/records', { person, records });
+	res.render('admin/records', { person, records });
 });
 
 router.get('/archives', async (req, res, next) => {
 	const person = req.user;
 	const archivedRecord = await Archives.find();
-	res.render('system_admn/archives', { person, archivedRecord });
+	res.render('admin/archives', { person, archivedRecord });
 });
 
 router.get('/calendar', async (req, res, next) => {
 	const person = req.user;
-	res.render('system_admn/calendar', { person });
+	res.render('admin/calendar', { person });
 });
 
 router.get('/reports', async (req, res, next) => {
 	const person = req.user;
-	res.render('system_admn/reports', { person });
+	res.render('admin/reports', { person });
 });
 
 router.get('/profile', async (req, res, next) => {
 	const person = req.user;
-	res.render('system_admn/profile', { person });
+	res.render('admin/profile', { person });
 });
 
 router.get('/historyLogs', async (req, res, next) => {
 	const person = req.user;
-	res.render('system_admn/history-logs', { person });
+	res.render('admin/history-logs', { person });
 });
 
 router.get('/users', async (req, res, next) => {
 	try {
+        const currentUserRole = req.user.role;
 		const users = await User.find();
-		res.render('users', { users });
+		res.render('users', { users, currentUserRole });
 	} catch (error) {
 		next(error);
 	}
 });
 
+
 router.get('/addRecords', async (req, res, next) => {
 	const person = req.user;
-	res.render('system_admn/addRecords', { person });
+	res.render('admin/addRecords', { person });
 });
 
 const storage = multer.diskStorage({
@@ -122,7 +131,7 @@ router.get('/view-files/:id', async (req, res, next) => {
 		});
 
 		const person = req.user;
-		res.render('system_admn/view-files', {
+		res.render('admin/view-files', {
 			student,
 			person,
 			base64PDF,
@@ -143,7 +152,7 @@ router.post('/submit-form', upload.array('pdfFile'), async (req, res, next) => {
 		if (files.length > 2) {
 			// Display a flash message for exceeding the maximum allowed files
 			req.flash('error', 'You can only upload up to 2 files.');
-			return res.redirect('/systemAdmin/addRecords'); // Redirect to the upload page or handle it as needed
+			return res.redirect('/admin/addRecords'); // Redirect to the upload page or handle it as needed
 		}
 
 		const filePaths = files.map((file) => file.path);
@@ -153,7 +162,7 @@ router.post('/submit-form', upload.array('pdfFile'), async (req, res, next) => {
 				'error',
 				'Uploading at least one file is required. Please select PDF files to upload.'
 			);
-			res.redirect('/systemAdmin/addRecords');
+			res.redirect('/admin/addRecords');
 			return;
 		}
 
@@ -171,8 +180,8 @@ router.post('/submit-form', upload.array('pdfFile'), async (req, res, next) => {
 		const savedRecord = await newRecord.save();
 
 		req.flash('success', `${savedRecord.studentName} is succesfully saved`);
-		res.redirect('/systemAdmin/addRecords');
-		res.redirect(`/systemAdmin/view-files/${savedRecord._id}`);
+		res.redirect('/admin/addRecords');
+		res.redirect(`/admin/view-files/${savedRecord._id}`);
 	} catch (error) {
 		if (
 			error.code === 11000 &&
@@ -180,7 +189,7 @@ router.post('/submit-form', upload.array('pdfFile'), async (req, res, next) => {
 			error.keyPattern.lrn === 1
 		) {
 			req.flash('error', 'LRN already exists. Please enter a different LRN.');
-			res.redirect('/systemAdmin/addRecords');
+			res.redirect('/admin/addRecords');
 		} else {
 			next(error);
 		}
@@ -214,11 +223,11 @@ router.post(
 
 					// Redirect back to the view-files page
 					req.flash('success', 'Successfully uploaded');
-					res.redirect(`/systemAdmin/view-files/${recordId}`);
+					res.redirect(`/admin/view-files/${recordId}`);
 				} else {
 					// Display a flash message for exceeding the maximum allowed files
 					req.flash('error', 'You can only upload up to 2 files.');
-					res.redirect(`/systemAdmin/view-files/${recordId}`);
+					res.redirect(`/admin/view-files/${recordId}`);
 				}
 			} else {
 				req.flash('error', 'No file uploaded');
@@ -241,7 +250,7 @@ router.post('/deleteFile/:recordId/:index', async (req, res, next) => {
 
 		if (!record) {
 			req.flash('error', 'Record not found');
-			res.redirect(`/systemAdmin/view-files/${recordId}`); // Redirect to an error route
+			res.redirect(`/admin/view-files/${recordId}`); // Redirect to an error route
 			return;
 		}
 
@@ -259,7 +268,7 @@ router.post('/deleteFile/:recordId/:index', async (req, res, next) => {
 		}
 
 		// Redirect back to the view-files page
-		res.redirect(`/systemAdmin/view-files/${recordId}`);
+		res.redirect(`/admin/view-files/${recordId}`);
 	} catch (error) {
 		console.error('Error:', error);
 		next(error);
@@ -291,7 +300,7 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 
 		// Redirect back to the records page
 		req.flash('success', 'Record updated successfully');
-		res.redirect('/systemAdmin/records');
+		res.redirect('/admin/records');
 	} catch (error) {
 		console.error('Error:', error);
 		next(error);
@@ -328,12 +337,12 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
 		await Records.findByIdAndDelete(recordId);
 
 		req.flash('success', 'Record moved to archive successfully');
-		res.redirect('/systemAdmin/records');
+		res.redirect('/admin/records');
 	} catch (error) {
 		console.error('Error:', error);
 		// Handle errors appropriately, e.g., flash an error message
 		req.flash('error', 'Failed to move record to archive');
-		res.redirect('/systemAdmin/records');
+		res.redirect('/admin/records');
 	}
 });
 
@@ -372,7 +381,7 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
 
 		const person = req.user;
 
-		res.render('system_admn/archived-files', {
+		res.render('admin/archived-files', {
 			archivedRecord,
 			student,
 			person,
@@ -384,7 +393,6 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
 		next(error);
 	}
 });
-
 
 
 

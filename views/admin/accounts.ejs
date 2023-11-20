@@ -172,8 +172,13 @@
 					</h2>
 					<hr>
 					<div class="container w-100">
+						<% try { %>
+							<%- include('../credentials/flash-message.ejs') %>
+						  <% } catch (error) { %>
+							<div>Error: <%= error.message %></div>
+						  <% } %>
 						<a
-							class="btn btn-success my-2"
+							class="btn btn-success btn-sm my-2"
 							href="/auth/register"
 							>Add users</a
 						>
@@ -190,7 +195,7 @@
 									<th>Class Advisory</th>
 									<th>Subject Advisory</th>
 									<th>Email</th>
-									<!-- <th>Action</th> -->
+									<th>Action</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -202,6 +207,21 @@
 										<td><%= user.classAdvisory %></td>
 										<td><%= user.subjectAdvisory %></td>
 										<td><%= user.email %></td>
+										
+										<td>
+											<button
+												type="button"
+												class="btn btn-sm btn-warning"
+												data-bs-toggle="modal"
+												data-bs-target="#editUserModal"
+												onclick="populateUserForm('<%= user._id %>', '<%= user.name %>', '<%= user.role %>', '<%= user.classAdvisory %>', '<%= user.subjectAdvisory %>', '<%= user.email %>')"
+											>
+												Edit
+											</button>
+											<button class="btn btn-danger btn-sm">
+												Deactivate
+											</button>
+										</td>
 										<!-- Add more cells based on your user schema -->
 									  </tr>
 									<% } %>
@@ -215,113 +235,128 @@
 									<th>Class Advisory</th>
 									<th>Subject Advisory</th>
 									<th>Email</th>
-									<!-- <th>Action</th> -->
+									<th>Action</th>
 								</tr>
 							</tfoot>
 						</table>
 					</div>
-						
-						<!-- <div
-						class="modal fade modal-lg"
-						id="reg-modal"
-						data-bs-backdrop="static" 
-						data-bs-keyboard="false"
+					<div
+						class="modal fade"
+						id="editUserModal"
 						tabindex="-1"
-						aria-labelledby="modal-title"
+						aria-labelledby="editRecordModalLabel"
 						aria-hidden="true"
 					>
-						<div class="modal-dialog modal-dialog-scrollable">
+						<div class="modal-dialog">
 							<div class="modal-content">
 								<div class="modal-header">
-									<h5 class="modal-title" id="modal-title">Add new user</h5>
-									<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>
+									<h5 class="modal-title" id="editRecordModalLabel">Edit Account details</h5>
+									<button
+									type="button"
+									class="btn-close"
+									data-bs-dismiss="modal"
+									aria-label="Close"
+									></button>
 								</div>
 								<div class="modal-body">
-									<form >
-										
-										<div class="row">
-											<div class="col">
-												<label for="modal-email" class="form-label mt-2">Enter email address</label>
-												<input type="email" class="form-control" id="modal-email" name="email-address" placeholder="@example.com" required>
-											</div>
-										
+									<form id="editUserForm" method="post">
+										<div class="form-floating mb-3">
+											<input
+												type="text"
+												class="form-control"
+												name="editName"
+												id="editName"
+												required
+											/>
+											<label for="editName">Full Name</label>
 										</div>
-										<div class="row my-2">
-											<div class="col-6">
-												<label for="pass m-0" class="form-label">Create password</label>
-												<input type="text" class="form-control" id="pass" name="pass" placeholder="Create password" required>
-											</div>
-											<div class="col-6">
-												<label for="con-pass m-0" class="form-label">Confirm Password</label>
-												<input type="text" class="form-control" id="con-pass" name="con-pass" placeholder="Confirm password" required>
-											</div>
+										<div class="form-floating mb-3">
+											<input
+												type="email"
+												class="form-control"
+												name="editEmail"
+												id="editEmail"
+												required
+											/>
+											<label for="editEmail">Email</label>
 										</div>
-										<hr>
-										<div class="row my-2">
-											<h5 class="mb-3">Personal Information</h5>
-											<div class="col-6">
-												<label for="lname m-0" class="form-label">Last Name</label>
-												<input type="text" class="form-control" id="lname" name="lname" placeholder="Last Name" required>
-											</div>
-											<div class="col-6">
-												<label for="fname m-0" class="form-label">First Name</label>
-												<input type="text" class="form-control" id="fname" name="fname" placeholder="First Name" required>
-											</div>
-											<div class="col-6 mt-2">
-												<label for="gender" class="form-label">Gender</label>
-												<select class="form-select" id="gender" name="gender" aria-label="Default select example">
-													<option disabled selected>Choose Gender</option>
-													<option value="male">Male</option>
-													<option value="female">Female</option>
-												</select>
-											</div>
-											<div class="col-6 mt-2">
-												<label for="contact-num m-0" class="form-label">Contact Number</label>
-												<input type="number" class="form-control" id="contact-num" name="contact-num" placeholder="Phone number" required>
-											</div>
-											<div class="col-6 mt-3">
-												<label for="validationDefault04" class="form-label">Subject Advisory</label>
-												<select class="form-select" id="validationDefault04" name="subjects" required>
-													<option value="" disabled selected>Select subject</option>
-													<option value="">Filipino</option>
-													<option value="">AP</option>
-													<option value="">Values</option>
-													<option value="">Civics</option>
-													<option value="">EPP</option>
-													<option value="">Science</option>
-													<option value="">MAPEH</option>
-													<option value="">Math</option>
-
-												</select>
-											</div>
-											<div class="col-6 mt-3">
-												<label for="validationDefault04" class="form-label">Role</label>
-												<select class="form-select" id="validationDefault04" name="role" required>
-													<option value="" disabled selected>Select role</option>
-													<option>Admin</option>
-													<option value="">Class Advisor</option>
-													<option>Class Advisor <p class="text-info">(kinder)</p></option>
-													<option>Class Advisor <p class="text-info">(Grade 1)</option>
-													<option>Class Advisor <p class="text-info">(Grade 2)</option>
-													<option>Class Advisor <p class="text-info">(Grade 3)</option>
-													<option>Class Advisor <p class="text-info">(Grade 4)</option>
-													<option>Class Advisor <p class="text-info">(Grade 5)</small></option>
-													<option>Class Advisor <p class="text-info">(Grade 6)</option>
-												</select>
-											</div>
+										<div class="form-floating mb-3">
+											<select class="form-select" name="editRole" id="editRole" required>
+											  <% if (currentUserRole === 'System Admin') { %>
+												<option value="System Admin">System Admin</option>
+												<option value="Admin">Admin</option>
+												<option value="Class Advisor">Class Advisor</option>
+											  <% } else if (currentUserRole === 'Admin') { %>
+												<option value="Admin" selected disabled>Select role</option>
+												<option value="Class Advisor">Class Advisor</option>
+											  <% } else { %>
+												<option disabled>Select role</option>
+											  <% } %>
+											</select>
+											<label for="editRole">Role</label>
+										  </div>
+										  <div class="form-floating mb-3">
+											<select class="form-select" name="editClassAdvisory" id="editClassAdvisory" required>
+											  <option disabled>Class Advisory</option>
+											  <option value="None">None</option>
+											  <option value="kinder">Kinder</option>
+											  <option value="Grade 1">Grade 1</option>
+											  <option value="Grade 2">Grade 2</option>
+											  <option value="Grade 3">Grade 3</option>
+											  <option value="Grade 4">Grade 4</option>
+											  <option value="Grade 5">Grade 5</option>
+											  <option value="Grade 6">Grade 6</option>
+											</select>
+											<label for="editClassAdvisory">Class Advisory</label>
+										</div>
+										<div class="form-floating mb-3">
+											<select class="form-select" name="editSubjectAdvisory" id="editSubjectAdvisory" required>
+												<option disabled>Select subject</option>
+												<option value="None">None</option>
+												<option value="Filipino">Filipino</option>
+												<option value="AP">AP</option>
+												<option value="Values">Values</option>
+												<option value="Civics">Civics</option>
+												<option value="EPP">EPP</option>
+												<option value="Science">Science</option>
+												<option value="Mapeh">MAPEH</option>
+												<option value="Math">Math</option>
+											</select>
+											<label for="editSubjectAdvisory">Subject Advisory</label>
+										</div>
+										<div class="d-flex justify-content-end">
+											<button type="submit" class="btn btn-success">
+												Update
+											</button>
 										</div>
 									</form>
 								</div>
-								<div class="modal-footer">
-									<input class="btn btn-success" type="submit" value="register">
-								</div>
 							</div>
 						</div>
-					</div> -->
+					</div>
 					
 				</div>
 			</div>
 		</div>
-
+		<script>
+			// JavaScript function to populate the edit form
+			function populateUserForm(
+				_id,
+				name,
+				role,
+				classAdvisory,
+				subjectAdvisory,
+				email
+			) {
+				document
+					.getElementById('editUserForm')
+					.setAttribute('action', `/admin/edit-users/${_id}`);
+				document.getElementById('editName').value = name;
+				document.getElementById('editEmail').value = email;
+				document.getElementById('editRole').value = role;
+				document.getElementById('editClassAdvisory').value = classAdvisory;
+				document.getElementById('editSubjectAdvisory').value = subjectAdvisory;
+			}
+		</script>
     </body>
 </html>

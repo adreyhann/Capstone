@@ -66,7 +66,7 @@
 							<div class="col-md-6">
 								<p class="my-0" style="font-size: 15px"><%= person.name %></p>
 								<span class="badge rounded-pill text-bg-info my-0"
-									>System Admin</span
+									><%= person.role %></span
 								>
 							</div>
 						</div>
@@ -191,18 +191,27 @@
 					<h2 class="my-1">Records Management</h2>
 					<hr />
 					<div class="container w-100 position-relative">
-						<% try { %>
-							<%- include('../credentials/flash-message.ejs') %>
-						  <% } catch (error) { %>
-							<div>Error: <%= error.message %></div>
-						  <% } %>
+						<% try { %> <%- include('../credentials/flash-message.ejs') %> <% }
+						catch (error) { %>
+						<div>Error: <%= error.message %></div>
+						<% } %>
 						<a
 							id="addRow"
-							class="btn btn-success my-2"
+							class="btn btn-success btn-sm my-2"
 							href="/systemAdmin/addRecords"
 							>Create new record</a
 						>
-						
+						<a
+							type="button"
+							class="btn btn-sm btn-link"
+							data-bs-toggle="tooltip"
+							data-bs-placement="top"
+							title="Download Backup"
+							alt="backup"
+							href="/systemAdmin/backup"
+							><span class="material-symbols-outlined"> backup_table </span></a
+						>
+
 						<table
 							id="example"
 							class="table table-striped hover"
@@ -241,7 +250,13 @@
 										>
 											Edit
 										</button>
-										<button type="button" class="btn btn-danger btn-sm" onclick="moveToArchive('<%= record._id %>')">Add to archive</button>
+										<button
+											type="button"
+											class="btn btn-danger btn-sm"
+											onclick="moveToArchive('<%= record._id %>')"
+										>
+											Add to archive
+										</button>
 									</td>
 
 									<!-- Add more cells based on your user schema -->
@@ -309,7 +324,12 @@
 							</div>
 
 							<div class="form-floating mb-3">
-								<select class="form-select" name="editGender" id="editGender" required>
+								<select
+									class="form-select"
+									name="editGender"
+									id="editGender"
+									required
+								>
 									<option disabled>Select gender</option>
 									<option value="Male">Male</option>
 									<option value="Female">Female</option>
@@ -317,7 +337,12 @@
 								<label for="editGender">Gender</label>
 							</div>
 							<div class="form-floating mb-3">
-								<select class="form-select" name="editTransferee" id="editTransferee" required>
+								<select
+									class="form-select"
+									name="editTransferee"
+									id="editTransferee"
+									required
+								>
 									<option disabled>Is student transferee</option>
 									<option value="Yes">Yes</option>
 									<option value="No">No</option>
@@ -325,7 +350,12 @@
 								<label for="editTransferee">Is student transferee?</label>
 							</div>
 							<div class="form-floating mb-3">
-								<select class="form-select" name="editGradeLevel" id="editGradeLevel" required>
+								<select
+									class="form-select"
+									name="editGradeLevel"
+									id="editGradeLevel"
+									required
+								>
 									<option disabled>Select Grade level</option>
 									<option value="Kinder">Kinder</option>
 									<option value="Grade 1">Grade 1</option>
@@ -347,6 +377,18 @@
 				</div>
 			</div>
 		</div>
+		// tooltip scipt
+		<script>
+			document.addEventListener('DOMContentLoaded', function () {
+				const tooltipTriggerList = document.querySelectorAll(
+					'[data-bs-toggle="tooltip"]'
+				);
+				const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+					return new bootstrap.Tooltip(tooltipTriggerEl);
+				});
+			});
+		</script>
+
 		<script>
 			// JavaScript function to populate the edit form
 			function populateEditForm(
@@ -367,19 +409,21 @@
 				document.getElementById('editGradeLevel').value = gradeLevel;
 			}
 		</script>
-		
-		
+
 		<script>
 			// script to move record in archived
 			async function moveToArchive(recordId) {
 				try {
-					const response = await fetch(`/systemAdmin/move-to-archive/${recordId}`, {
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-					});
-		
+					const response = await fetch(
+						`/systemAdmin/move-to-archive/${recordId}`,
+						{
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+							},
+						}
+					);
+
 					if (response.ok) {
 						// Optionally, you can update the UI or show a success message
 						alert('Record moved to archive successfully');

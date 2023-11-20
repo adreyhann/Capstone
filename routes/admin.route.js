@@ -9,30 +9,46 @@ const { Records, Archives } = require('../models/records.model');
 router.get('/dashboard', async (req, res, next) => {
 	// console.log(req.user)
 	const person = req.user;
-    const currentUserRole = req.user.role;
+	const currentUserRole = req.user.role;
 	const users = await User.find();
 	const records = await Records.find();
 	const archives = await Archives.find();
-    function countAdminRecords(records) {
-        // Your logic to count records for Admin
-        return records.filter(record => record.role === 'Admin').length;
-      }
-	res.render('admin/dashboard', { person, users, records, archives, currentUserRole, countAdminRecords });
+	function countAdminRecords(records) {
+		// Your logic to count records for Admin
+		return records.filter((record) => record.role === 'Admin').length;
+	}
+	function countAdminUsers(users) {
+		// Your logic to count admin and class advisor users
+		return users.filter(user => user.role === 'Admin' || user.role === 'Class Advisor').length;
+	  }
+	res.render('admin/dashboard', {
+		person,
+		users,
+		records,
+		archives,
+		currentUserRole,
+		countAdminUsers,
+		countAdminRecords,
+	});
 });
-
-
 
 router.get('/accounts', async (req, res, next) => {
 	const person = req.user;
-    const currentUserRole = req.user.role;
+	const currentUserRole = req.user.role;
 	const users = await User.find();
-	res.render('admin/accounts', { person, users, currentUserRole });
+
+	res.render('admin/accounts', {
+		person,
+		users,
+		currentUserRole,
+	});
 });
 
 router.get('/records', async (req, res, next) => {
 	const person = req.user;
+	const currentUserRole = req.user.role;
 	const records = await Records.find();
-	res.render('admin/records', { person, records });
+	res.render('admin/records', { person, records, currentUserRole });
 });
 
 router.get('/archives', async (req, res, next) => {
@@ -63,14 +79,13 @@ router.get('/historyLogs', async (req, res, next) => {
 
 router.get('/users', async (req, res, next) => {
 	try {
-        const currentUserRole = req.user.role;
+		const currentUserRole = req.user.role;
 		const users = await User.find();
 		res.render('users', { users, currentUserRole });
 	} catch (error) {
 		next(error);
 	}
 });
-
 
 router.get('/addRecords', async (req, res, next) => {
 	const person = req.user;
@@ -395,5 +410,35 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
 });
 
 
+router.post('/edit-users/:_id', async (req, res, next) => {
+	try {
+		const userId = req.params._id;
+
+		// Find the record by ID
+		const user = await User.findById(userId);
+
+		if (!user) {
+			res.status(404).send('Record not found');
+			return;
+		}
+
+		// Update the record with new values
+		user.name = req.body.editName;
+		user.role = req.body.editRole;
+		user.classAdvisory = req.body.editClassAdvisory;
+		user.subjectAdvisory = req.body.editSubjectAdvisory;
+		user.email = req.body.editEmail;
+
+		// Save the updated record
+		await user.save();
+
+		// Redirect back to the records page
+		req.flash('success', 'Record updated successfully');
+		res.redirect('/admin/accounts');
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
+});
 
 module.exports = router;

@@ -5,11 +5,14 @@ const fs = require('fs');
 const { PDFDocument } = require('pdf-lib');
 const User = require('../models/user.model');
 const { Records, Archives } = require('../models/records.model');
+const archiver = require('archiver');
+const { exec } = require('child_process');
 const Event = require('../models/events.model');
 
 router.get('/dashboard', async (req, res, next) => {
 	// console.log(req.user)
 	const person = req.user;
+	
 	const users = await User.find();
 	const records = await Records.find();
 	const archives = await Archives.find();
@@ -18,13 +21,15 @@ router.get('/dashboard', async (req, res, next) => {
 
 router.get('/accounts', async (req, res, next) => {
 	const person = req.user;
+	const currentUserRole = req.user.role;
 	const users = await User.find();
-	res.render('system_admn/accounts', { person, users });
+	res.render('system_admn/accounts', { person, users, currentUserRole });
 });
 
 router.get('/records', async (req, res, next) => {
 	const person = req.user;
 	const records = await Records.find();
+	
 	res.render('system_admn/records', { person, records });
 });
 
@@ -385,7 +390,116 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
 	}
 });
 
+router.get('/backup', async (req, res, next) => {
+	try {
+	  // Fetch records from the database 
+	  const records = await Records.find();
+  
+	  // Create a zip stream
+	  const archive = archiver('zip', {
+		zlib: { level: 9 }, // Sets the compression level
+	  });
+  
+	  // Pipe the zip stream to the response
+	  archive.pipe(res);
+  
+	  // Iterate over records and add each PDF file to the zip stream
+	  records.forEach((record) => {
+		record.pdfFilePath.forEach((filePath) => {
+		  archive.file(filePath, { name: path.basename(filePath) });
+		});
+	  });
+
+	  // Set Content-Disposition header
+	  res.setHeader('Content-Disposition', 'attachment; filename=student_records.zip');
+	  res.setHeader('Content-Type', 'application/zip');
+  
+	  // Finalize the zip stream and send the response
+	  archive.finalize();
+	} catch (error) {
+	  console.error('Error:', error);
+	  next(error);
+	}
+  });
+
+// router.get('/backup', async (req, res, next) => {
+//     try {
+//         // Specify the path where you want to store the backup
+//         const backupPath = 'C:\\Backup';
+
+//         // Run the mongodump command
+//         exec(`mongodump --uri=${process.env.MONGO_URI} --out=${backupPath}`, (error, stdout, stderr) => {
+//             if (error) {
+//                 console.error('Error:', error);
+//                 return res.status(500).send('Failed to create backup');
+//             }
+
+//             // Create a ZIP archive of the backup
+//             const archiveName = 'backup.zip';
+//             const archivePath = 'C:\\Backup\\' + archiveName;
+
+//             // Use the full path to the 7z executable
+//             const zipExecutable = '"C:\\Program Files\\7-Zip\\7z.exe"';  // Enclose the path in double quotes
+
+//             exec(`${zipExecutable} a -r "${archivePath}" "${backupPath}"`, (zipError) => {
+//                 if (zipError) {
+//                     console.error('ZIP Error:', zipError);
+//                     return res.status(500).send('Failed to create backup archive');
+//                 }
+
+//                 // Send the ZIP archive as a response
+//                 res.download(archivePath, archiveName, (downloadError) => {
+//                     if (downloadError) {
+//                         console.error('Download Error:', downloadError);
+//                         return res.status(500).send('Failed to download backup archive');
+//                     }
+
+//                     // Clean up: Remove the temporary backup files
+//                     exec(`rm -r "${backupPath}"`, (cleanupError) => {
+//                         if (cleanupError) {
+//                             console.error('Cleanup Error:', cleanupError);
+//                         }
+//                     });
+//                 });
+//             });
+//         });
+//     } catch (error) {
+//         console.error('Error:', error);
+//         res.status(500).send('Internal Server Error');
+//     }
+// });
 
 
+
+router.post('/edit-users/:_id', async (req, res, next) => {
+	try {
+		const userId = req.params._id;
+
+		// Find the record by ID
+		const user = await User.findById(userId);
+
+		if (!user) {
+			res.status(404).send('Record not found');
+			return;
+		}
+
+		// Update the record with new values
+		user.name = req.body.editName;
+		user.role = req.body.editRole;
+		user.classAdvisory = req.body.editClassAdvisory;
+		user.subjectAdvisory = req.body.editSubjectAdvisory;
+		user.email = req.body.editEmail;
+
+		// Save the updated record
+		await user.save();
+
+		// Redirect back to the records page
+		req.flash('success', 'Record updated successfully');
+		res.redirect('/systemAdmin/accounts');
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
+});
 
 module.exports = router;

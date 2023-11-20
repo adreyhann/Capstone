@@ -65,7 +65,7 @@
 							<div class="col-md-6">
 								<p class="my-0" style="font-size: 15px"><%= person.name %></p>
 								<span class="badge rounded-pill text-bg-info my-0"
-									>System Admin</span
+									><%= person.role %></span
 								>
 							</div>
 						</div>
@@ -166,12 +166,7 @@
 					<h2 class="my-1">Archives</h2>
 					<hr />
 					<div class="container w-100">
-						<a class="icon-link" href="#">
-							<span class="material-symbols-outlined">
-								settings_backup_restore
-							</span>
-							Backup
-						</a>
+						
 						<table
 							id="example"
 							class="table table-striped hover"

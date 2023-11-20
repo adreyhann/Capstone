@@ -195,10 +195,13 @@
 							<div class="card-body">
 								<h5 class="card-title position-relative">
 									Accounts
-									<span
-										class="badge text-bg-secondary position-absolute top-0 end-0"
-										><%= users.length %></span
-									>
+									<span class="badge text-bg-secondary position-absolute top-0 end-0">
+										<% if (currentUserRole === 'Admin') { %>
+										  <%= countAdminUsers(users) %>
+										<% } else { %>
+										  <%= users.length %>
+										<% } %>
+									  </span>
 								</h5>
 								<p class="card-text">View list of users accounts</p>
 								<a
@@ -213,13 +216,10 @@
 							<div class="card-body">
 								<h5 class="card-title position-relative">
 									Records
-									<% if (currentUserRole === 'System Admin') { %>
-										<span class="badge text-bg-secondary position-absolute top-0 end-0"><%= records.length %></span>
-									  <% } else if (currentUserRole === 'Admin') { %>
-										<span class="badge text-bg-secondary position-absolute top-0 end-0"><%= countAdminRecords(records) %></span>
-									  <% } else { %>
-										<span class="badge text-bg-secondary position-absolute top-0 end-0"><%= countUserRecords(records, currentUserRole) %></span>
-									  <% } %>
+									<span
+										class="badge text-bg-secondary position-absolute top-0 end-0"
+										><%= records.length %></span
+									>
 								</h5>
 								<p class="card-text">List of active records</p>
 								<a

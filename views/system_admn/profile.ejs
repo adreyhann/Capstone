@@ -189,8 +189,6 @@
 										<h3 class="fw-bold">Profile</h3>
 										<p>Manage your profile</p>
 										<hr />
-										
-
 										<form action="">
 											<div class="mt-4 mb-2">
 												<label for="exampleInputEmail1" class="form-label"
@@ -211,23 +209,11 @@
 														data-bs-toggle="modal"
 														>Change email</a
 													>
-												</div>
-
-												<label for="pass1" class="form-label mt-3"
-													>Password</label
-												>
-												<input
-													type="text"
-													class="form-control"
-													id="pass1"
-													placeholder="*****"
-													disabled
-												/>
-												<div class="form-text">
 													<a
 														href=""
 														data-bs-target="#exampleModal"
 														data-bs-toggle="modal"
+														style="border-left: 1px solid black; padding-left: 3px;"
 														>Change password</a
 													>
 												</div>
@@ -252,6 +238,26 @@
 														class="form-control"
 														id="role"
 														placeholder="<%= person.role %>"
+														disabled
+													/>
+												</div>
+												<div class="my-2 col-6">
+													<label for="role" class="form-label">Class Advisory</label>
+													<input
+														type="Text"
+														class="form-control"
+														id="role"
+														placeholder="<%= person.classAdvisory %>"
+														disabled
+													/>
+												</div>
+												<div class="my-2 col-6">
+													<label for="role" class="form-label">Subject Advisory</label>
+													<input
+														type="Text"
+														class="form-control"
+														id="role"
+														placeholder="<%= person.subjectAdvisory %>"
 														disabled
 													/>
 												</div>

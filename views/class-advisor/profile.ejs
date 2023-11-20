@@ -53,7 +53,7 @@
 							<div class="col-md-6">
 								<p class="my-0" style="font-size: 15px"><%= person.name %></p>
 								<span class="badge rounded-pill text-bg-info my-0 fw-normal"
-									>System Admin</span
+									><%= person.role %></span
 								>
 							</div>
 						</div>
@@ -157,7 +157,6 @@
 								<div class="col m-0">
 									<div class="container">
 										<h3 class="fw-bold">Profile</h3>
-										<p>Manage your profile</p>
 										<hr />
 										
 
@@ -174,33 +173,8 @@
 													placeholder="<%= person.email %>"
 													disabled
 												/>
-												<div class="form-text">
-													<a
-														href=""
-														data-bs-target="#exampleModalToggle"
-														data-bs-toggle="modal"
-														>Change email</a
-													>
-												</div>
-
-												<label for="pass1" class="form-label mt-3"
-													>Password</label
-												>
-												<input
-													type="text"
-													class="form-control"
-													id="pass1"
-													placeholder="*****"
-													disabled
-												/>
-												<div class="form-text">
-													<a
-														href=""
-														data-bs-target="#exampleModal"
-														data-bs-toggle="modal"
-														>Change password</a
-													>
-												</div>
+												
+												
 											</div>
 
 											<div class="row">
@@ -212,6 +186,7 @@
 														type="text"
 														class="form-control"
 														id="fname"
+														disabled
 														placeholder="<%= person.name %>"
 													/>
 												</div>
@@ -225,194 +200,29 @@
 														disabled
 													/>
 												</div>
+												<div class="my-2 col-6">
+													<label for="role" class="form-label">Class Advisory</label>
+													<input
+														type="Text"
+														class="form-control"
+														id="role"
+														placeholder="<%= person.classAdvisory %>"
+														disabled
+													/>
+												</div>
+												<div class="my-2 col-6">
+													<label for="role" class="form-label">Subject Advisory</label>
+													<input
+														type="Text"
+														class="form-control"
+														id="role"
+														placeholder="<%= person.subjectAdvisory %>"
+														disabled
+													/>
+												</div>
 											</div>
-											<button class="btn btn-info btn-sm mt-4">Update</button>
+											
 										</form>
-									</div>
-									<!-- Vertically centered modal -->
-									<div
-										class="modal fade"
-										id="exampleModalToggle"
-										aria-hidden="true"
-										aria-labelledby="exampleModalToggleLabel"
-										tabindex="-1"
-									>
-										<div class="modal-dialog modal-dialog-centered">
-											<div class="modal-content">
-												<div class="modal-header">
-													<h1
-														class="modal-title fs-5"
-														id="exampleModalToggleLabel"
-													>
-														Enter Verification Code
-													</h1>
-													<button
-														type="button"
-														class="btn-close"
-														data-bs-dismiss="modal"
-														aria-label="Close"
-													></button>
-												</div>
-												<div class="modal-body text-center">
-													A Verification code has been sent to <span class="fw-semibold">carlos@gmail.com.</span>
-													Please enter the code to continue.
-													<form action="">
-														<div class="my-3">
-															<input type="number" class="form-control" id="exampleInputPassword1" required>
-														  </div>
-													</form>
-												</div>
-												<div class="modal-footer">
-													<button
-														class="btn btn-primary"
-														data-bs-target="#exampleModalToggle2"
-														data-bs-toggle="modal"
-													>
-														Submit
-													</button>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div
-										class="modal fade"
-										id="exampleModalToggle2"
-										aria-hidden="true"
-										aria-labelledby="exampleModalToggleLabel2"
-										tabindex="-1"
-									>
-										<div class="modal-dialog modal-dialog-centered">
-											<div class="modal-content">
-												<div class="modal-header">
-													<h1
-														class="modal-title fs-5"
-														id="exampleModalToggleLabel2"
-													>
-														Enter new email
-													</h1>
-													<button
-														type="button"
-														class="btn-close"
-														data-bs-dismiss="modal"
-														aria-label="Close"
-													></button>
-												</div>
-												<div class="modal-body text-center">
-													<span class="mb-5">New email address</span>
-													<div class="form-floating my-3">
-														
-														<input type="email" class="form-control" id="floatingInput" placeholder="name@example.com">
-														<label for="floatingInput">Enter new email</label>
-													  </div>
-												</div>
-												<div class="modal-footer">
-													<button
-														class="btn btn-light"
-														data-bs-target="#exampleModalToggle"
-														data-bs-toggle="modal"
-													>
-														Cancel
-													</button>
-													<button
-														class="btn btn-success"
-														data-bs-target="#exampleModalToggl3"
-														data-bs-toggle="modal"
-													>
-														Submit
-													</button>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div
-										class="modal fade"
-										id="exampleModalToggl3"
-										aria-hidden="true"
-										aria-labelledby="exampleModalToggleLabel"
-										tabindex="-1"
-									>
-										<div class="modal-dialog modal-dialog-centered">
-											<div class="modal-content">
-												<div class="modal-header">
-													<h1
-														class="modal-title fs-5"
-														id="exampleModalToggleLabel"
-													>
-														Enter Verification Code
-													</h1>
-													<button
-														type="button"
-														class="btn-close"
-														data-bs-dismiss="modal"
-														aria-label="Close"
-													></button>
-												</div>
-												<div class="modal-body text-center">
-													A Verification code has been sent to <span class="fw-semibold">(new email)</span>
-													Please enter the code to continue.
-													<form action="">
-														<div class="mb-3">
-															<input type="number" class="form-control" id="exampleInputPassword1">
-														  </div>
-													</form>
-												</div>
-												<div class="modal-footer">
-													<button
-														class="btn btn-primary"
-														data-bs-target="#exampleModalToggl4"
-														data-bs-toggle="modal"
-													>
-														Submit
-													</button>
-												</div>
-											</div>
-										</div>
-									</div>
-									<div
-										class="modal fade"
-										id="exampleModalToggl4"
-										aria-hidden="true"
-										aria-labelledby="exampleModalToggleLabel"
-										tabindex="-1"
-									>
-										<div class="modal-dialog modal-dialog-centered">
-											<div class="modal-content">
-												<div class="modal-header">
-													<h1
-														class="modal-title fs-5"
-														id="exampleModalToggleLabel"
-													>
-														Confirm Email
-													</h1>
-													<button
-														type="button"
-														class="btn-close"
-														data-bs-dismiss="modal"
-														aria-label="Close"
-													></button>
-												</div>
-												<div class="modal-body text-center">
-													Confirm email change to <span class="fw-semibold">(new email)</span>
-													<p>You will no longer be able to use <span class="fw-semibold">carlos@gmail.com</span> to log in.</p>
-												</div>
-												<div class="modal-footer">
-													<button
-														class="btn btn-light"
-														data-bs-target="#exampleModalToggl"
-														data-bs-toggle="modal"
-													>
-														Cancel
-													</button>
-													<button
-														class="btn btn-success"
-														data-bs-target="#exampleModalToggl"
-														data-bs-toggle="modal"
-													>
-														Confirm
-													</button>
-												</div>
-											</div>
-										</div>
 									</div>
 								</div>
 							</div>

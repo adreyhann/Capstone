@@ -9,27 +9,36 @@ const archiver = require('archiver');
 const { exec } = require('child_process');
 const Event = require('../models/events.model');
 
+function countVisibleUsersInTable(users, currentUser) {
+	// Implement your logic to count visible users in the table
+	const visibleUsersInTable = users.filter(user => {
+	  return user._id.toString() !== currentUser._id.toString();
+	});
+	return visibleUsersInTable.length;
+  }
+
 router.get('/dashboard', async (req, res, next) => {
 	// console.log(req.user)
 	const person = req.user;
-	
+
 	const users = await User.find();
 	const records = await Records.find();
 	const archives = await Archives.find();
-	res.render('system_admn/dashboard', { person, users, records, archives });
+	res.render('system_admn/dashboard', { person, users, records, archives, countVisibleUsersInTable: countVisibleUsersInTable(users, person) });
 });
 
 router.get('/accounts', async (req, res, next) => {
 	const person = req.user;
 	const currentUserRole = req.user.role;
 	const users = await User.find();
-	res.render('system_admn/accounts', { person, users, currentUserRole });
+	const currentUser = req.user;
+	res.render('system_admn/accounts', { person, users, currentUserRole, currentUser });
 });
 
 router.get('/records', async (req, res, next) => {
 	const person = req.user;
 	const records = await Records.find();
-	
+
 	res.render('system_admn/records', { person, records });
 });
 
@@ -51,7 +60,15 @@ router.get('/reports', async (req, res, next) => {
 
 router.get('/profile', async (req, res, next) => {
 	const person = req.user;
-	res.render('system_admn/profile', { person });
+	const records = await Records.find();
+	const currentUserRole = req.user.role;
+	const users = await User.find();
+	res.render('system_admn/profile', {
+		person,
+		records,
+		users,
+		currentUserRole,
+	});
 });
 
 router.get('/historyLogs', async (req, res, next) => {
@@ -392,35 +409,73 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
 
 router.get('/backup', async (req, res, next) => {
 	try {
-	  // Fetch records from the database 
-	  const records = await Records.find();
-  
-	  // Create a zip stream
-	  const archive = archiver('zip', {
-		zlib: { level: 9 }, // Sets the compression level
-	  });
-  
-	  // Pipe the zip stream to the response
-	  archive.pipe(res);
-  
-	  // Iterate over records and add each PDF file to the zip stream
-	  records.forEach((record) => {
-		record.pdfFilePath.forEach((filePath) => {
-		  archive.file(filePath, { name: path.basename(filePath) });
-		});
-	  });
+		// Fetch records from the database
+		const records = await Records.find();
 
-	  // Set Content-Disposition header
-	  res.setHeader('Content-Disposition', 'attachment; filename=student_records.zip');
-	  res.setHeader('Content-Type', 'application/zip');
-  
-	  // Finalize the zip stream and send the response
-	  archive.finalize();
+		// Create a zip stream
+		const archive = archiver('zip', {
+			zlib: { level: 9 }, // Sets the compression level
+		});
+
+		// Pipe the zip stream to the response
+		archive.pipe(res);
+
+		// Iterate over records and add each PDF file to the zip stream
+		records.forEach((record) => {
+			record.pdfFilePath.forEach((filePath) => {
+				archive.file(filePath, { name: path.basename(filePath) });
+			});
+		});
+
+		// Set Content-Disposition header
+		res.setHeader(
+			'Content-Disposition',
+			'attachment; filename=student_records.zip'
+		);
+		res.setHeader('Content-Type', 'application/zip');
+
+		// Finalize the zip stream and send the response
+		archive.finalize();
 	} catch (error) {
-	  console.error('Error:', error);
-	  next(error);
+		console.error('Error:', error);
+		next(error);
 	}
-  });
+});
+
+router.get('/backup-archive', async (req, res, next) => {
+	try {
+		// Fetch records from the database
+		const records = await Archives.find();
+
+		// Create a zip stream
+		const archive = archiver('zip', {
+			zlib: { level: 9 }, // Sets the compression level
+		});
+
+		// Pipe the zip stream to the response
+		archive.pipe(res);
+
+		// Iterate over records and add each PDF file to the zip stream
+		records.forEach((record) => {
+			record.pdfFilePath.forEach((filePath) => {
+				archive.file(filePath, { name: path.basename(filePath) });
+			});
+		});
+
+		// Set Content-Disposition header
+		res.setHeader(
+			'Content-Disposition',
+			'attachment; filename=student_archives_records.zip'
+		);
+		res.setHeader('Content-Type', 'application/zip');
+
+		// Finalize the zip stream and send the response
+		archive.finalize();
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
+});
 
 // router.get('/backup', async (req, res, next) => {
 //     try {
@@ -469,8 +524,6 @@ router.get('/backup', async (req, res, next) => {
 //     }
 // });
 
-
-
 router.post('/edit-users/:_id', async (req, res, next) => {
 	try {
 		const userId = req.params._id;
@@ -501,5 +554,84 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 		next(error);
 	}
 });
+
+router.post('/edit-profile/:id', async (req, res) => {
+	try {
+		const userId = req.params.id;
+		const {
+			editName,
+			editEmail,
+			editRole,
+			editClassAdvisory,
+			editSubjectAdvisory,
+		} = req.body;
+
+		// Perform a check to see if the user is changing the role to something other than "System Admin"
+		if (editRole !== 'System Admin') {
+			// Count the number of users with the role "System Admin"
+			const systemAdminCount = await User.countDocuments({
+				role: 'System Admin',
+			});
+
+			// If there is only one "System Admin" user, prevent the role change
+			if (systemAdminCount === 1) {
+				req.flash(
+					'error',
+					'At least one user must have the role "System Admin".'
+				);
+				return res.redirect('/systemAdmin/profile');
+			}
+		}
+
+		// Update the user's details in the database
+		await User.findByIdAndUpdate(userId, {
+			name: editName,
+			email: editEmail,
+			role: editRole,
+			classAdvisory: editClassAdvisory,
+			subjectAdvisory: editSubjectAdvisory,
+		});
+
+		
+		// Check if the user's new role is either "Admin" or "Class Advisor"
+		if (editRole === 'Admin' || editRole === 'Class Advisor') {
+			// Log out the user and destroy the session
+			req.logout(() => {
+				req.session.destroy(() => {
+					// Redirect to the appropriate dashboard
+					if (editRole === 'Admin') {
+						return res.redirect('/admin/dashboard');
+					} else if (editRole === 'Class Advisor') {
+						return res.redirect('/classAdvisor/dashboard');
+					}
+				});
+			});
+		} else {
+			// Redirect to the profile page or another appropriate route
+			res.redirect('/systemAdmin/profile');
+		}
+	} catch (error) {
+		console.error(error);
+		res.status(500).send('Internal Server Error');
+	}
+});
+
+
+// Assuming you're using Express
+// router.post('/deactivate-user/:userId', async (req, res) => {
+// 	try {
+// 	  const userId = req.params.userId;
+  
+// 	  // Implement your logic to deactivate the user based on userId
+// 	  // Update the user status in the database
+  
+// 	  // Return a JSON response indicating success
+// 	  res.json({ success: true, message: 'User deactivated successfully' });
+// 	} catch (error) {
+// 	  console.error('Deactivation error:', error);
+// 	  res.status(500).json({ success: false, message: 'Internal Server Error' });
+// 	}
+//   });
+  
 
 module.exports = router;

@@ -6,16 +6,19 @@ require('dotenv').config();
 const session = require('express-session');
 const connectFlash = require('connect-flash');
 const passport = require('passport');
-const MongoStore = require('connect-mongo')
-const MongoClient = require('mongodb').MongoClient
-const path = require('path')
+const MongoStore = require('connect-mongo');
+const MongoClient = require('mongodb').MongoClient;
+const path = require('path');
 const cors = require('cors');
+const csrf = require('csurf');
 
 // const { roles, ClassAdvisory, SubjectAdvisory } = require('./utils/constants');
 
 const app = express();
 
-app.use(cors()); 
+// const csrfProtection = csrf({ cookie: true });
+
+app.use(cors());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(morgan('dev'));
@@ -26,7 +29,6 @@ app.use('/css', express.static(__dirname + '/public/css'));
 app.use('/img', express.static(__dirname + '/public/img'));
 app.use('/js', express.static(__dirname + '/public/js'));
 app.use('/uploads', express.static(path.join(__dirname + '/public/uploads')));
-
 
 const client = new MongoClient(process.env.MONGO_URI);
 const mongoStore = new MongoStore({ client });
@@ -41,7 +43,6 @@ app.use(
 			// secure: true ->only in https server
 			httpOnly: true,
 		},
-		
 	})
 );
 
@@ -54,18 +55,35 @@ app.use((req, res, next) => {
 	next();
 });
 
+
+
 app.use(connectFlash());
 app.use((req, res, next) => {
 	res.locals.messages = req.flash();
 	next();
 });
 
+app.use((req, res, next) => {
+	res.locals.currentUser = req.user; // Assuming your authentication logic sets currentUser in the request
+	next();
+  });
+
 // this handle all the routes
 app.use('/', require('./routes/index.route'));
 app.use('/auth', require('./routes/auth-routes'));
-app.use('/systemAdmin', ensureAuthenticated, ensureSystemAdmin, require('./routes/system.admin.route'));
-app.use('/classAdvisor', ensureAuthenticated, require('./routes/advisor.route'));
-app.use('/admin', ensureAuthenticated, require('./routes/admin.route'));
+app.use(
+	'/systemAdmin',
+	ensureAuthenticated,
+	ensureSystemAdmin,
+	require('./routes/system.admin.route')
+);
+app.use(
+	'/classAdvisor',
+	ensureAuthenticated,
+	ensureClassAdvisor,
+	require('./routes/advisor.route')
+);
+app.use('/admin', ensureAuthenticated, ensureAdmin, require('./routes/admin.route'));
 
 // error handler (404)
 app.use((req, res, next) => {
@@ -90,7 +108,6 @@ mongoose
 
 const PORT = process.env.PORT || 3000;
 
-
 function ensureAuthenticated(req, res, next) {
 	if (req.isAuthenticated()) {
 		next();
@@ -101,11 +118,34 @@ function ensureAuthenticated(req, res, next) {
 
 function ensureSystemAdmin(req, res, next) {
 	if (req.user && req.user.role === 'System Admin') {
+		// User is a system administrator, allow access
+		next();
+	} else {
+		// User is not a system administrator, deny access
+		res
+			.status(403)
+			.send('Access Forbidden: You are not a system administrator.');
+	}
+}
+
+function ensureAdmin(req, res, next) {
+	if (req.user && req.user.role === 'Admin') {
+		// User is a system administrator, allow access
+		next();
+	} else {
+		// User is not a system administrator, deny access
+		res
+			.status(403)
+			.send('Access Forbidden: You are not a administrator.');
+	}
+}
+
+function ensureClassAdvisor(req, res, next) {
+	if (req.user && req.user.role === 'Class Advisor') {
 	  // User is a system administrator, allow access
 	  next();
 	} else {
 	  // User is not a system administrator, deny access
-	  res.status(403).send('Access Forbidden: You are not a system administrator.');
+	  res.status(403).send('Access Forbidden: You are not a Class Advisor.');
 	}
   }
-  

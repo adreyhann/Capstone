@@ -200,34 +200,32 @@
 							</thead>
 							<tbody>
 								<% users.forEach(user => { %>
-									<% if (user.role === 'System Admin' && currentUserRole !== 'Admin' || user.role !== 'System Admin') { %>
-									  <tr>
-										<td><%= user.name %></td>
-										<td><%= user.role %></td>
-										<td><%= user.classAdvisory %></td>
-										<td><%= user.subjectAdvisory %></td>
-										<td><%= user.email %></td>
-										
-										<td>
-											<button
-												type="button"
-												class="btn btn-sm btn-warning"
-												data-bs-toggle="modal"
-												data-bs-target="#editUserModal"
-												onclick="populateUserForm('<%= user._id %>', '<%= user.name %>', '<%= user.role %>', '<%= user.classAdvisory %>', '<%= user.subjectAdvisory %>', '<%= user.email %>')"
-											>
-												Edit
-											</button>
-											<button class="btn btn-danger btn-sm">
-												Deactivate
-											</button>
-										</td>
-										<!-- Add more cells based on your user schema -->
-									  </tr>
-									<% } %>
-								  <% }); %>
-								
-							</tbody>
+								  <% if (user._id.toString() !== currentUser._id.toString() && user.role !== 'System Admin') { %>
+									<tr>
+									  <td><%= user.name %></td>
+									  <td><%= user.role %></td>
+									  <td><%= user.classAdvisory %></td>
+									  <td><%= user.subjectAdvisory %></td>
+									  <td><%= user.email %></td>
+									  <td>
+										<button
+										  type="button"
+										  class="btn btn-sm btn-warning"
+										  data-bs-toggle="modal"
+										  data-bs-target="#editUserModal"
+										  onclick="populateUserForm('<%= user._id %>', '<%= user.name %>', '<%= user.role %>', '<%= user.classAdvisory %>', '<%= user.subjectAdvisory %>', '<%= user.email %>')"
+										>
+										  Edit
+										</button>
+										<button class="btn btn-danger btn-sm">
+										  Deactivate
+										</button>
+									  </td>
+									</tr>
+								  <% } %>
+								<% }); %>
+							  </tbody>
+							  
 							<tfoot class="table-info">
 								<tr>
 									<th>Account Name</th>

@@ -6,41 +6,44 @@ const { PDFDocument } = require('pdf-lib');
 const User = require('../models/user.model');
 const { Records, Archives } = require('../models/records.model');
 
-router.get('/dashboard', async (req, res, next) => {
+function countVisibleUsers(users, currentUser) {
+	// Implement your logic to count visible users
+	const visibleUsers = users.filter(user => {
+	  return user._id.toString() !== currentUser._id.toString() && user.role !== 'System Admin';
+	});
+	return visibleUsers.length;
+  }
+  
+  router.get('/dashboard', async (req, res, next) => {
 	// console.log(req.user)
 	const person = req.user;
 	const currentUserRole = req.user.role;
 	const users = await User.find();
 	const records = await Records.find();
 	const archives = await Archives.find();
-	function countAdminRecords(records) {
-		// Your logic to count records for Admin
-		return records.filter((record) => record.role === 'Admin').length;
-	}
-	function countAdminUsers(users) {
-		// Your logic to count admin and class advisor users
-		return users.filter(user => user.role === 'Admin' || user.role === 'Class Advisor').length;
-	  }
+	
 	res.render('admin/dashboard', {
-		person,
-		users,
-		records,
-		archives,
-		currentUserRole,
-		countAdminUsers,
-		countAdminRecords,
+	  person,
+	  users,
+	  records,
+	  archives,
+	  currentUserRole,
+	  countVisibleUsers: countVisibleUsers(users, person)
 	});
-});
+  });
+  
 
 router.get('/accounts', async (req, res, next) => {
+
 	const person = req.user;
 	const currentUserRole = req.user.role;
 	const users = await User.find();
-
+	const currentUser = req.user;
 	res.render('admin/accounts', {
 		person,
 		users,
 		currentUserRole,
+		currentUser
 	});
 });
 

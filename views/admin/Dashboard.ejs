@@ -196,11 +196,7 @@
 								<h5 class="card-title position-relative">
 									Accounts
 									<span class="badge text-bg-secondary position-absolute top-0 end-0">
-										<% if (currentUserRole === 'Admin') { %>
-										  <%= countAdminUsers(users) %>
-										<% } else { %>
-										  <%= users.length %>
-										<% } %>
+										<%= countVisibleUsers %>
 									  </span>
 								</h5>
 								<p class="card-text">View list of users accounts</p>

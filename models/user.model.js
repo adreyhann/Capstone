@@ -31,6 +31,15 @@ const UserSchema = new mongoose.Schema({
 		type: String,
 		required: true,
 	},
+	status: {
+		type: String,
+		default: 'Active',
+		required: true,
+	},
+	resetCode: {
+		type: Number,
+		
+	}
 });
 
 UserSchema.pre('save', async function (next) {

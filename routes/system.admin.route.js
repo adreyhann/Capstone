@@ -616,22 +616,8 @@ router.post('/edit-profile/:id', async (req, res) => {
 	}
 });
 
-
-// Assuming you're using Express
-// router.post('/deactivate-user/:userId', async (req, res) => {
-// 	try {
-// 	  const userId = req.params.userId;
   
-// 	  // Implement your logic to deactivate the user based on userId
-// 	  // Update the user status in the database
   
-// 	  // Return a JSON response indicating success
-// 	  res.json({ success: true, message: 'User deactivated successfully' });
-// 	} catch (error) {
-// 	  console.error('Deactivation error:', error);
-// 	  res.status(500).json({ success: false, message: 'Internal Server Error' });
-// 	}
-//   });
   
 
 module.exports = router;

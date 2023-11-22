@@ -210,10 +210,12 @@
 							<thead class="table-info">
 								<tr>
 									<th>Account Name</th>
+									<th>Email</th>
 									<th>Role</th>
 									<th>Class Advisory</th>
 									<th>Subject Advisory</th>
-									<th>Email</th>
+									
+									<th>Status</th>
 									<th>Action</th>
 								</tr>
 							</thead>
@@ -222,10 +224,12 @@
 								currentUser._id.toString()) { %>
 								<tr>
 									<td><%= user.name %></td>
+									<td><%= user.email %></td>
 									<td><%= user.role %></td>
 									<td><%= user.classAdvisory %></td>
 									<td><%= user.subjectAdvisory %></td>
-									<td><%= user.email %></td>
+									
+									<td class="status-cell"><%= user.status %></td>
 									<td>
 										<button
 											type="button"
@@ -252,10 +256,11 @@
 							<tfoot class="table-info">
 								<tr>
 									<th>Account Name</th>
+									<th>Email</th>
 									<th>Role</th>
 									<th>Class Advisory</th>
 									<th>Subject Advisory</th>
-									<th>Email</th>
+									<th>Status</th>
 									<th>Action</th>
 								</tr>
 							</tfoot>
@@ -376,7 +381,7 @@
 						</div>
 					</div>
 					<!-- ========== modal for deactivate confirmation ========== -->
-					<!-- Add this modal at the end of your HTML body -->
+
 					<div
 						class="modal fade"
 						id="confirmationModal"
@@ -399,6 +404,7 @@
 								</div>
 								<div class="modal-body">
 									<p>Are you sure you want to deactivate this user?</p>
+									<p id="userEmail" style="font-weight: bold"></p>
 								</div>
 								<div class="modal-footer">
 									<button
@@ -411,7 +417,7 @@
 									<button
 										type="button"
 										class="btn btn-danger"
-										id="confirmDeactivateBtn"
+										id="confirmDeactivateBtn"	
 									>
 										Deactivate
 									</button>
@@ -442,56 +448,5 @@
 				document.getElementById('editSubjectAdvisory').value = subjectAdvisory;
 			}
 		</script>
-
-		<!-- ========== script to handle the confirmation and update the user status ========== -->
-		// <script>
-		// 	document.addEventListener('DOMContentLoaded', function () {
-		// 		var confirmationModal = new bootstrap.Modal(
-		// 			document.getElementById('confirmationModal')
-		// 		);
-		// 		var confirmDeactivateBtn = document.getElementById(
-		// 			'confirmDeactivateBtn'
-		// 		);
-		// 		var userIdToDelete;
-
-		// 		// Handle confirmation modal show event
-		// 		confirmationModal._element.addEventListener(
-		// 			'show.bs.modal',
-		// 			function (event) {
-		// 				var button = event.relatedTarget;
-		// 				userIdToDelete = button.getAttribute('data-user-id');
-		// 			}
-		// 		);
-
-				
-		// 		confirmDeactivateBtn.addEventListener('click', function () {
-					
-		// 			fetch(`/systemAdmin/deactivate-user/${userIdToDelete}`, {
-		// 				method: 'POST',
-		// 				headers: {
-		// 					'Content-Type': 'application/json',
-		// 					'X-CSRF-Token': '<%=/* csrfToken */ %>', // Add your CSRF token here
-		// 				},
-		// 				// You can pass additional data if needed
-		// 				// body: JSON.stringify({ key: 'value' }),
-		// 			})
-		// 				.then((response) => response.json())
-		// 				.then((data) => {
-		// 					// Handle the response, update UI, etc.
-		// 					console.log('Deactivation successful:', data);
-
-		// 					// Close the modal
-		// 					confirmationModal.hide();
-
-		// 					// Optionally, you can reload the page or update the UI dynamically
-		// 					location.reload(); // Uncomment if you want to reload the page
-		// 				})
-		// 				.catch((error) => {
-		// 					console.error('Deactivation error:', error);
-		// 					// Handle errors if needed
-		// 				});
-		// 		});
-		// 	});
-		// </script>
 	</body>
 </html>

@@ -10,7 +10,6 @@ const MongoStore = require('connect-mongo');
 const MongoClient = require('mongodb').MongoClient;
 const path = require('path');
 const cors = require('cors');
-const csrf = require('csurf');
 
 // const { roles, ClassAdvisory, SubjectAdvisory } = require('./utils/constants');
 
@@ -23,6 +22,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(morgan('dev'));
 app.set('view engine', 'ejs');
+
+
+
+
 
 app.use(express.static('public'));
 app.use('/css', express.static(__dirname + '/public/css'));
@@ -67,6 +70,8 @@ app.use((req, res, next) => {
 	res.locals.currentUser = req.user; // Assuming your authentication logic sets currentUser in the request
 	next();
   });
+
+
 
 // this handle all the routes
 app.use('/', require('./routes/index.route'));

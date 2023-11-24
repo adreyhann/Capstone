@@ -37,6 +37,7 @@
 		></script>
 		<script defer src="/js/toggler.js"></script>
 		<script defer src="/js/tables.js"></script>
+		<script defer src="/js/tooltip.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 
 		<title>Accounts</title>
@@ -214,7 +215,7 @@
 									<th>Role</th>
 									<th>Class Advisory</th>
 									<th>Subject Advisory</th>
-									
+
 									<th>Status</th>
 									<th>Action</th>
 								</tr>
@@ -228,25 +229,36 @@
 									<td><%= user.role %></td>
 									<td><%= user.classAdvisory %></td>
 									<td><%= user.subjectAdvisory %></td>
-									
+
 									<td class="status-cell"><%= user.status %></td>
 									<td>
 										<button
 											type="button"
-											class="btn btn-sm btn-warning"
+											class="btn btn-sm"
 											data-bs-toggle="modal"
 											data-bs-target="#editUserModal"
 											onclick="populateUserForm('<%= user._id %>', '<%= user.name %>', '<%= user.role %>', '<%= user.classAdvisory %>', '<%= user.subjectAdvisory %>', '<%= user.email %>')"
 										>
-											Edit
+											<span
+												class="material-symbols-outlined"
+												data-bs-toggle="tooltip"
+												data-bs-placement="top"
+												data-bs-title="Edit"
+											>
+												edit
+											</span>
 										</button>
 										<button
-											class="btn btn-danger btn-sm"
+											class="btn btn-sm"
 											data-bs-toggle="modal"
 											data-bs-target="#confirmationModal"
 											data-user-id="<%= user._id %>"
 										>
-											Deactivate
+											<span class="material-symbols-outlined" data-bs-toggle="tooltip"
+												data-bs-placement="top"
+												data-bs-title="Deactivate user">
+												person_off
+											</span>
 										</button>
 									</td>
 								</tr>
@@ -417,7 +429,7 @@
 									<button
 										type="button"
 										class="btn btn-danger"
-										id="confirmDeactivateBtn"	
+										id="confirmDeactivateBtn"
 									>
 										Deactivate
 									</button>

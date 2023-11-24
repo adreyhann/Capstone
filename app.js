@@ -23,10 +23,6 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.set('view engine', 'ejs');
 
-
-
-
-
 app.use(express.static('public'));
 app.use('/css', express.static(__dirname + '/public/css'));
 app.use('/img', express.static(__dirname + '/public/img'));
@@ -58,8 +54,6 @@ app.use((req, res, next) => {
 	next();
 });
 
-
-
 app.use(connectFlash());
 app.use((req, res, next) => {
 	res.locals.messages = req.flash();
@@ -69,9 +63,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
 	res.locals.currentUser = req.user; // Assuming your authentication logic sets currentUser in the request
 	next();
-  });
-
-
+});
 
 // this handle all the routes
 app.use('/', require('./routes/index.route'));
@@ -88,7 +80,12 @@ app.use(
 	ensureClassAdvisor,
 	require('./routes/advisor.route')
 );
-app.use('/admin', ensureAuthenticated, ensureAdmin, require('./routes/admin.route'));
+app.use(
+	'/admin',
+	ensureAuthenticated,
+	ensureAdmin,
+	require('./routes/admin.route')
+);
 
 // error handler (404)
 app.use((req, res, next) => {
@@ -123,34 +120,24 @@ function ensureAuthenticated(req, res, next) {
 
 function ensureSystemAdmin(req, res, next) {
 	if (req.user && req.user.role === 'System Admin') {
-		// User is a system administrator, allow access
 		next();
 	} else {
-		// User is not a system administrator, deny access
-		res
-			.status(403)
-			.send('Access Forbidden: You are not a system administrator.');
+		res.status(403).render('error_403');
 	}
 }
 
 function ensureAdmin(req, res, next) {
 	if (req.user && req.user.role === 'Admin') {
-		// User is a system administrator, allow access
 		next();
 	} else {
-		// User is not a system administrator, deny access
-		res
-			.status(403)
-			.send('Access Forbidden: You are not a administrator.');
+		res.status(403).render('error_403');
 	}
 }
 
 function ensureClassAdvisor(req, res, next) {
 	if (req.user && req.user.role === 'Class Advisor') {
-	  // User is a system administrator, allow access
-	  next();
+		next();
 	} else {
-	  // User is not a system administrator, deny access
-	  res.status(403).send('Access Forbidden: You are not a Class Advisor.');
+		res.status(403).render('error_403');
 	}
-  }
+}

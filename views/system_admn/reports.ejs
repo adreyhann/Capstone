@@ -7,7 +7,7 @@
 			src="https://kit.fontawesome.com/ae360af17e.js"
 			crossorigin="anonymous"
 		></script>
-        <link
+		<link
 			href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
 			rel="stylesheet"
 			integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
@@ -32,9 +32,10 @@
 		></script>
 		<script defer src="/js/tables.js"></script>
 		<script defer src="/js/charts.js"></script>
-        <script defer src="/js/toggler.js"></script>
-		<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <link rel="stylesheet" type="text/css" href="/css/styles.css">
+		<script defer src="/js/toggler.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chart.js@latest"></script>
+
+		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<title>Reports</title>
 	</head>
 	<body>
@@ -61,9 +62,11 @@
 								/>
 							</div>
 							<div class="col-md-6">
-								<p class="my-0 pt-2" style="font-size: 15px"><%= person.name %></p>
+								<p class="my-0 pt-2" style="font-size: 15px">
+									<%= person.name %>
+								</p>
 								<span class="badge rounded-pill text-bg-info my-0"
-									>System Admin</span
+									><%= person.role %></span
 								>
 							</div>
 						</div>
@@ -165,101 +168,43 @@
 								</a>
 								<ul class="dropdown-menu dropdown-menu-lg-end">
 									<li>
-										<a
-											class="dropdown-item"
-											href="/systemAdmin/profile"
+										<a class="dropdown-item" href="/systemAdmin/profile"
 											>View Profile</a
 										>
 									</li>
 									<li>
-										<a
-											class="dropdown-item"
-											href="/systemAdmin/historyLogs"
+										<a class="dropdown-item" href="/systemAdmin/historyLogs"
 											>History logs</a
 										>
 									</li>
 									<li><hr class="dropdown-divider" /></li>
 									<li>
-										<a class="dropdown-item" href="/auth/logout"
-											>Logout</a
-										>
+										<a class="dropdown-item" href="/auth/logout">Logout</a>
 									</li>
 								</ul>
 							</li>
 						</ul>
 					</div>
 				</nav>
-				<div class="container">
+				<div class="container-lg">
 					<h2 class="my-1">Reports</h2>
 					<hr />
-					<div class="container text-center">
-						<div class="row">
-							<div class="col">
-								<div class="card">
-									<div class="card-header text-start">Records Overview</div>
-									<div class="card-body">
-										<div class="container">
-											<div class="row">
-												<div
-													class="col-3"
-													style="border-right: rgb(206, 202, 202) 2px solid"
-												>
-													<canvas id="reportChart"></canvas>
-												</div>
-												<div class="col text-center">
-													<h5>Recently added records</h5>
-													<table
-														class="table table-hover table-responsive"
-														style="width: 45rem; overflow: hidden"
-													>
-														<thead>
-															<tr>
-																<th>LRN</th>
-																<th>Student Name</th>
-																<th>year level</th>
-																<th>Batch</th>
-																<th>Action</th>
-															</tr>
-														</thead>
-														<tbody>
-															<tr>
-																<th>1</th>
-																<td>Mark</td>
-																<td>Otto</td>
-																<td>@mdo</td>
-																<td>
-																	<a
-																		class="btn btn-primary btn-sm"
-																		href="../sys-admin-ui/stud-details.html"
-																		>Manage</a
-																	>
-																</td>
-															</tr>
-															<tr>
-																<th>2</th>
-																<td>Jacob</td>
-																<td>Thornton</td>
-																<td>@fat</td>
-																<td>
-																	<a
-																		class="btn btn-primary btn-sm"
-																		href="../sys-admin-ui/stud-details.html"
-																		>Manage</a
-																	>
-																</td>
-															</tr>
-														</tbody>
-													</table>
-												</div>
-											</div>
+					<div class="card custom-card-2 border-0">
+						<div class="card-header border-0">
+							<p class="my-0">Summary reports</p>
+						</div>
+						<div class="card-body">
+							<div class="row">
+								<div class="col-3">
+									<canvas id="reportChart"></canvas>
+								</div>
+								<div class="col" style="border-left: 1px solid gray">
+									<p>Activity logs</p>
+									<div class="card custom-card-2 border-0">
+										<div class="card-body">
+											<p class="my-0">Information here</p>
 										</div>
 									</div>
-								</div>
-							</div>
-							<div class="col-5 mt-3">
-								<div class="card">
-									<div class="card-header text-start">Activity</div>
-									<div class="card-body"></div>
 								</div>
 							</div>
 						</div>

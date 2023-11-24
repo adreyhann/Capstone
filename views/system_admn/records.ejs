@@ -37,6 +37,7 @@
 		></script>
 		<script defer src="/js/toggler.js"></script>
 		<script defer src="/js/tables.js"></script>
+		<script defer src="/js/tooltip.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<title>Records</title>
 	</head>
@@ -64,7 +65,9 @@
 								/>
 							</div>
 							<div class="col-md-6">
-								<p class="my-0 pt-2" style="font-size: 15px"><%= person.name %></p>
+								<p class="my-0 pt-2" style="font-size: 15px">
+									<%= person.name %>
+								</p>
 								<span class="badge rounded-pill text-bg-info my-0"
 									><%= person.role %></span
 								>
@@ -205,7 +208,7 @@
 							type="button"
 							class="btn btn-sm btn-link"
 							data-bs-toggle="tooltip"
-							data-bs-placement="top"
+							data-bs-placement="right"
 							title="Download Backup"
 							alt="backup"
 							href="/systemAdmin/backup"
@@ -237,25 +240,40 @@
 									<td><%= record.gradeLevel %></td>
 									<td>
 										<a
-											class="btn btn-info btn-sm"
+											class="btn btn-sm"
 											href="/systemAdmin/view-files/<%= record._id %>"
-											>View Files</a
+											data-bs-toggle="tooltip"
+											data-bs-placement="top"
+											data-bs-title="View files"
+											><span class="material-symbols-outlined">
+												folder
+											</span></a
 										>
 										<button
 											type="button"
-											class="btn btn-sm btn-warning"
+											class="btn btn-sm"
 											data-bs-toggle="modal"
 											data-bs-target="#editRecordModal"
 											onclick="populateEditForm('<%= record._id %>', '<%= record.lrn %>', '<%= record.studentName %>', '<%= record.gender %>', '<%= record.transferee %>', '<%= record.gradeLevel %>')"
 										>
-											Edit
+											<span
+												class="material-symbols-outlined"
+												data-bs-toggle="tooltip"
+												data-bs-placement="top"
+												data-bs-title="Edit"
+											>
+												edit
+											</span>
 										</button>
 										<button
 											type="button"
-											class="btn btn-danger btn-sm"
+											class="btn btn-sm"
+											data-bs-toggle="tooltip"
+											data-bs-placement="top"
+											data-bs-title="Add to archives"
 											onclick="moveToArchive('<%= record._id %>')"
 										>
-											Add to archive
+											<span class="material-symbols-outlined"> archive </span>
 										</button>
 									</td>
 

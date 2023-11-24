@@ -7,7 +7,7 @@
 			src="https://kit.fontawesome.com/ae360af17e.js"
 			crossorigin="anonymous"
 		></script>
-        <link
+		<link
 			href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
 			rel="stylesheet"
 			integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
@@ -36,7 +36,8 @@
 		></script>
 		<script defer src="/js/tables.js"></script>
 		<script defer src="/js/toggler.js"></script>
-        <link rel="stylesheet" type="text/css" href="/css/styles.css">
+		<script defer src="/js/tooltip.js"></script>
+		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<title>Archives</title>
 	</head>
 	<body>
@@ -53,7 +54,7 @@
 						</a>
 					</div>
 					<hr class="mx-4 mt-0" style="width: 13rem" />
-					<div class="container my-2 ">
+					<div class="container my-2">
 						<div class="row">
 							<div class="col-md-4 mx-2">
 								<img
@@ -63,7 +64,9 @@
 								/>
 							</div>
 							<div class="col-md-6">
-								<p class="my-0 pt-2" style="font-size: 15px"><%= person.name %></p>
+								<p class="my-0 pt-2" style="font-size: 15px">
+									<%= person.name %>
+								</p>
 								<span class="badge rounded-pill text-bg-info my-0"
 									><%= person.role %></span
 								>
@@ -169,24 +172,18 @@
 								</a>
 								<ul class="dropdown-menu dropdown-menu-lg-end">
 									<li>
-										<a
-											class="dropdown-item"
-											href="/systemAdmin/profile"
+										<a class="dropdown-item" href="/systemAdmin/profile"
 											>View Profile</a
 										>
 									</li>
 									<li>
-										<a
-											class="dropdown-item"
-											href="/systemAdmin/historyLogs"
+										<a class="dropdown-item" href="/systemAdmin/historyLogs"
 											>History logs</a
 										>
 									</li>
 									<li><hr class="dropdown-divider" /></li>
 									<li>
-										<a class="dropdown-item" href="/auth/logout"
-											>Logout</a
-										>
+										<a class="dropdown-item" href="/auth/logout">Logout</a>
 									</li>
 								</ul>
 							</li>
@@ -199,13 +196,15 @@
 					<div class="container w-100">
 						<a
 							type="button"
-							class="icon-link icon-link-hover" style="--bs-icon-link-transform: translate3d(0, -.125rem, 0);"
+							class="icon-link icon-link-hover"
+							style="--bs-icon-link-transform: translate3d(0, -0.125rem, 0)"
 							data-bs-toggle="tooltip"
 							data-bs-placement="top"
 							title="Download Backup"
 							alt="backup"
 							href="/systemAdmin/backup-archive"
-							><span class="material-symbols-outlined"> backup_table </span>Download all files</a
+							><span class="material-symbols-outlined"> backup_table </span
+							>Download all files</a
 						>
 						<table
 							id="example"
@@ -227,19 +226,26 @@
 									<td><%= record.lrn %></td>
 									<td><%= record.studentName %></td>
 									<td><%= record.gender %></td>
-									<td><%= new Date(record.dateAddedToArchive).toLocaleString() %></td>
+									<td>
+										<%= new Date(record.dateAddedToArchive).toLocaleString() %>
+									</td>
 									<td>
 										<a
-											class="btn btn-info btn-sm"
+											class="btn btn-sm"
+											data-bs-toggle="tooltip"
+											data-bs-placement="top"
+											data-bs-title="View files"
 											href="/systemAdmin/archived-files/<%= record._id %>"
-											>View Files</a
+											><span class="material-symbols-outlined">
+												folder
+											</span></a
 										>
 									</td>
 									<!-- Add more cells based on your schema -->
 								</tr>
 								<% }); %>
 							</tbody>
-							
+
 							<tfoot class="table-info">
 								<tr>
 									<th>LRN</th>

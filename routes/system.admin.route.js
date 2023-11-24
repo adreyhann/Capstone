@@ -4,18 +4,32 @@ const path = require('path');
 const fs = require('fs');
 const { PDFDocument } = require('pdf-lib');
 const User = require('../models/user.model');
+const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
 const archiver = require('archiver');
-const { exec } = require('child_process');
-const Event = require('../models/events.model');
 
 function countVisibleUsersInTable(users, currentUser) {
 	// Implement your logic to count visible users in the table
-	const visibleUsersInTable = users.filter(user => {
-	  return user._id.toString() !== currentUser._id.toString();
+	const visibleUsersInTable = users.filter((user) => {
+		return user._id.toString() !== currentUser._id.toString();
 	});
 	return visibleUsersInTable.length;
-  }
+}
+
+// Function to add a history log
+async function addHistoryLog(userId, action, details) {
+	try {
+		const historyLog = new History({
+			userId,
+			action,
+			details,
+		});
+
+		await historyLog.save();
+	} catch (error) {
+		console.error('Error adding history log:', error);
+	}
+}
 
 router.get('/dashboard', async (req, res, next) => {
 	// console.log(req.user)
@@ -24,7 +38,13 @@ router.get('/dashboard', async (req, res, next) => {
 	const users = await User.find();
 	const records = await Records.find();
 	const archives = await Archives.find();
-	res.render('system_admn/dashboard', { person, users, records, archives, countVisibleUsersInTable: countVisibleUsersInTable(users, person) });
+	res.render('system_admn/dashboard', {
+		person,
+		users,
+		records,
+		archives,
+		countVisibleUsersInTable: countVisibleUsersInTable(users, person),
+	});
 });
 
 router.get('/accounts', async (req, res, next) => {
@@ -32,7 +52,12 @@ router.get('/accounts', async (req, res, next) => {
 	const currentUserRole = req.user.role;
 	const users = await User.find();
 	const currentUser = req.user;
-	res.render('system_admn/accounts', { person, users, currentUserRole, currentUser });
+	res.render('system_admn/accounts', {
+		person,
+		users,
+		currentUserRole,
+		currentUser,
+	});
 });
 
 router.get('/records', async (req, res, next) => {
@@ -72,8 +97,17 @@ router.get('/profile', async (req, res, next) => {
 });
 
 router.get('/historyLogs', async (req, res, next) => {
-	const person = req.user;
-	res.render('system_admn/history-logs', { person });
+	try {
+		const person = req.user;
+
+		// Fetch history logs from the database
+		const historyLogs = await History.find().populate('userId', 'name'); // Assuming 'User' model has 'name' field
+
+		res.render('system_admn/history-logs', { person, historyLogs });
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 router.get('/users', async (req, res, next) => {
@@ -301,6 +335,15 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 			return;
 		}
 
+		// Capture the existing values for history logging
+		const oldValues = {
+			lrn: record.lrn,
+			studentName: record.studentName,
+			gender: record.gender,
+			transferee: record.transferee,
+			gradeLevel: record.gradeLevel,
+		};
+
 		// Update the record with new values
 		record.lrn = req.body.editLrn;
 		record.studentName = req.body.editName;
@@ -310,6 +353,9 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 
 		// Save the updated record
 		await record.save();
+
+		// Log the history of the record update
+		await addHistoryLog(req.user._id, 'Record Updated', `Record ID: ${record._id}`, { oldValues, newValues: { ...record.toObject() } });
 
 		// Redirect back to the records page
 		req.flash('success', 'Record updated successfully');
@@ -592,7 +638,6 @@ router.post('/edit-profile/:id', async (req, res) => {
 			subjectAdvisory: editSubjectAdvisory,
 		});
 
-		
 		// Check if the user's new role is either "Admin" or "Class Advisor"
 		if (editRole === 'Admin' || editRole === 'Class Advisor') {
 			// Log out the user and destroy the session
@@ -616,8 +661,19 @@ router.post('/edit-profile/:id', async (req, res) => {
 	}
 });
 
-  
-  
-  
+// Add this route to get record counts
+router.get('/get-record-counts', async (req, res, next) => {
+	try {
+		const activeCount = await Records.countDocuments({
+			/* your active conditions */
+		});
+		const archivedCount = await Archives.countDocuments();
+
+		res.json({ activeCount, archivedCount });
+	} catch (error) {
+		console.error('Error:', error);
+		res.status(500).json({ error: 'Internal Server Error' });
+	}
+});
 
 module.exports = router;

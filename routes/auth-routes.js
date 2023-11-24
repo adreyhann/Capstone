@@ -42,9 +42,11 @@ router.post(
 					req.flash('error', error.msg);
 				});
 				const person = req.user;
+				const currentUserRole = req.user.role;
 				res.render('credentials/register', {
 					person,
 					email: req.body.email,
+					currentUserRole,
 					messages: req.flash(),
 				});
 				return;
@@ -64,9 +66,11 @@ router.post(
 			res.redirect('/auth/register');
 		} catch (error) {
 			const person = req.user;
+			const currentUserRole = req.user.role;
 			res.render('credentials/register', {
 				person,
 				email: req.body.email,
+				currentUserRole,
 				messages: req.flash(),
 				error: error.message,
 			});
@@ -107,124 +111,217 @@ router.post(
 );
 
 router.get('/forgot', (req, res, next) => {
-    res.render('credentials/forgot_password');
+	res.render('credentials/forgot_password');
 });
 
 router.post('/forgot', async (req, res, next) => {
 	const { email } = req.body;
-  
+	 // Validate that the email is not empty
+	 if (!email) {
+        req.flash('error', 'Please enter a valid email.');
+        return res.redirect('/auth/forgot');
+    }
+
 	try {
-	  const user = await User.findOne({ email });
-  
-	  if (!user) {
-		req.flash('error', 'User not found.');
-		return res.redirect('/auth/forgot');
-	  }
-  
-	  // Generate a reset code
-	  const resetCode = Math.floor(100000 + Math.random() * 900000); // 6-digit code
-  
-	  user.resetCode = resetCode;
-	  await user.save();
-  
-	  const transporter = nodemailer.createTransport({
-		service: 'gmail',
-		auth: {
-		  user: 'meliboadrian@gmail.com', 
-		  pass: 'igtw pyqi aggb bbyb', 
-		},
-		tls: {
-		  rejectUnauthorized: false
+		const user = await User.findOne({ email });
+
+		if (!user) {
+			req.flash('error', 'User not found.');
+			return res.redirect('/auth/forgot');
 		}
-	  });
-  
-	  const mailOptions = {
-		from: 'meliboadrian@gmail.com', 
-		to: user.email,
-		subject: 'Password Reset Code',
-		text: `Your password reset code is: ${resetCode}`,
-	  };
-  
-	  try {
-		await transporter.sendMail(mailOptions);
-		req.flash('success', 'Password reset code sent. Check your email.');
-		res.redirect(`/auth/reset-code?email=${user.email}`);
-	  } catch (err) {
-		console.error('Error sending password reset email:', err);
-		req.flash('error', 'An error occurred while sending the password reset email. Please try again later.');
-		res.redirect('/auth/forgot');
-	  }
+
+		// Generate a reset code
+		const resetCode = Math.floor(100000 + Math.random() * 900000); // 6-digit code
+
+		// Set reset code and expiration to 30 minutes
+		user.resetCode = resetCode;
+		user.resetCodeExpires = Date.now() + 1800000; // 30 minutes expiration
+
+		await user.save();
+
+		const transporter = nodemailer.createTransport({
+			service: 'gmail',
+			auth: {
+				user: 'meliboadrian@gmail.com',
+				pass: 'igtw pyqi aggb bbyb',
+			},
+			tls: {
+				rejectUnauthorized: false,
+			},
+		});
+
+		const mailOptions = {
+			from: 'meliboadrian@gmail.com',
+			to: user.email,
+			subject: 'Password Reset Code',
+			text: `Your password reset code is: ${resetCode}`,
+		};
+
+		try {
+			await transporter.sendMail(mailOptions);
+			req.flash('success', 'Password reset code sent. Check your email.');
+			res.redirect(`/auth/reset-code?email=${user.email}`);
+		} catch (err) {
+			console.error('Error sending password reset email:', err);
+			req.flash(
+				'error',
+				'An error occurred while sending the password reset email. Please try again later.'
+			);
+			res.redirect('/auth/forgot');
+		}
 	} catch (err) {
-	  console.error('Error handling password reset request:', err);
-	  req.flash('error', 'An error occurred.');
-	  res.redirect('/auth/forgot');
+		console.error('Error handling password reset request:', err);
+		req.flash('error', 'An error occurred.');
+		res.redirect('/auth/forgot');
 	}
-  });
-  
+});
 
 router.get('/reset-code', (req, res, next) => {
-    res.render('credentials/reset-code');
+	res.render('credentials/reset-code');
 });
 
 router.post('/reset-code', async (req, res, next) => {
-    const { code } = req.body;
+	const { code } = req.body;
 
+	if (!code) {
+        req.flash('error', 'Please enter the reset code.');
+        return res.redirect('/auth/reset-code');
+    }
+
+	try {
+		const user = await User.findOne({ resetCode: code });
+
+		if (!user) {
+			req.flash('error', 'Invalid reset code.');
+			return res.redirect('/auth/reset-code');
+		}
+
+		user.resetCode = null;
+		await user.save();
+
+		res.redirect(`/auth/reset-password/${user._id}`);
+	} catch (err) {
+		console.error(err);
+		req.flash('error', 'An error occurred.');
+		res.redirect('/auth/reset-code');
+	}
+});
+
+// Add this route in your router definition
+// Add this route in your router definition
+router.get('/resend-code', async (req, res) => {
     try {
-        const user = await User.findOne({ resetCode: code });
+        // Get the user by email
+        const user = await User.findOne({ email: req.query.email });
 
         if (!user) {
-            req.flash('error', 'Invalid reset code.');
+            req.flash('error', 'User not found.');
+            return res.redirect('/auth/forgot');
+        }
+
+        // Check if the previous code has expired
+        if (user.resetCodeExpires && user.resetCodeExpires > Date.now()) {
+            req.flash('error', 'Previous code has not expired yet.');
             return res.redirect('/auth/reset-code');
         }
 
-        user.resetCode = null;
+        // Generate a new reset code
+        const resetCode = Math.floor(100000 + Math.random() * 900000); // 6-digit code
+
+        // Set reset code and expiration
+        user.resetCode = resetCode;
+        user.resetCodeExpires = Date.now() + 3600000; // 1 hour expiration
+
         await user.save();
 
-        res.redirect(`/auth/reset-password/${user._id}`);
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'meliboadrian@gmail.com',
+                pass: 'igtw pyqi aggb bbyb',
+            },
+            tls: {
+                rejectUnauthorized: false,
+            },
+        });
+
+        const mailOptions = {
+            from: 'meliboadrian@gmail.com',
+            to: user.email,
+            subject: 'Password Reset Code',
+            text: `Your new password reset code is: ${resetCode}`,
+        };
+
+        await transporter.sendMail(mailOptions);
+        req.flash('success', 'New password reset code sent. Check your email.');
+        res.redirect('/auth/reset-code');
     } catch (err) {
-        console.error(err);
-        req.flash('error', 'An error occurred.');
+        console.error('Error resending password reset code:', err);
+        req.flash('error', 'An error occurred while resending the password reset code. Please try again later.');
         res.redirect('/auth/reset-code');
     }
 });
 
+  
+  
+  
+  
+  
+
 
 router.get('/reset-password/:userId', (req, res, next) => {
 	const userId = req.params.userId;
-	res.render('credentials/reset', { userId }); 
+	res.render('credentials/reset', { userId });
 });
 
 router.post('/reset-password/:userId', async (req, res, next) => {
 	const userId = req.params.userId;
 	const { password, password2 } = req.body;
-  
+
+	// Validate that the passwords are not empty
+    if (!password || !password2) {
+        req.flash('error', 'Please fill in all the fields.');
+        return res.redirect(`/auth/reset-password/${userId}`);
+    }
+
+    // Validate that the passwords match
+    if (password !== password2) {
+        req.flash('error', 'Passwords do not match.');
+        return res.redirect(`/auth/reset-password/${userId}`);
+    }
+
+    // Validate minimum password length
+    if (password.length < 8) {
+        req.flash('error', 'Password must be at least 8 characters long.');
+        return res.redirect(`/auth/reset-password/${userId}`);
+    }
+
 	try {
-	  // Update the user's password
-	  const user = await User.findById(userId);
-  
-	  if (!user) {
-		req.flash('error', 'User not found.');
-		return res.redirect('/auth/reset-code');
-	  }
-  
-	  if (password !== password2) {
-		req.flash('error', 'Passwords do not match.');
-		return res.redirect(`/auth/reset-password/${userId}`);
-	  }
+		// Update the user's password
+		const user = await User.findById(userId);
 
-	  const hashedPassword = await bcrypt.hash(password, 10);
-	  user.password = hashedPassword;
-	  await user.save();
-  
-	  req.flash('success', 'Password reset successfully.');
-	  res.redirect('/auth/login');
+		if (!user) {
+			req.flash('error', 'User not found.');
+			return res.redirect('/auth/reset-code');
+		}
+
+		if (password !== password2) {
+			req.flash('error', 'Passwords do not match.');
+			return res.redirect(`/auth/reset-password/${userId}`);
+		}
+
+		const hashedPassword = await bcrypt.hash(password, 10);
+		user.password = hashedPassword;
+		await user.save();
+
+		req.flash('success', 'Password reset successfully.');
+		res.redirect('/auth/login');
 	} catch (err) {
-	  console.error(err);
-	  req.flash('error', 'An error occurred.');
-	  res.redirect(`/auth/reset-password/${userId}`);
+		console.error(err);
+		req.flash('error', 'An error occurred.');
+		res.redirect(`/auth/reset-password/${userId}`);
 	}
-  });
-
+});
 
 router.get('/logout', ensureAuthenticated, async (req, res, next) => {
 	req.logout(function (err) {

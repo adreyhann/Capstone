@@ -1,11 +1,10 @@
-
 // reports chart
-const chart = document.getElementById('reportChart').getContext('2d');
+const chart = document.getElementById('reportsChart').getContext('2d');
 
 // Function to fetch data from the server
 async function fetchData() {
 	try {
-		const response = await fetch('/admin/get-record-counts'); // Update the route accordingly
+		const response = await fetch('/systemAdmin/get-record-counts'); // Update the route accordingly
 		if (response.ok) {
 			const data = await response.json();
 			updateChart(data);
@@ -40,3 +39,6 @@ function updateChart(data) {
 
 // Call the fetchData function to initially populate the chart
 fetchData();
+
+
+

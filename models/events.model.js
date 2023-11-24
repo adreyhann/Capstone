@@ -1,9 +1,11 @@
 const mongoose = require('mongoose');
 
+// Define Mongoose schema for events
 const eventSchema = new mongoose.Schema({
-	title: { type: String, required: true },
-	start: { type: Date, required: true },
-	allDay: { type: Boolean, required: true },
+	title: String,
+	start: Date,
+	end: Date,
+	description: String,
 });
 
 const Event = mongoose.model('Event', eventSchema);

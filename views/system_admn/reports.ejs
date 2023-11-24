@@ -31,7 +31,7 @@
 			src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"
 		></script>
 		<script defer src="/js/tables.js"></script>
-		<script defer src="/js/charts.js"></script>
+		<script defer src="/js/sa.report.chart.js"></script>
 		<script defer src="/js/toggler.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/chart.js@latest"></script>
 
@@ -196,16 +196,31 @@
 						<div class="card-body">
 							<div class="row">
 								<div class="col-3">
-									<canvas id="reportChart"></canvas>
+									<canvas id="reportsChart"></canvas>
 								</div>
-								<div class="col" style="border-left: 1px solid gray">
+								<div class="col" style="border-left: 1px solid gray; height: 400px; overflow-y: auto;">
 									<p>Activity logs</p>
-									<div class="card custom-card-2 border-0">
-										<div class="card-body">
-											<p class="my-0">Information here</p>
+									<% historyLogs.forEach(log => { %>
+										<div class="card my-2 custom-card-2 border-0">
+											<div class="card-body position-relative">
+												<p class="m-0 fs-6 fw-medium"><%= log.action %></p>
+												<p class="m-0" style="color: #72726e"><%= log.timestamp %></p>
+												<p class="d-inline-flex gap-1 mb-0 position-absolute top-0 end-0 translate-middle" style="padding-top: 80px;">
+													<a class="btn btn-primary btn-sm" data-bs-toggle="collapse" href="#collapseExample<%= log._id %>" role="button" aria-expanded="false" aria-controls="collapseExample<%= log._id %>">
+														View details
+													</a>
+												</p>
+												<div class="collapse" id="collapseExample<%= log._id %>">
+													<div class="card card-body">
+														<%= log.details %>
+													</div>
+												</div>
+											</div>
 										</div>
-									</div>
+									<% }); %>
 								</div>
+								
+								
 							</div>
 						</div>
 					</div>

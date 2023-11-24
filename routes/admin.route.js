@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { PDFDocument } = require('pdf-lib');
 const User = require('../models/user.model');
+const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
 
 function countVisibleUsers(users, currentUser) {
@@ -66,8 +67,17 @@ router.get('/calendar', async (req, res, next) => {
 });
 
 router.get('/reports', async (req, res, next) => {
-	const person = req.user;
-	res.render('admin/reports', { person });
+	try {
+		const person = req.user;
+
+		// Fetch history logs from the database
+		const historyLogs = await History.find().populate('userId', 'name'); // Assuming 'User' model has 'name' field
+
+		res.render('admin/reports', { person, historyLogs });
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 router.get('/profile', async (req, res, next) => {
@@ -76,8 +86,17 @@ router.get('/profile', async (req, res, next) => {
 });
 
 router.get('/historyLogs', async (req, res, next) => {
-	const person = req.user;
-	res.render('admin/history-logs', { person });
+	try {
+		const person = req.user;
+
+		// Fetch history logs from the database
+		const historyLogs = await History.find().populate('userId', 'name'); // Assuming 'User' model has 'name' field
+
+		res.render('admin/history-logs', { person, historyLogs });
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 router.get('/users', async (req, res, next) => {
@@ -442,6 +461,45 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 		console.error('Error:', error);
 		next(error);
 	}
+});
+
+
+// Add this route to get record counts
+router.get('/get-record-counts', async (req, res, next) => {
+	try {
+		const activeCount = await Records.countDocuments({
+			/* your active conditions */
+		});
+		const archivedCount = await Archives.countDocuments();
+
+		res.json({ activeCount, archivedCount });
+	} catch (error) {
+		console.error('Error:', error);
+		res.status(500).json({ error: 'Internal Server Error' });
+	}
+});
+
+// Add this route to get record counts based on gradeLevel
+router.get('/get-gradeLevel-counts', async (req, res, next) => {
+    try {
+        // Assuming 'gradeLevel' is a property in the 'Records' collection
+        const gradeLevelCounts = await Records.aggregate([
+            {
+                $group: {
+                    _id: '$gradeLevel',
+                    count: { $sum: 1 },
+                },
+            },
+        ]);
+
+        const labels = gradeLevelCounts.map((gradeLevelCount) => gradeLevelCount._id);
+        const counts = gradeLevelCounts.map((gradeLevelCount) => gradeLevelCount.count);
+
+        res.json({ labels, counts });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 });
 
 module.exports = router;

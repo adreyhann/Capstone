@@ -63,7 +63,7 @@
 							<div class="col-md-6">
 								<p class="my-0 pt-2" style="font-size: 15px"><%= person.name %></p>
 								<span class="badge rounded-pill text-bg-info my-0"
-									>System Admin</span
+									><%= person.role %></span
 								>
 							</div>
 						</div>
@@ -192,74 +192,35 @@
 				<div class="container">
 					<h2 class="my-1">Reports</h2>
 					<hr />
-					<div class="container text-center">
-						<div class="row">
-							<div class="col">
-								<div class="card">
-									<div class="card-header text-start">Records Overview</div>
-									<div class="card-body">
-										<div class="container">
-											<div class="row">
-												<div
-													class="col-3"
-													style="border-right: rgb(206, 202, 202) 2px solid"
-												>
-													<canvas id="reportChart"></canvas>
-												</div>
-												<div class="col text-center">
-													<h5>Recently added records</h5>
-													<table
-														class="table table-hover table-responsive"
-														style="width: 45rem; overflow: hidden"
-													>
-														<thead>
-															<tr>
-																<th>LRN</th>
-																<th>Student Name</th>
-																<th>year level</th>
-																<th>Batch</th>
-																<th>Action</th>
-															</tr>
-														</thead>
-														<tbody>
-															<tr>
-																<th>1</th>
-																<td>Mark</td>
-																<td>Otto</td>
-																<td>@mdo</td>
-																<td>
-																	<a
-																		class="btn btn-primary btn-sm"
-																		href=""
-																		>Manage</a
-																	>
-																</td>
-															</tr>
-															<tr>
-																<th>2</th>
-																<td>Jacob</td>
-																<td>Thornton</td>
-																<td>@fat</td>
-																<td>
-																	<a
-																		class="btn btn-primary btn-sm"
-																		href=""
-																		>Manage</a
-																	>
-																</td>
-															</tr>
-														</tbody>
-													</table>
+					<div class="card custom-card-2 border-0">
+						<div class="card-header border-0">
+							<p class="my-0">Summary reports</p>
+						</div>
+						<div class="card-body">
+							<div class="row">
+								<div class="col-3">
+									<canvas id="reportChart"></canvas>
+								</div>
+								<div class="col" style="border-left: 1px solid gray; height: 400px; overflow-y: auto;">
+									<p>Activity logs</p>
+									<% historyLogs.forEach(log => { %>
+										<div class="card my-2 custom-card-2 border-0">
+											<div class="card-body position-relative">
+												<p class="m-0 fs-5 fw-medium"><%= log.action %></p>
+												<p class="m-0" style="color: #72726e"><%= log.timestamp %></p>
+												<p class="d-inline-flex gap-1 mb-0 position-absolute top-0 end-0 translate-middle" style="padding-top: 80px;">
+													<a class="btn btn-primary btn-sm" data-bs-toggle="collapse" href="#collapseExample<%= log._id %>" role="button" aria-expanded="false" aria-controls="collapseExample<%= log._id %>">
+														View details
+													</a>
+												</p>
+												<div class="collapse" id="collapseExample<%= log._id %>">
+													<div class="card card-body">
+														<%= log.details %>
+													</div>
 												</div>
 											</div>
 										</div>
-									</div>
-								</div>
-							</div>
-							<div class="col-5 mt-3">
-								<div class="card">
-									<div class="card-header text-start">Activity</div>
-									<div class="card-body"></div>
+									<% }); %>
 								</div>
 							</div>
 						</div>

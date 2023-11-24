@@ -11,11 +11,7 @@ const MongoClient = require('mongodb').MongoClient;
 const path = require('path');
 const cors = require('cors');
 
-// const { roles, ClassAdvisory, SubjectAdvisory } = require('./utils/constants');
-
 const app = express();
-
-// const csrfProtection = csrf({ cookie: true });
 
 app.use(cors());
 app.use(express.urlencoded({ extended: false }));
@@ -94,8 +90,14 @@ app.use((req, res, next) => {
 
 app.use((error, req, res, next) => {
 	error.status = error.status || 500;
-	res.status(error.status);
-	res.json({ error: error.message });
+	
+    if (error.status === 404) {
+        res.status(404).render('error_404', { error: error.message });
+    } else if (error.status === 500) {
+        res.status(500).render('error_500', { error: 'Internal Server Error' });
+    } else {
+        res.status(error.status).render('error_40x', { error: error.message });
+    }
 });
 
 mongoose

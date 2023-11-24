@@ -36,6 +36,7 @@
 		></script>
 		<script defer src="/js/tables.js"></script>
 		<script defer src="/js/toggler.js"></script>
+		<script defer src="/js/tooltip.js"></script>
         <link rel="stylesheet" type="text/css" href="/css/styles.css">
 		<title>Archives</title>
 	</head>
@@ -221,9 +222,14 @@
 									<td><%= new Date(record.dateAddedToArchive).toLocaleString() %></td>
 									<td>
 										<a
-											class="btn btn-info btn-sm"
+											class="btn btn-sm"
+											data-bs-toggle="tooltip"
+											data-bs-placement="top"
+											data-bs-title="View files"
 											href="/admin/archived-files/<%= record._id %>"
-											>View Files</a
+											><span class="material-symbols-outlined">
+												folder
+											</span></a
 										>
 									</td>
 									<!-- Add more cells based on your schema -->

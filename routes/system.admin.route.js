@@ -6,6 +6,7 @@ const { PDFDocument } = require('pdf-lib');
 const User = require('../models/user.model');
 const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
+const Event = require('../models/events.model');
 const archiver = require('archiver');
 
 function countVisibleUsersInTable(users, currentUser) {
@@ -79,8 +80,17 @@ router.get('/calendar', async (req, res, next) => {
 });
 
 router.get('/reports', async (req, res, next) => {
-	const person = req.user;
-	res.render('system_admn/reports', { person });
+	try {
+		const person = req.user;
+
+		// Fetch history logs from the database
+		const historyLogs = await History.find().populate('userId', 'name'); // Assuming 'User' model has 'name' field
+
+		res.render('system_admn/reports', { person, historyLogs });
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 router.get('/profile', async (req, res, next) => {
@@ -355,7 +365,12 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 		await record.save();
 
 		// Log the history of the record update
-		await addHistoryLog(req.user._id, 'Record Updated', `Record ID: ${record._id}`, { oldValues, newValues: { ...record.toObject() } });
+		await addHistoryLog(
+			req.user._id,
+			'Record Updated',
+			`Record ID: ${record._id}`,
+			{ oldValues, newValues: { ...record.toObject() } }
+		);
 
 		// Redirect back to the records page
 		req.flash('success', 'Record updated successfully');
@@ -523,53 +538,6 @@ router.get('/backup-archive', async (req, res, next) => {
 	}
 });
 
-// router.get('/backup', async (req, res, next) => {
-//     try {
-//         // Specify the path where you want to store the backup
-//         const backupPath = 'C:\\Backup';
-
-//         // Run the mongodump command
-//         exec(`mongodump --uri=${process.env.MONGO_URI} --out=${backupPath}`, (error, stdout, stderr) => {
-//             if (error) {
-//                 console.error('Error:', error);
-//                 return res.status(500).send('Failed to create backup');
-//             }
-
-//             // Create a ZIP archive of the backup
-//             const archiveName = 'backup.zip';
-//             const archivePath = 'C:\\Backup\\' + archiveName;
-
-//             // Use the full path to the 7z executable
-//             const zipExecutable = '"C:\\Program Files\\7-Zip\\7z.exe"';  // Enclose the path in double quotes
-
-//             exec(`${zipExecutable} a -r "${archivePath}" "${backupPath}"`, (zipError) => {
-//                 if (zipError) {
-//                     console.error('ZIP Error:', zipError);
-//                     return res.status(500).send('Failed to create backup archive');
-//                 }
-
-//                 // Send the ZIP archive as a response
-//                 res.download(archivePath, archiveName, (downloadError) => {
-//                     if (downloadError) {
-//                         console.error('Download Error:', downloadError);
-//                         return res.status(500).send('Failed to download backup archive');
-//                     }
-
-//                     // Clean up: Remove the temporary backup files
-//                     exec(`rm -r "${backupPath}"`, (cleanupError) => {
-//                         if (cleanupError) {
-//                             console.error('Cleanup Error:', cleanupError);
-//                         }
-//                     });
-//                 });
-//             });
-//         });
-//     } catch (error) {
-//         console.error('Error:', error);
-//         res.status(500).send('Internal Server Error');
-//     }
-// });
-
 router.post('/edit-users/:_id', async (req, res, next) => {
 	try {
 		const userId = req.params._id;
@@ -675,5 +643,75 @@ router.get('/get-record-counts', async (req, res, next) => {
 		res.status(500).json({ error: 'Internal Server Error' });
 	}
 });
+
+// Add this route to get record counts based on gradeLevel
+router.get('/get-gradeLevel-counts', async (req, res, next) => {
+	try {
+		// Assuming 'gradeLevel' is a property in the 'Records' collection
+		const gradeLevelCounts = await Records.aggregate([
+			{
+				$group: {
+					_id: '$gradeLevel',
+					count: { $sum: 1 },
+				},
+			},
+		]);
+
+		const labels = gradeLevelCounts.map(
+			(gradeLevelCount) => gradeLevelCount._id
+		);
+		const counts = gradeLevelCounts.map(
+			(gradeLevelCount) => gradeLevelCount.count
+		);
+
+		res.json({ labels, counts });
+	} catch (error) {
+		console.error('Error:', error);
+		res.status(500).json({ error: 'Internal Server Error' });
+	}
+});
+
+// // create event
+// router.post('/events', async (req, res) => {
+// 	try {
+// 		const event = new Event(req.body);
+// 		await event.save();
+// 		res.status(201).json(event);
+// 	} catch (error) {
+// 		res.status(500).send(error.message);
+// 	}
+// });
+
+// // read events
+// router.get('/events', async (req, res) => {
+// 	try {
+// 		const events = await Event.find();
+// 		res.status(200).json(events);
+// 	} catch (error) {
+// 		res.status(500).send(error.message);
+// 	}
+// });
+
+// // Update event
+// router.put('/events/:eventId', async (req, res) => {
+// 	try {
+// 		const event = await Event.findByIdAndUpdate(req.params.eventId, req.body, {
+// 			new: true,
+// 		});
+// 		res.status(200).json(event);
+// 	} catch (error) {
+// 		res.status(500).send(error.message);
+// 	}
+// });
+
+// // Delete event
+// router.delete('/events/:eventId/delete', async (req, res) => {
+// 	try {
+// 		await Event.findByIdAndDelete(req.params.eventId);
+// 		res.status(204).send();
+// 	} catch (error) {
+// 		res.status(500).send(error.message);
+// 	}
+// });
 
 module.exports = router;

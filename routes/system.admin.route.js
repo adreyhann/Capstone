@@ -75,8 +75,15 @@ router.get('/archives', async (req, res, next) => {
 });
 
 router.get('/calendar', async (req, res, next) => {
-	const person = req.user;
-	res.render('system_admn/calendar', { person });
+	try {
+        const person = req.user;
+        const events = await Event.find(); // Assuming you have an Event model
+
+        res.render('system_admn/calendar', { person, events });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
 
 router.get('/reports', async (req, res, next) => {

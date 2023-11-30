@@ -44,7 +44,7 @@ async function updateChart() {
                     {
                         label: 'Number of Students',
                         data: recordCounts.counts,
-                        backgroundColor: backgroundColors,
+                        // backgroundColor: backgroundColors,
                         borderWidth: 1,
                     },
                 ],

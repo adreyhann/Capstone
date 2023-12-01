@@ -206,7 +206,7 @@
 									<% historyLogs.forEach(log => { %>
 										<div class="card my-2 custom-card-2 border-0">
 											<div class="card-body position-relative">
-												<p class="m-0 fs-5 fw-medium"><%= log.action %></p>
+												<p class="m-0 fs-6 fw-medium"><%= log.action %></p>
 												<p class="m-0" style="color: #72726e"><%= log.timestamp %></p>
 												<p class="d-inline-flex gap-1 mb-0 position-absolute top-0 end-0 translate-middle" style="padding-top: 80px;">
 													<a class="btn btn-primary btn-sm" data-bs-toggle="collapse" href="#collapseExample<%= log._id %>" role="button" aria-expanded="false" aria-controls="collapseExample<%= log._id %>">
@@ -222,6 +222,8 @@
 										</div>
 									<% }); %>
 								</div>
+								
+								
 							</div>
 						</div>
 					</div>

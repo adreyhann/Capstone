@@ -185,43 +185,50 @@
 				<div class="container">
 					<h2 class="mt-2">Calendar</h2>
 					<hr>
-					<div class="card custom-card-2 border-0" style="height: 450px">
+					<div class="card custom-card-2 border-0" style="height: 470px">
+						<div class="card-header bg-info border-0"></div>
 						<div class="card-body">
 							<div class="row">
-								<div class="col-5">
-									<p class="fs-4">Create Events</p>
-
-									<div
-										style="
-											display: flex;
-											justify-content: start;
-											gap: 9px;
-											align-items: center;
-										"
-									>
-										<input
-											class="form-control"
-											style="width: 70%"
-											type="text"
-											id="datepicker"
-											placeholder="Select Date and Time"
-										/>
-										<button
-											class="btn btn-primary btn-sm"
-											onclick="addEvent()"
-										>
-											Add Event
-										</button>
+								<div class="col-md-5">
+									<div class="mb-3">
+										<h4 class="fs-4">Create Events</h4>
+									</div>
+									<div class="d-flex align-items-center">
+										<input class="form-control me-2" style="width: 70%" type="text" id="datepicker" placeholder="Select Date and Time" />
+										<button class="btn btn-primary btn-sm" onclick="addEvent()">Add Event</button>
 									</div>
 								</div>
-								<div class="col-5" style="border-left: 1px solid grey">
-									<p class="fs-4">Events list</p>
-									<ul id="eventList"></ul>
+								<div class="col-md-5">
+									<h4>Events list</h4>
+									<div class="card custom-card-2 border-0" style="width: 36rem;">
+										<div class="card-body" style="height: 365px; overflow-y: auto;">
+											<ul id="eventList" class="list-group">
+												<% for (const date in events) { %>
+													<li class="list-group-item">
+														<span><%= date %>:</span>
+														<ul>
+															<% for (const eventName of events[date]) { %>
+																<li class="d-flex justify-content-between align-items-center">
+																	<%= eventName %>
+																	<div>
+																		<button class="btn btn-sm btn-primary" onclick="editEvent('<%= date %>', '<%= eventName %>')">Edit</button>
+																		<button class="btn btn-sm btn-danger" onclick="deleteEvent('<%= date %>', '<%= eventName %>')">Delete</button>
+																	</div>
+																</li>
+															<% } %>
+														</ul>
+													</li>
+												<% } %>
+											</ul>
+										</div>
+									</div>
+									
 								</div>
+								
 							</div>
 						</div>
 					</div>
-				  </div>
+				</div>
 			</div>
 		</div>
 	</body>

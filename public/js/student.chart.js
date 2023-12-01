@@ -1,8 +1,4 @@
 
-
-
-// for admin
- 
 const chart2 = document.getElementById('studentChart');
 
 // Function to fetch record counts based on gradeLevel
@@ -17,17 +13,6 @@ async function fetchRecordCounts() {
     }
 }
 
-// Function to generate an array of random colors
-function generateRandomColors(count) {
-    const colors = [];
-    for (let i = 0; i < count; i++) {
-        const color = `rgba(${Math.floor(Math.random() * 256)}, ${Math.floor(
-            Math.random() * 256
-        )}, ${Math.floor(Math.random() * 256)}, 0.7)`;
-        colors.push(color);
-    }
-    return colors;
-}
 
 // Function to update the chart with record counts
 async function updateChart() {
@@ -48,7 +33,6 @@ async function updateChart() {
                     {
                         label: 'Number of Students',
                         data: recordCounts.counts,
-                        backgroundColor: backgroundColors,
                         borderWidth: 1,
                     },
                 ],

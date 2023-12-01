@@ -6,6 +6,7 @@ const { PDFDocument } = require('pdf-lib');
 const User = require('../models/user.model');
 const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
+const Event = require('../models/events.model')
 
 function countVisibleUsers(users, currentUser) {
 	// Implement your logic to count visible users
@@ -62,8 +63,15 @@ router.get('/archives', async (req, res, next) => {
 });
 
 router.get('/calendar', async (req, res, next) => {
-	const person = req.user;
-	res.render('admin/calendar', { person });
+	try {
+        const person = req.user;
+        const events = await Event.find(); // Assuming you have an Event model
+
+        res.render('admin/calendar', { person, events });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
 
 router.get('/reports', async (req, res, next) => {

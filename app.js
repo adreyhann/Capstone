@@ -57,7 +57,7 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-	res.locals.currentUser = req.user; // Assuming your authentication logic sets currentUser in the request
+	res.locals.currentUser = req.user; // authentication logic sets currentUser in the request
 	next();
 });
 

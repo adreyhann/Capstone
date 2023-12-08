@@ -16,6 +16,8 @@ router.get('/register', ensureAuthenticated, async (req, res, next) => {
 router.post(
 	'/register',
 	ensureAuthenticated,
+	ensureAdmin,
+	ensureSystemAdmin,
 	[
 		body('email')
 			.trim()
@@ -103,7 +105,6 @@ router.post(
 			case 'Admin':
 				res.redirect('/admin/dashboard');
 				break;
-			// Add more cases for other roles as needed
 			default:
 				res.redirect('/auth/login');
 		}
@@ -133,9 +134,8 @@ router.post('/forgot', async (req, res, next) => {
 		// Generate a reset code
 		const resetCode = Math.floor(100000 + Math.random() * 900000); // 6-digit code
 
-		// Set reset code and expiration to 30 minutes
 		user.resetCode = resetCode;
-		user.resetCodeExpires = Date.now() + 1800000; // 30 minutes expiration
+		user.resetCodeExpires = Date.now() + 1800000;
 
 		await user.save();
 
@@ -207,8 +207,6 @@ router.post('/reset-code', async (req, res, next) => {
 	}
 });
 
-// Add this route in your router definition
-// Add this route in your router definition
 router.get('/resend-code', async (req, res) => {
     try {
         // Get the user by email
@@ -261,12 +259,6 @@ router.get('/resend-code', async (req, res) => {
         res.redirect('/auth/reset-code');
     }
 });
-
-  
-  
-  
-  
-  
 
 
 router.get('/reset-password/:userId', (req, res, next) => {
@@ -347,5 +339,21 @@ function ensureNotAuthenticated(req, res, next) {
 		res.redirect('/systemAdmin/dashboard');
 	} else {
 		next();
+	}
+}
+
+function ensureSystemAdmin(req, res, next) {
+	if (req.user && req.user.role === 'System Admin') {
+		next();
+	} else {
+		res.status(403).render('error_403');
+	}
+}
+
+function ensureAdmin(req, res, next) {
+	if (req.user && req.user.role === 'Admin') {
+		next();
+	} else {
+		res.status(403).render('error_403');
 	}
 }

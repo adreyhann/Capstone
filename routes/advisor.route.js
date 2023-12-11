@@ -17,8 +17,19 @@ router.get('/dashboard', async (req, res, next) => {
 
 router.get('/records', async (req, res, next) => {
 	const person = req.user;
-	const records = await Records.find();
-	res.render('class-advisor/records', { person, records });
+	const currentUserRole = req.user.role;
+    const currentUserClassAdvisory = req.user.classAdvisory;
+
+    // Check if the user is a "Class Advisor"
+    if (currentUserRole === 'Class Advisor') {
+        // Filter records based on the user's class advisory
+        const records = await Records.find({ gradeLevel: currentUserClassAdvisory });
+        res.render('class-advisor/records', { person, records, gradeLevel: currentUserClassAdvisory });
+    } else {
+        // If the user is not a "Class Advisor," retrieve all records
+        const records = await Records.find();
+        res.render('class-advisor/records', { person, records, gradeLevel: 'All Grades' });
+    }
 });
 
 router.get('/archives', async (req, res, next) => {

@@ -215,18 +215,20 @@
                                         <label for="gender">Is student transferee?</label>
                                     </div>
 									<div class="form-floating mb-3">
-                                        <select class="form-select" name="gradeLevel" id="gradeLevel" required>
-                                            <option disabled>Select Grade level</option>
-                                            <option value="Kinder">Kinder</option>
-                                            <option value="Grade 1">Grade 1</option>
-											<option value="Grade 2">Grade 2</option>
-                                            <option value="Grade 3">Grade 3</option>
-											<option value="Grade 4">Grade 4</option>
-                                            <option value="Grade 5">Grade 5</option>
-											<option value="Grade 6">Grade 6</option>
-                                        </select>
-                                        <label for="gradeLevel">Grade level</label>
-                                    </div>
+										<select class="form-select" name="gradeLevel" id="gradeLevel" required>
+											<option disabled>Select Grade level</option>
+											<option value="Kinder" <%= person.classAdvisory === 'Kinder' ? 'selected' : 'disabled' %>>Kinder</option>
+											<option value="Grade 1" <%= person.classAdvisory === 'Grade 1' ? 'selected' : 'disabled' %>>Grade 1</option>
+											<option value="Grade 2" <%= person.classAdvisory === 'Grade 2' ? 'selected' : 'disabled' %>>Grade 2</option>
+											<option value="Grade 3" <%= person.classAdvisory === 'Grade 3' ? 'selected' : 'disabled' %>>Grade 3</option>
+											<option value="Grade 4" <%= person.classAdvisory === 'Grade 4' ? 'selected' : 'disabled' %>>Grade 4</option>
+											<option value="Grade 5" <%= person.classAdvisory === 'Grade 5' ? 'selected' : 'disabled' %>>Grade 5</option>
+											<option value="Grade 6" <%= person.classAdvisory === 'Grade 6' ? 'selected' : 'disabled' %>>Grade 6</option>
+										</select>
+										<label for="gradeLevel">Grade level</label>
+									</div>
+									
+									
 									<div class="input-group mb-3">
 										<input type="file" class="form-control" name="pdfFile" id="pdfFile" accept=".pdf" multiple>
 									  </div>

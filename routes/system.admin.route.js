@@ -63,7 +63,9 @@ router.get('/accounts', async (req, res, next) => {
 
 router.get('/records', async (req, res, next) => {
 	const person = req.user;
+	const gradeLevel = req.query.gradeLevel || 'All Grades';
 	let records;
+	let levels;
 
     // Check if gradeLevel is provided in the query parameter
     if (req.query.gradeLevel) {
@@ -74,7 +76,16 @@ router.get('/records', async (req, res, next) => {
         records = await Records.find();
     }
 
-	res.render('system_admn/records', { person, records });
+	// Check if gradeLevel is provided in the query parameter
+    if (gradeLevel !== 'All Grades') {
+        // If gradeLevel is provided, filter records based on it
+        levels = await Records.find({ gradeLevel });
+    } else {
+        // If gradeLevel is not provided, retrieve all records
+        levels = await Records.find();
+    }
+
+	res.render('system_admn/records', { person, records, gradeLevel });
 });
 
 router.get('/records-menu', async (req, res, next) => {

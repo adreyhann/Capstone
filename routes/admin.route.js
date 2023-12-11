@@ -52,9 +52,35 @@ router.get('/accounts', async (req, res, next) => {
 router.get('/records', async (req, res, next) => {
 	const person = req.user;
 	const currentUserRole = req.user.role;
-	const records = await Records.find();
-	res.render('admin/records', { person, records, currentUserRole });
+	const gradeLevel = req.query.gradeLevel || 'All Grades';
+	let records;
+	let levels;
+
+    // Check if gradeLevel is provided in the query parameter
+    if (req.query.gradeLevel) {
+        // If gradeLevel is provided, filter records based on it
+        records = await Records.find({ gradeLevel: req.query.gradeLevel });
+    } else {
+        // If gradeLevel is not provided, retrieve all records
+        records = await Records.find();
+    }
+
+	// Check if gradeLevel is provided in the query parameter
+    if (gradeLevel !== 'All Grades') {
+        // If gradeLevel is provided, filter records based on it
+        levels = await Records.find({ gradeLevel });
+    } else {
+        // If gradeLevel is not provided, retrieve all records
+        levels = await Records.find();
+    }
+	res.render('admin/records', { person, records, currentUserRole, gradeLevel });
 });
+
+router.get('/records-menu', async (req, res, next) => {
+	const person = req.user;
+
+	res.render('admin/records-menu', {person})
+})
 
 router.get('/archives', async (req, res, next) => {
 	const person = req.user;
@@ -345,7 +371,7 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 
 		// Redirect back to the records page
 		req.flash('success', 'Record updated successfully');
-		res.redirect('/admin/records');
+		res.redirect(`/admin/records?gradeLevel=${record.gradeLevel}`);
 	} catch (error) {
 		console.error('Error:', error);
 		next(error);

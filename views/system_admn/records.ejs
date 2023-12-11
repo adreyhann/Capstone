@@ -35,6 +35,8 @@
 			defer
 			src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"
 		></script>
+		<script defer src="/js/select.all.js"></script>
+		<script defer src="/js/multiple.archives.js"></script>
 		<script defer src="/js/toggler.js"></script>
 		<script defer src="/js/tables.js"></script>
 		<script defer src="/js/tooltip.js"></script>
@@ -198,7 +200,22 @@
 						catch (error) { %>
 						<div>Error: <%= error.message %></div>
 						<% } %>
-
+						<button
+							type="button"
+							class="btn btn-sm mb-2"
+							id="archiveButton"
+							style="display: none"
+							onclick="archiveSelected()"
+						>
+							<span
+								class="material-symbols-outlined"
+								data-bs-toggle="tooltip"
+								data-bs-placement="right"
+								data-bs-title="Archive selected records"
+							>
+								archive
+							</span>
+						</button>
 						<table
 							id="example"
 							class="table table-striped hover"
@@ -206,7 +223,15 @@
 						>
 							<thead class="table-info">
 								<tr>
-									<th>Select</th>
+									<th class="text-center">
+										<input
+												class="form-check-input"
+												type="checkbox"
+												id="selectAll"
+											/>
+											<label class="form-check-label" for="selectAll"
+												></label>
+									</th>
 									<th>LRN</th>
 									<th>Student Name</th>
 									<th>Gender</th>
@@ -218,7 +243,7 @@
 							<tbody>
 								<% records.forEach(record => { %>
 								<tr>
-									<td class="text-center" style="width: 8px; ">
+									<td class="text-center" style="width: 9px">
 										<input
 											class="form-check-input"
 											type="checkbox"
@@ -276,7 +301,9 @@
 							</tbody>
 							<tfoot class="table-info">
 								<tr>
-									<th>Select</th>
+									<th>
+										Select
+									</th>
 									<th>LRN</th>
 									<th>Student Name</th>
 									<th>Gender</th>
@@ -389,7 +416,7 @@
 				</div>
 			</div>
 		</div>
-		// tooltip scipt
+		
 		<script>
 			document.addEventListener('DOMContentLoaded', function () {
 				const tooltipTriggerList = document.querySelectorAll(

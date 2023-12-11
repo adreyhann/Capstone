@@ -10,7 +10,7 @@ const Event = require('../models/events.model');
 const archiver = require('archiver');
 
 function countVisibleUsersInTable(users, currentUser) {
-	// Implement your logic to count visible users in the table
+	
 	const visibleUsersInTable = users.filter((user) => {
 		return user._id.toString() !== currentUser._id.toString();
 	});
@@ -407,7 +407,7 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 
 		// Redirect back to the records page
 		req.flash('success', 'Record updated successfully');
-		res.redirect('/systemAdmin/records');
+		res.redirect(`/systemAdmin/records?gradeLevel=${record.gradeLevel}`);
 	} catch (error) {
 		console.error('Error:', error);
 		next(error);
@@ -500,6 +500,49 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
 		next(error);
 	}
 });
+
+// Add this route for handling the archive selected logic
+router.post('/archive-selected', async (req, res, next) => {
+    try {
+        const selectedRecordIds = req.body.selectedRecords;
+
+        // Check if any records are selected
+        if (!selectedRecordIds || selectedRecordIds.length === 0) {
+            req.flash('error', 'No records selected for archiving');
+            return res.redirect('/systemAdmin/records');
+        }
+
+        // Find the selected records by IDs
+        const selectedRecords = await Records.find({ _id: { $in: selectedRecordIds } });
+
+        // Move the selected records to the Archives collection
+        const archivedRecords = selectedRecords.map((record) => {
+            return {
+                lrn: record.lrn,
+                studentName: record.studentName,
+                gender: record.gender,
+                dateAddedToArchive: new Date(),
+                pdfFilePath: record.pdfFilePath, // Check if you need to handle PDF files
+            };
+        });
+
+        // Save the archived records
+        await Archives.insertMany(archivedRecords);
+
+        // Delete the selected records from the original collection
+        await Records.deleteMany({ _id: { $in: selectedRecordIds } });
+
+        req.flash('success', 'Selected records archived successfully');
+        res.redirect('/systemAdmin/records');
+    } catch (error) {
+        console.error('Error:', error);
+        req.flash('error', 'Failed to archive selected records');
+        res.redirect('/systemAdmin/records');
+    }
+});
+
+
+
 
 router.get('/backup', async (req, res, next) => {
 	try {
@@ -704,47 +747,5 @@ router.get('/get-gradeLevel-counts', async (req, res, next) => {
 	}
 });
 
-// // create event
-// router.post('/events', async (req, res) => {
-// 	try {
-// 		const event = new Event(req.body);
-// 		await event.save();
-// 		res.status(201).json(event);
-// 	} catch (error) {
-// 		res.status(500).send(error.message);
-// 	}
-// });
-
-// // read events
-// router.get('/events', async (req, res) => {
-// 	try {
-// 		const events = await Event.find();
-// 		res.status(200).json(events);
-// 	} catch (error) {
-// 		res.status(500).send(error.message);
-// 	}
-// });
-
-// // Update event
-// router.put('/events/:eventId', async (req, res) => {
-// 	try {
-// 		const event = await Event.findByIdAndUpdate(req.params.eventId, req.body, {
-// 			new: true,
-// 		});
-// 		res.status(200).json(event);
-// 	} catch (error) {
-// 		res.status(500).send(error.message);
-// 	}
-// });
-
-// // Delete event
-// router.delete('/events/:eventId/delete', async (req, res) => {
-// 	try {
-// 		await Event.findByIdAndDelete(req.params.eventId);
-// 		res.status(204).send();
-// 	} catch (error) {
-// 		res.status(500).send(error.message);
-// 	}
-// });
 
 module.exports = router;

@@ -102,7 +102,7 @@
 						</li>
 						<li class="sidebar-item">
 							<a
-								href="/admin/records"
+								href="/admin/records-menu"
 								class="sidebar-link"
 								aria-expanded="false"
 								aria-controls="pages"
@@ -191,20 +191,13 @@
 					</div>
 				</nav>
 				<div class="container-lg">
-					<h2 class="my-1">Records Management</h2>
+					<h2 class="my-1"><%= gradeLevel %></h2>
 					<hr />
 					<div class="container w-100 position-relative">
 						<% try { %> <%- include('../credentials/flash-message.ejs') %> <% }
 						catch (error) { %>
 						<div>Error: <%= error.message %></div>
 						<% } %>
-						<a
-							id="addRow"
-							class="btn btn-success btn-sm my-2"
-							href="/admin/addRecords"
-							>Create new record</a
-						>
-
 						<table
 							id="example"
 							class="table table-striped hover"

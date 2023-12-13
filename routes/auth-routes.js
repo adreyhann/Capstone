@@ -16,8 +16,6 @@ router.get('/register', ensureAuthenticated, async (req, res, next) => {
 router.post(
 	'/register',
 	ensureAuthenticated,
-	ensureAdmin,
-	ensureSystemAdmin,
 	[
 		body('email')
 			.trim()

@@ -3,11 +3,6 @@ function updateAdvisoryOptions() {
     var classAdvisorySelect = document.getElementById("classAdvisory");
     var subjectAdvisorySelect = document.getElementById("subjectAdvisory");
 
-    // Disable 'All Kinder Subjects' if classAdvisory is not 'Kinder'
-    if (classAdvisorySelect.value !== 'kinder') {
-        disableOptions(subjectAdvisorySelect, ['All Kinder Subjects']);
-    }
-
     if (roleSelect.value === 'System Admin') {
         // Set classAdvisory and subjectAdvisory to 'None' and disable other options
         classAdvisorySelect.value = 'None';

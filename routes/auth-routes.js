@@ -14,69 +14,85 @@ router.get('/register', ensureAuthenticated, async (req, res, next) => {
 });
 
 router.post(
-	'/register',
-	ensureAuthenticated,
-	[
-		body('email')
-			.trim()
-			.isEmail()
-			.withMessage('Input valid email')
-			.normalizeEmail()
-			.toLowerCase(),
-		body('password')
-			.trim()
-			.isLength(8)
-			.withMessage('Password must be atleast 8 characters!'),
-		body('password2').custom((value, { req }) => {
-			if (value !== req.body.password) {
-				throw new Error('Password do not match!');
-			}
-			return true;
-		}),
-	],
-	async (req, res, next) => {
-		try {
-			const errors = validationResult(req);
-			if (!errors.isEmpty()) {
-				errors.array().forEach((error) => {
-					req.flash('error', error.msg);
-				});
-				const person = req.user;
-				const currentUserRole = req.user.role;
-				res.render('credentials/register', {
-					person,
-					email: req.body.email,
-					currentUserRole,
-					messages: req.flash(),
-				});
-				return;
-			}
+    '/register',
+    ensureAuthenticated,
+    [
+        body('email')
+            .trim()
+            .isEmail()
+            .withMessage('Input valid email')
+            .normalizeEmail()
+            .toLowerCase(),
+        body('password')
+            .trim()
+            .isLength(8)
+            .withMessage('Password must be at least 8 characters!'),
+        body('password2').custom((value, { req }) => {
+            if (value !== req.body.password) {
+                throw new Error('Passwords do not match!');
+            }
+            return true;
+        }),
+    ],
+    async (req, res, next) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                errors.array().forEach((error) => {
+                    req.flash('error', error.msg);
+                });
+                const person = req.user;
+                const currentUserRole = req.user.role;
+                return res.render('credentials/register', {
+                    person,
+                    email: req.body.email,
+                    currentUserRole,
+                    messages: req.flash(),
+                });
+            }
 
-			const { email } = req.body;
-			const doesExist = await User.findOne({ email });
-			if (doesExist) {
-				req.flash('error', 'Username/email already exists');
-				res.redirect('/auth/register');
-				return;
-			}
+            const { email, role } = req.body;
 
-			const user = new User(req.body);
-			await user.save();
-			req.flash('success', `${user.email} is succesfully registered`);
-			res.redirect('/auth/register');
-		} catch (error) {
-			const person = req.user;
-			const currentUserRole = req.user.role;
-			res.render('credentials/register', {
-				person,
-				email: req.body.email,
-				currentUserRole,
-				messages: req.flash(),
-				error: error.message,
-			});
-		}
-	}
+            // Check if the role is "System Admin"
+            if (role === 'System Admin') {
+                // Count the number of users with the role "System Admin"
+                const systemAdminCount = await User.countDocuments({
+                    role: 'System Admin',
+                });
+
+                // If there are already two users with the role "System Admin," prevent registration
+                if (systemAdminCount >= 2) {
+                    req.flash('error', 'Only two System Admin users are allowed.');
+                    return res.redirect('/auth/register');
+                }
+            }
+
+            // Check if the email already exists
+            const doesExist = await User.findOne({ email });
+            if (doesExist) {
+                req.flash('error', 'Username/email already exists');
+                return res.redirect('/auth/register');
+            }
+
+            const user = new User(req.body);
+            await user.save();
+
+            req.flash('success', `${user.email} is successfully registered`);
+            res.redirect('/auth/register');
+        } catch (error) {
+            const person = req.user;
+            const currentUserRole = req.user.role;
+            res.render('credentials/register', {
+                person,
+                email: req.body.email,
+                currentUserRole,
+                messages: req.flash(),
+                error: error.message,
+            });
+        }
+    }
 );
+
 
 router.get('/login', ensureNotAuthenticated, async (req, res, next) => {
 	res.render('credentials/login');

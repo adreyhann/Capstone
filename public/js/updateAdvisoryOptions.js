@@ -15,8 +15,6 @@ function updateAdvisoryOptions() {
         subjectAdvisorySelect.value = 'None';
         disableOptions(classAdvisorySelect, ['kinder', 'Grade 1', 'Grade 2','Grade 3', 'Grade 4', 'Grade 5', 'Grade 6']);
         disableOptions(subjectAdvisorySelect, ['All Kinder Subjects', 'Filipino', 'AP', 'Values', 'Civics', 'EPP', 'Science', 'Mapeh', 'Math']);
-
-        
        
     } else {
         // Reset classAdvisory and subjectAdvisory to 'None' and enable all options

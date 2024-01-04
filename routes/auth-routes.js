@@ -7,7 +7,7 @@ const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 
-router.get('/register', ensureAuthenticated, async (req, res, next) => {
+router.get('/register', ensureAuthenticated, ensureSystemAdminOrAdmin, async (req, res, next) => {
 	const person = req.user;
 	const currentUserRole = req.user.role;
 	res.render('credentials/register', { person, currentUserRole });
@@ -356,18 +356,10 @@ function ensureNotAuthenticated(req, res, next) {
 	}
 }
 
-function ensureSystemAdmin(req, res, next) {
-	if (req.user && req.user.role === 'System Admin') {
-		next();
-	} else {
-		res.status(403).render('error_403');
-	}
-}
-
-function ensureAdmin(req, res, next) {
-	if (req.user && req.user.role === 'Admin') {
-		next();
-	} else {
-		res.status(403).render('error_403');
-	}
+function ensureSystemAdminOrAdmin(req, res, next) {
+    if (req.user && (req.user.role === 'System Admin' || req.user.role === 'Admin')) {
+        next();
+    } else {
+        res.status(403).render('error_403');
+    }
 }

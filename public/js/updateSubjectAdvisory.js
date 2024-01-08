@@ -3,7 +3,7 @@ function updateSubjectAdvisory() {
     var subjectAdvisorySelect = document.getElementById("subjectAdvisory");
 
     // Check if classAdvisory is 'Kinder'
-    if (classAdvisorySelect.value === 'kinder') {
+    if (classAdvisorySelect.value === 'Kinder') {
         // Set subjectAdvisory to 'All Kinder subjects' (AKS) and disable other options
         subjectAdvisorySelect.value = 'All Kinder Subjects';
         disableOptions(subjectAdvisorySelect, ['select','None','Filipino', 'AP', 'Values', 'Civics', 'EPP', 'Science', 'Mapeh', 'Math']);
@@ -14,7 +14,7 @@ function updateSubjectAdvisory() {
     }
 
 
-    if (classAdvisorySelect.value !== 'kinder') {
+    if (classAdvisorySelect.value !== 'Kinder') {
         disableOptions(subjectAdvisorySelect, ['None', 'All Kinder Subjects']);
     }
 }

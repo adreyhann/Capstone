@@ -67,10 +67,31 @@ router.post(
                 }
             }
 
+            // Check if the role is "System Admin"
+            if (role === 'Admin') {
+                // Count the number of users with the role "System Admin"
+                const AdminCount = await User.countDocuments({
+                    role: 'Admin',
+                });
+
+                // If there are already two users with the role "System Admin," prevent registration
+                if (AdminCount >= 1) {
+                    req.flash('error', 'Only one Admin users are allowed.');
+                    return res.redirect('/auth/register');
+                }
+            }
+
             // Check if the email already exists
             const doesExist = await User.findOne({ email });
             if (doesExist) {
                 req.flash('error', 'Username/email already exists');
+                return res.redirect('/auth/register');
+            }
+
+            // Check if there's already a user with classAdvisory of "Kinder"
+            const kinderUserExists = await User.findOne({ classAdvisory: 'Kinder' });
+            if (kinderUserExists) {
+                req.flash('error', 'A user with Class Advisory of Kinder already exists.');
                 return res.redirect('/auth/register');
             }
 

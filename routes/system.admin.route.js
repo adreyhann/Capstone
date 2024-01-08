@@ -628,10 +628,11 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 
 		// Update the record with new values
 		user.name = req.body.editName;
+		user.email = req.body.editEmail;
 		user.role = req.body.editRole;
 		user.classAdvisory = req.body.editClassAdvisory;
 		user.subjectAdvisory = req.body.editSubjectAdvisory;
-		user.email = req.body.editEmail;
+		
 
 		// Save the updated record
 		await user.save();

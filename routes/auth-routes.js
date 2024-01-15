@@ -67,14 +67,14 @@ router.post(
                 }
             }
 
-            // Check if the role is "System Admin"
+            // Check if the role is "Admin"
             if (role === 'Admin') {
-                // Count the number of users with the role "System Admin"
+                // Count the number of users with the role "Admin"
                 const AdminCount = await User.countDocuments({
                     role: 'Admin',
                 });
 
-                // If there are already two users with the role "System Admin," prevent registration
+                // If there are already two users with the role "Admin," prevent registration
                 if (AdminCount >= 1) {
                     req.flash('error', 'Only one Admin users are allowed.');
                     return res.redirect('/auth/register');

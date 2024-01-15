@@ -76,7 +76,7 @@ router.post(
 
                 // If there are already two users with the role "Admin," prevent registration
                 if (AdminCount >= 1) {
-                    req.flash('error', 'Only one Admin users are allowed.');
+                    req.flash('error', 'Only one Admin user are allowed.');
                     return res.redirect('/auth/register');
                 }
             }

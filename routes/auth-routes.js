@@ -51,7 +51,7 @@ router.post(
                 });
             }
 
-            const { email, role } = req.body;
+            const { email, role, classAdvisory, subjectAdvisory } = req.body;
 
             // Check if the role is "System Admin"
             if (role === 'System Admin') {
@@ -90,8 +90,93 @@ router.post(
 
             // Check if there's already a user with classAdvisory of "Kinder"
             const kinderUserExists = await User.findOne({ classAdvisory: 'Kinder' });
-            if (kinderUserExists) {
+            if (kinderUserExists && classAdvisory === 'Kinder') {
                 req.flash('error', 'A user with Class Advisory of Kinder already exists.');
+                return res.redirect('/auth/register');
+            }
+
+            const gradeOneUserExists = await User.findOne({ classAdvisory: 'Grade 1' });
+            if (gradeOneUserExists && classAdvisory === 'Grade 1') {
+                req.flash('error', 'A user with Class Advisory of Grade 1 already exists.');
+                return res.redirect('/auth/register');
+            }
+
+            const gradeTwoUserExists = await User.findOne({ classAdvisory: 'Grade 2' });
+            if (gradeTwoUserExists && classAdvisory === 'Grade 2') {
+                req.flash('error', 'A user with Class Advisory of Grade 2 already exists.');
+                return res.redirect('/auth/register');
+            }
+
+            const gradeThreeUserExists = await User.findOne({ classAdvisory: 'Grade 3' });
+            if (gradeThreeUserExists && classAdvisory === 'Grade 3') {
+                req.flash('error', 'A user with Class Advisory of Grade 3 already exists.');
+                return res.redirect('/auth/register');
+            }
+
+            const gradeFourUserExists = await User.findOne({ classAdvisory: 'Grade 4' });
+            if (gradeFourUserExists && classAdvisory === 'Grade 4') {
+                req.flash('error', 'A user with Class Advisory of Grade 4 already exists.');
+                return res.redirect('/auth/register');
+            }
+
+            const gradeFiveUserExists = await User.findOne({ classAdvisory: 'Grade 5' });
+            if (gradeFiveUserExists && classAdvisory === 'Grade 5') {
+                req.flash('error', 'A user with Class Advisory of Grade 5 already exists.');
+                return res.redirect('/auth/register');
+            }
+
+            const gradeSixUserExists = await User.findOne({ classAdvisory: 'Grade 6' });
+            if (gradeSixUserExists && classAdvisory === 'Grade 6') {
+                req.flash('error', 'A user with Class Advisory of Grade 6 already exists.');
+                return res.redirect('/auth/register');
+            }
+
+            // find existing subject advisory
+            const filipinoExists = await User.findOne({ subjectAdvisory: 'Filipino' });
+            if (filipinoExists && subjectAdvisory === 'Filipino') {
+                req.flash('error', 'A user with Subject Advisory of Filipino is already exists.');
+                return res.redirect('/auth/register');
+            }
+
+            const apExists = await User.findOne({ subjectAdvisory: 'AP' });
+            if (apExists && subjectAdvisory === 'AP') {
+                req.flash('error', 'A user with Subject Advisory of AP is already exists.');
+                return res.redirect('/auth/register');
+            }
+
+            const valuesExists = await User.findOne({ subjectAdvisory: 'Values' });
+            if (valuesExists && subjectAdvisory === 'Values') {
+                req.flash('error', 'A user with Subject Advisory of Values is already exists.');
+                return res.redirect('/auth/register');
+            }
+
+            const civicsExists = await User.findOne({ subjectAdvisory: 'Civics' });
+            if (civicsExists && subjectAdvisory === 'Civics') {
+                req.flash('error', 'A user with Subject Advisory of Civics is already exists.');
+                return res.redirect('/auth/register');
+            }
+
+            const eppExists = await User.findOne({ subjectAdvisory: 'EPP' });
+            if (eppExists && subjectAdvisory === 'EPP') {
+                req.flash('error', 'A user with Subject Advisory of Filipino is already exists.');
+                return res.redirect('/auth/register');
+            }
+
+            const scienceExists = await User.findOne({ subjectAdvisory: 'Science' });
+            if (scienceExists && subjectAdvisory === 'Science') {
+                req.flash('error', 'A user with Subject Advisory of Science is already exists.');
+                return res.redirect('/auth/register');
+            }
+
+            const mapehExists = await User.findOne({ subjectAdvisory: 'Mapeh' });
+            if (mapehExists && subjectAdvisory === 'Mapeh') {
+                req.flash('error', 'A user with Subject Advisory of Mapeh is already exists.');
+                return res.redirect('/auth/register');
+            }
+
+            const mathExists = await User.findOne({ subjectAdvisory: 'Math' });
+            if (mathExists && subjectAdvisory === 'Math') {
+                req.flash('error', 'A user with Subject Advisory of Filipino is already exists.');
                 return res.redirect('/auth/register');
             }
 
@@ -113,6 +198,8 @@ router.post(
         }
     }
 );
+
+
 
 
 router.get('/login', ensureNotAuthenticated, async (req, res, next) => {

@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const createHttpError = require('http-errors');
-// const { roles, ClassAdvisor, ClassAdvisory, SubjectAdvisory } = require('../utils/constants');
 
 const UserSchema = new mongoose.Schema({
 	email: {

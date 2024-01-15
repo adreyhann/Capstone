@@ -38,8 +38,10 @@
 		<script defer src="/js/toggler.js"></script>
 		<script defer src="/js/tables.js"></script>
 		<script defer src="/js/tooltip.js"></script>
-		<script defer src="/js/updateSubjectAdvisory.js"></script>
-		<script defer src="/js/updateAdvisoryOptions.js"></script>
+		<!-- <script defer src="/js/updateSubjectAdvisory.js"></script>
+		<script defer src="/js/updateAdvisoryOptions.js"></script> -->
+		<script defer src="/js/populate.user.form.js"></script>
+		<script defer src="/js/update.users.details.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 
 		<title>Accounts</title>
@@ -256,9 +258,12 @@
 											data-bs-target="#confirmationModal"
 											data-user-id="<%= user._id %>"
 										>
-											<span class="material-symbols-outlined" data-bs-toggle="tooltip"
+											<span
+												class="material-symbols-outlined"
+												data-bs-toggle="tooltip"
 												data-bs-placement="top"
-												data-bs-title="Deactivate user">
+												data-bs-title="Deactivate user"
+											>
 												person_off
 											</span>
 										</button>
@@ -303,6 +308,7 @@
 								</div>
 								<div class="modal-body">
 									<form id="editUserForm" method="post">
+										
 										<div class="form-floating mb-3">
 											<input
 												type="text"
@@ -330,6 +336,7 @@
 												id="editRole"
 												required
 												onchange="updateAdvisoryOptions()"
+												
 											>
 												<% if (currentUserRole === 'System Admin') { %>
 												<option value="System Admin">System Admin</option>
@@ -351,10 +358,10 @@
 												class="form-select"
 												name="editClassAdvisory"
 												id="editClassAdvisory"
-												required
 												onchange="updateSubjectAdvisory()"
+												required
 											>
-												<option disabled>Class Advisory</option>
+												<option value="" disabled></option>
 												<option value="None">None</option>
 												<option value="Kinder">Kinder</option>
 												<option value="Grade 1">Grade 1</option>
@@ -373,9 +380,11 @@
 												id="editSubjectAdvisory"
 												required
 											>
-												<option disabled>Select subject</option>
+												<option value="" disabled></option>
 												<option value="None">None</option>
-												<option value="All Kinder Subjects">All Kinder Subjects</option>
+												<option value="All Kinder Subjects">
+													All Kinder Subjects
+												</option>
 												<option value="Filipino">Filipino</option>
 												<option value="AP">AP</option>
 												<option value="Values">Values</option>
@@ -445,26 +454,6 @@
 				</div>
 			</div>
 		</div>
-		<script>
-			// JavaScript function to populate the edit form
-			function populateUserForm(
-				_id,
-				name,
-				role,
-				classAdvisory,
-				subjectAdvisory,
-				email,
-				
-			) {
-				document
-					.getElementById('editUserForm')
-					.setAttribute('action', `/systemAdmin/edit-users/${_id}`);
-				document.getElementById('editName').value = name;
-				document.getElementById('editEmail').value = email;
-				document.getElementById('editRole').value = role;
-				document.getElementById('editClassAdvisory').value = classAdvisory;
-				document.getElementById('editSubjectAdvisory').value = subjectAdvisory;
-			}
-		</script>
+		
 	</body>
 </html>

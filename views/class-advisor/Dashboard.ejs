@@ -166,10 +166,15 @@
 							<div class="card-body">
 								<h5 class="card-title position-relative">
 									Records
-									<span
-										class="badge text-bg-secondary position-absolute top-0 end-0"
-										><%= records.length %></span
-									>
+									<% if (person.classAdvisory) { %>
+										<% const classAdvisory = person.classAdvisory; %>
+										<% const recordsForClassAdvisory = records.filter(record => record.gradeLevel === classAdvisory); %>
+										<span class="badge text-bg-secondary position-absolute top-0 end-0">
+											<%= recordsForClassAdvisory.length %>
+										</span>
+									<% } %>
+									
+									
 								</h5>
 								<p class="card-text">List of active records</p>
 								<a

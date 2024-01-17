@@ -47,6 +47,25 @@ function updateSubjectAdvisory() {
     }
 }
 
+function updateClassAdvisory() {
+    var classAdvisorySelect = document.getElementById("editClassAdvisory");
+    var subjectAdvisorySelect = document.getElementById("editSubjectAdvisory");
+
+    // Check if classAdvisory is 'Kinder'
+    if (subjectAdvisorySelect.value === 'All Kinder Subjects') {
+        // Set subjectAdvisory to 'All Kinder subjects' (AKS) and disable other options
+        classAdvisorySelect.value = 'Kinder';
+        disableOptions(subjectAdvisorySelect, ['select','None','Filipino', 'AP', 'Values', 'Civics', 'EPP', 'Science', 'Mapeh', 'Math']);
+    } else {
+
+        enableAllOptions(subjectAdvisorySelect, ['Filipino', 'AP', 'Values', 'Civics', 'EPP', 'Science', 'Mapeh', 'Math']);
+    }
+    
+    if (classAdvisorySelect.value !== 'Kinder') {
+        disableOptions(subjectAdvisorySelect, ['None', 'All Kinder Subjects']);
+    }
+}
+
     
 
 function disableOptions(selectElement, optionsToDisable) {

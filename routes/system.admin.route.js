@@ -626,6 +626,72 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			return;
 		}
 
+		// Check for duplicate email
+        const existingUserWithSameEmail = await User.findOne({
+            email: req.body.editEmail,
+            _id: { $ne: userId }, // Exclude the current user
+        });
+
+        if (existingUserWithSameEmail) {
+            req.flash('error', 'Another user with the same email already exists.');
+            return res.redirect('/systemAdmin/accounts');
+        }
+
+		// Check if the user is changing the role to "System Admin"
+        if (req.body.editRole === 'System Admin') {
+            // Count the number of users with the role "System Admin"
+            const systemAdminCount = await User.countDocuments({
+                role: 'System Admin',
+                _id: { $ne: userId }, // Exclude the current user
+            });
+
+            // Allow only two users with the role "System Admin"
+            if (systemAdminCount >= 2) {
+                req.flash('error', 'Only two users can have the role "System Admin".');
+                return res.redirect('/systemAdmin/accounts');
+            }
+        }
+
+		// Check if there's already a user with the 'Admin' role
+        if (req.body.editRole === 'Admin') {
+            const existingAdmin = await User.findOne({
+                role: 'Admin',
+                _id: { $ne: userId }, // Exclude the current user
+            });
+
+            if (existingAdmin) {
+                req.flash('error', 'Another user with the role Admin already exists.');
+                return res.redirect('/systemAdmin/accounts');
+            }
+        }
+
+		// If the new classAdvisory is not 'None', check for uniqueness
+        if (req.body.editClassAdvisory !== 'None') {
+            const existingUserWithSameClassAdvisory = await User.findOne({
+                classAdvisory: req.body.editClassAdvisory,
+                _id: { $ne: userId }, // Exclude the current user
+            });
+
+            if (existingUserWithSameClassAdvisory) {
+                req.flash('error', 'Another user with the same class advisory already exists.');
+                return res.redirect('/systemAdmin/accounts');
+            }
+        }
+
+		// If the new subjectAdvisory is not 'None', check for uniqueness
+        if (req.body.editSubjectAdvisory !== 'None') {
+            const existingUserWithSameSubjectAdvisory = await User.findOne({
+                subjectAdvisory: req.body.editSubjectAdvisory,
+                _id: { $ne: userId }, // Exclude the current user
+            });
+
+            if (existingUserWithSameSubjectAdvisory) {
+                req.flash('error', 'Another user with the same subject advisory already exists.');
+                return res.redirect('/systemAdmin/accounts');
+            }
+        }
+
+
 		// Update the record with new values
 		user.name = req.body.editName;
 		user.email = req.body.editEmail;
@@ -664,11 +730,25 @@ router.post('/edit-profile/:id', async (req, res) => {
 				role: 'System Admin',
 			});
 
+			// Count the number of users with the role "Admin"
+			const adminCount = await User.countDocuments({
+				role: 'Admin',
+			});
+
 			// If there is only one "System Admin" user, prevent the role change
 			if (systemAdminCount === 1) {
 				req.flash(
 					'error',
 					'At least one user must have the role "System Admin".'
+				);
+				return res.redirect('/systemAdmin/profile');
+			}
+
+			// If there is only one "Admin" user, prevent the role change
+			if (adminCount === 1) {
+				req.flash(
+					'error',
+					'Only one user is allowed to have the role "Admin".'
 				);
 				return res.redirect('/systemAdmin/profile');
 			}
@@ -697,7 +777,7 @@ router.post('/edit-profile/:id', async (req, res) => {
 				});
 			});
 		} else {
-			// Redirect to the profile page or another appropriate route
+			// Redirect to the profile page
 			res.redirect('/systemAdmin/profile');
 		}
 	} catch (error) {

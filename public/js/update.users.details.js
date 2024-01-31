@@ -34,15 +34,17 @@ function updateSubjectAdvisory() {
     if (classAdvisorySelect.value === 'Kinder') {
         // Set subjectAdvisory to 'All Kinder subjects' (AKS) and disable other options
         subjectAdvisorySelect.value = 'All Kinder Subjects';
+        enableAllOptions(subjectAdvisorySelect, ['All Kinder Subjects'])
         disableOptions(subjectAdvisorySelect, ['select','None','Filipino', 'AP', 'Values', 'Civics', 'EPP', 'Science', 'Mapeh', 'Math']);
     } else {
         // Reset subjectAdvisory to 'Select subject' and enable all options
-        subjectAdvisorySelect.value = '';
+        
         enableAllOptions(subjectAdvisorySelect);
     }
 
 
     if (classAdvisorySelect.value !== 'Kinder') {
+        subjectAdvisorySelect.value = ''
         disableOptions(subjectAdvisorySelect, ['None', 'All Kinder Subjects']);
     }
 }
@@ -56,8 +58,11 @@ function updateClassAdvisory() {
         // Set subjectAdvisory to 'All Kinder subjects' (AKS) and disable other options
         classAdvisorySelect.value = 'Kinder';
         disableOptions(subjectAdvisorySelect, ['select','None','Filipino', 'AP', 'Values', 'Civics', 'EPP', 'Science', 'Mapeh', 'Math']);
+    } else if (subjectAdvisorySelect.value !== 'All Kinder Subjects') {
+        
+        // classAdvisorySelect.value = ''
+        disableOptions(classAdvisorySelect, [])
     } else {
-
         enableAllOptions(subjectAdvisorySelect, ['Filipino', 'AP', 'Values', 'Civics', 'EPP', 'Science', 'Mapeh', 'Math']);
     }
     

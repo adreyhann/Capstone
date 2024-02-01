@@ -626,6 +626,8 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			return;
 		}
 
+		
+
 		// Check for duplicate email
         const existingUserWithSameEmail = await User.findOne({
             email: req.body.editEmail,
@@ -691,6 +693,14 @@ router.post('/edit-users/:_id', async (req, res, next) => {
             }
         }
 
+		// Check if classAdvisory is 'Kinder' and subjectAdvisory is not 'All Kinder Subjects'
+        const isKinderClassAdvisory = req.body.editClassAdvisory === 'Kinder';
+        const isAllKinderSubjects = req.body.editSubjectAdvisory === 'All Kinder Subjects';
+
+        if (isKinderClassAdvisory && !isAllKinderSubjects) {
+            req.flash('error', 'If Class Advisory is Kinder, Subject Advisory must be All Kinder Subjects.');
+            return res.redirect(`/systemAdmin/accounts`);
+        }
 
 		// Update the record with new values
 		user.name = req.body.editName;
@@ -723,6 +733,8 @@ router.post('/edit-profile/:id', async (req, res) => {
 			editSubjectAdvisory,
 		} = req.body;
 
+		
+
 		// Perform a check to see if the user is changing the role to something other than "System Admin"
 		if (editRole !== 'System Admin') {
 			// Count the number of users with the role "System Admin"
@@ -754,6 +766,7 @@ router.post('/edit-profile/:id', async (req, res) => {
 			}
 		}
 
+		
 		// Update the user's details in the database
 		await User.findByIdAndUpdate(userId, {
 			name: editName,

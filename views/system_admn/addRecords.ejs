@@ -36,6 +36,7 @@
 			src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"
 		></script>
 		<script defer src="/js/toggler.js"></script>
+		<script defer src="/js/limit.number.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 
 		<title>Add Record</title>
@@ -209,6 +210,8 @@
 									<div class="form-floating mb-3">
 										<input
 											type="number"
+											onkeydown="return event.keyCode !== 69"
+											
 											class="form-control"
                                             name="lrn"
 											id="lrn"

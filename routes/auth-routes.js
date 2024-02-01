@@ -16,6 +16,7 @@ router.get('/register', ensureAuthenticated, ensureSystemAdminOrAdmin, async (re
 router.post(
     '/register',
     ensureAuthenticated,
+    ensureSystemAdminOrAdmin,
     [
         body('email')
             .trim()
@@ -438,13 +439,16 @@ router.post('/reset-password/:userId', async (req, res, next) => {
 });
 
 router.get('/logout', ensureAuthenticated, async (req, res, next) => {
-	req.logout(function (err) {
-		if (err) {
-			return next(err);
-		}
-		res.redirect('/');
-	});
+    req.logout(function (err) {
+        if (err) {
+            return next(err);
+        }
+        // Set Cache-Control header to prevent caching
+        res.setHeader('Cache-Control','private, no-cache, no-store, must-revalidate');
+        res.redirect('/');
+    });
 });
+
 
 module.exports = router;
 

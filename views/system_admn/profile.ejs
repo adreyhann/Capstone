@@ -24,6 +24,8 @@
 		<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 		<script defer src="/js/charts.js"></script>
 		<script defer src="/js/toggler.js"></script>
+		<script defer src="/js/update.profile.details.js"></script>
+		<script defer src="/js/disable.button.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<title>Profile</title>
 	</head>
@@ -186,11 +188,10 @@
 										<h3 class="fw-bold">Profile</h3>
 										<p>Manage your profile</p>
 										<hr />
-										<% try { %>
-											<%- include('../credentials/flash-message.ejs') %>
-										  <% } catch (error) { %>
-											<div>Error: <%= error.message %></div>
-										  <% } %>
+										<% try { %> <%- include('../credentials/flash-message.ejs')
+										%> <% } catch (error) { %>
+										<div>Error: <%= error.message %></div>
+										<% } %>
 										<form action="">
 											<div class="mt-4 mb-2">
 												<label for="exampleInputEmail1" class="form-label"
@@ -209,7 +210,7 @@
 											<div class="row">
 												<div class="my-2 col-6">
 													<label for="fname" class="form-label"
-														>Full Name</label
+														>Name</label
 													>
 													<input
 														type="text"
@@ -263,6 +264,13 @@
 										>
 											Edit profile
 										</button>
+										<button
+											class="btn btn-info btn-sm"
+											data-bs-toggle="modal"
+											data-bs-target="#verifymodal"
+										>
+											hello
+										</button>
 									</div>
 								</div>
 							</div>
@@ -272,24 +280,27 @@
 					<div
 						class="modal fade"
 						id="editUserModal"
+						data-bs-backdrop="static" 
+						data-bs-keyboard="false"
 						tabindex="-1"
 						aria-labelledby="editRecordModalLabel"
 						aria-hidden="true"
 					>
 						<div class="modal-dialog">
 							<div class="modal-content">
-								<div class="modal-header">
-									<h5 class="modal-title" id="editRecordModalLabel">Edit Account details</h5>
+								<div class="modal-header bg-info">
+									<h5 class="modal-title" id="editRecordModalLabel">
+										Edit Account details
+									</h5>
 									<button
-									type="button"
-									class="btn-close"
-									data-bs-dismiss="modal"
-									aria-label="Close"
+										type="button"
+										class="btn-close"
+										data-bs-dismiss="modal"
+										aria-label="Close"
 									></button>
 								</div>
 								<div class="modal-body">
-									
-									<form id="editUserForm" method="post">
+									<form id="editUserForm" action="" method="post">
 										<div class="form-floating mb-3">
 											<input
 												type="text"
@@ -298,7 +309,7 @@
 												id="editName"
 												required
 											/>
-											<label for="editName">Full Name</label>
+											<label for="editName">Name</label>
 										</div>
 										<div class="form-floating mb-3">
 											<input
@@ -311,38 +322,53 @@
 											<label for="editEmail">Email</label>
 										</div>
 										<div class="form-floating mb-3">
-											<select class="form-select" name="editRole" id="editRole" required>
-											  <% if (currentUserRole === 'System Admin') { %>
+											<select
+												class="form-select"
+												name="editRole"
+												id="editRole"
+												onchange="updateAdvisoryOptions()"
+												required
+											>
 												<option value="System Admin">System Admin</option>
 												<option value="Admin">Admin</option>
 												<option value="Class Advisor">Class Advisor</option>
-											  <% } else if (currentUserRole === 'Admin') { %>
-												<option value="Admin" selected disabled>Select role</option>
-												<option value="Class Advisor">Class Advisor</option>
-											  <% } else { %>
-												<option disabled>Select role</option>
-											  <% } %>
 											</select>
 											<label for="editRole">Role</label>
-										  </div>
-										  <div class="form-floating mb-3">
-											<select class="form-select" name="editClassAdvisory" id="editClassAdvisory" required>
-											  <option disabled>Class Advisory</option>
-											  <option value="None">None</option>
-											  <option value="Kinder">Kinder</option>
-											  <option value="Grade 1">Grade 1</option>
-											  <option value="Grade 2">Grade 2</option>
-											  <option value="Grade 3">Grade 3</option>
-											  <option value="Grade 4">Grade 4</option>
-											  <option value="Grade 5">Grade 5</option>
-											  <option value="Grade 6">Grade 6</option>
+											<div class="form-text form-text-sm" style="font-size: 12px; padding-left: 8px;">Please note that changing your role will automatically log you out.</div>
+
+										</div>
+										<div class="form-floating mb-3">
+											<select
+												class="form-select"
+												name="editClassAdvisory"
+												id="editClassAdvisory"
+												required
+												onchange="updateSubjectAdvisory()"
+											>
+												<option value=""></option>
+												<option value="None">None</option>
+												<option value="Kinder">Kinder</option>
+												<option value="Grade 1">Grade 1</option>
+												<option value="Grade 2">Grade 2</option>
+												<option value="Grade 3">Grade 3</option>
+												<option value="Grade 4">Grade 4</option>
+												<option value="Grade 5">Grade 5</option>
+												<option value="Grade 6">Grade 6</option>
 											</select>
 											<label for="editClassAdvisory">Class Advisory</label>
 										</div>
 										<div class="form-floating mb-3">
-											<select class="form-select" name="editSubjectAdvisory" id="editSubjectAdvisory" required>
-												<option disabled>Select subject</option>
+											<select
+												class="form-select"
+												name="editSubjectAdvisory"
+												id="editSubjectAdvisory"
+												required
+											>
+												<option value=""></option>
 												<option value="None">None</option>
+												<option value="All Kinder Subjects">
+													All Kinder Subjects
+												</option>
 												<option value="Filipino">Filipino</option>
 												<option value="AP">AP</option>
 												<option value="Values">Values</option>
@@ -355,11 +381,50 @@
 											<label for="editSubjectAdvisory">Subject Advisory</label>
 										</div>
 										<div class="d-flex justify-content-end">
-											<button type="submit" class="btn btn-success">
+											<button
+												type="submit"
+												id="submitButton"
+												class="btn btn-success"
+											>
 												Update
 											</button>
 										</div>
 									</form>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="modal fade" id="verifymodal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+						<div class="modal-dialog">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h5 class="modal-title">Email Verification</h5>
+									<button
+										type="button"
+										class="btn-close"
+										data-bs-dismiss="modal"
+										aria-label="Close"
+									></button>
+								</div>
+								<div class="modal-body">
+									<form action="">
+										<label for="inputPassword5" class="form-label"
+											>Verification Code</label
+										>
+										<input
+											type="number"
+											id="verificationCode"
+											class="form-control"
+										/>
+										<div class="form-text">
+											Enter valid verification code.
+										</div>
+									</form>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-primary">
+										Save changes
+									</button>
 								</div>
 							</div>
 						</div>

@@ -173,6 +173,10 @@ li:hover .icon-delete {
 	visibility: visible;
 }
 
+.disabled {
+    cursor: not-allowed;
+}
+
 /* Responsive */
 
 @media (min-width: 768px) {

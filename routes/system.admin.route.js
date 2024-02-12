@@ -8,9 +8,9 @@ const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
 const Event = require('../models/events.model');
 const archiver = require('archiver');
+const nodemailer = require('nodemailer');
 
 function countVisibleUsersInTable(users, currentUser) {
-	
 	const visibleUsersInTable = users.filter((user) => {
 		return user._id.toString() !== currentUser._id.toString();
 	});
@@ -67,23 +67,23 @@ router.get('/records', async (req, res, next) => {
 	let records;
 	let levels;
 
-    // Check if gradeLevel is provided in the query parameter
-    if (req.query.gradeLevel) {
-        // If gradeLevel is provided, filter records based on it
-        records = await Records.find({ gradeLevel: req.query.gradeLevel });
-    } else {
-        // If gradeLevel is not provided, retrieve all records
-        records = await Records.find();
-    }
+	// Check if gradeLevel is provided in the query parameter
+	if (req.query.gradeLevel) {
+		// If gradeLevel is provided, filter records based on it
+		records = await Records.find({ gradeLevel: req.query.gradeLevel });
+	} else {
+		// If gradeLevel is not provided, retrieve all records
+		records = await Records.find();
+	}
 
 	// Check if gradeLevel is provided in the query parameter
-    if (gradeLevel !== 'All Grades') {
-        // If gradeLevel is provided, filter records based on it
-        levels = await Records.find({ gradeLevel });
-    } else {
-        // If gradeLevel is not provided, retrieve all records
-        levels = await Records.find();
-    }
+	if (gradeLevel !== 'All Grades') {
+		// If gradeLevel is provided, filter records based on it
+		levels = await Records.find({ gradeLevel });
+	} else {
+		// If gradeLevel is not provided, retrieve all records
+		levels = await Records.find();
+	}
 
 	res.render('system_admn/records', { person, records, gradeLevel });
 });
@@ -91,8 +91,8 @@ router.get('/records', async (req, res, next) => {
 router.get('/records-menu', async (req, res, next) => {
 	const person = req.user;
 
-	res.render('system_admn/records-menu', {person})
-})
+	res.render('system_admn/records-menu', { person });
+});
 
 router.get('/archives', async (req, res, next) => {
 	const person = req.user;
@@ -102,14 +102,14 @@ router.get('/archives', async (req, res, next) => {
 
 router.get('/calendar', async (req, res, next) => {
 	try {
-        const person = req.user;
-        const events = await Event.find(); // Assuming you have an Event model
+		const person = req.user;
+		const events = await Event.find(); // Assuming you have an Event model
 
-        res.render('system_admn/calendar', { person, events });
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		res.render('system_admn/calendar', { person, events });
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 router.get('/reports', async (req, res, next) => {
@@ -503,46 +503,45 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
 
 // Add this route for handling the archive selected logic
 router.post('/archive-selected', async (req, res, next) => {
-    try {
-        const selectedRecordIds = req.body.selectedRecords;
+	try {
+		const selectedRecordIds = req.body.selectedRecords;
 
-        // Check if any records are selected
-        if (!selectedRecordIds || selectedRecordIds.length === 0) {
-            req.flash('error', 'No records selected for archiving');
-            return res.redirect('/systemAdmin/records');
-        }
+		// Check if any records are selected
+		if (!selectedRecordIds || selectedRecordIds.length === 0) {
+			req.flash('error', 'No records selected for archiving');
+			return res.redirect('/systemAdmin/records');
+		}
 
-        // Find the selected records by IDs
-        const selectedRecords = await Records.find({ _id: { $in: selectedRecordIds } });
+		// Find the selected records by IDs
+		const selectedRecords = await Records.find({
+			_id: { $in: selectedRecordIds },
+		});
 
-        // Move the selected records to the Archives collection
-        const archivedRecords = selectedRecords.map((record) => {
-            return {
-                lrn: record.lrn,
-                studentName: record.studentName,
-                gender: record.gender,
-                dateAddedToArchive: new Date(),
-                pdfFilePath: record.pdfFilePath, // Check if you need to handle PDF files
-            };
-        });
+		// Move the selected records to the Archives collection
+		const archivedRecords = selectedRecords.map((record) => {
+			return {
+				lrn: record.lrn,
+				studentName: record.studentName,
+				gender: record.gender,
+				dateAddedToArchive: new Date(),
+				pdfFilePath: record.pdfFilePath, // Check if you need to handle PDF files
+			};
+		});
 
-        // Save the archived records
-        await Archives.insertMany(archivedRecords);
+		// Save the archived records
+		await Archives.insertMany(archivedRecords);
 
-        // Delete the selected records from the original collection
-        await Records.deleteMany({ _id: { $in: selectedRecordIds } });
+		// Delete the selected records from the original collection
+		await Records.deleteMany({ _id: { $in: selectedRecordIds } });
 
-        req.flash('success', 'Selected records archived successfully');
-        res.redirect('/systemAdmin/records');
-    } catch (error) {
-        console.error('Error:', error);
-        req.flash('error', 'Failed to archive selected records');
-        res.redirect('/systemAdmin/records');
-    }
+		req.flash('success', 'Selected records archived successfully');
+		res.redirect('/systemAdmin/records');
+	} catch (error) {
+		console.error('Error:', error);
+		req.flash('error', 'Failed to archive selected records');
+		res.redirect('/systemAdmin/records');
+	}
 });
-
-
-
 
 router.get('/backup', async (req, res, next) => {
 	try {
@@ -626,81 +625,97 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			return;
 		}
 
-		
-
 		// Check for duplicate email
-        const existingUserWithSameEmail = await User.findOne({
-            email: req.body.editEmail,
-            _id: { $ne: userId }, // Exclude the current user
-        });
+		const existingUserWithSameEmail = await User.findOne({
+			email: req.body.editEmail,
+			_id: { $ne: userId }, // Exclude the current user
+		});
 
-        if (existingUserWithSameEmail) {
-            req.flash('error', 'Another user with the same email already exists.');
-            return res.redirect('/systemAdmin/accounts');
-        }
+		if (existingUserWithSameEmail) {
+			req.flash('error', 'Another user with the same email already exists.');
+			return res.redirect('/systemAdmin/accounts');
+		}
 
 		// Check if the user is changing the role to "System Admin"
-        if (req.body.editRole === 'System Admin') {
-            // Count the number of users with the role "System Admin"
-            const systemAdminCount = await User.countDocuments({
-                role: 'System Admin',
-                _id: { $ne: userId }, // Exclude the current user
-            });
+		if (req.body.editRole === 'System Admin') {
+			// Count the number of users with the role "System Admin"
+			const systemAdminCount = await User.countDocuments({
+				role: 'System Admin',
+				_id: { $ne: userId }, // Exclude the current user
+			});
 
-            // Allow only two users with the role "System Admin"
-            if (systemAdminCount >= 2) {
-                req.flash('error', 'Only two users can have the role "System Admin".');
-                return res.redirect('/systemAdmin/accounts');
-            }
-        }
+			// Allow only two users with the role "System Admin"
+			if (systemAdminCount >= 2) {
+				req.flash('error', 'Only two users can have the role "System Admin".');
+				return res.redirect('/systemAdmin/accounts');
+			}
+		}
 
 		// Check if there's already a user with the 'Admin' role
-        if (req.body.editRole === 'Admin') {
-            const existingAdmin = await User.findOne({
-                role: 'Admin',
-                _id: { $ne: userId }, // Exclude the current user
-            });
+		if (req.body.editRole === 'Admin') {
+			const existingAdmin = await User.findOne({
+				role: 'Admin',
+				_id: { $ne: userId }, // Exclude the current user
+			});
 
-            if (existingAdmin) {
-                req.flash('error', 'Another user with the role Admin already exists.');
-                return res.redirect('/systemAdmin/accounts');
-            }
-        }
+			if (existingAdmin) {
+				req.flash('error', 'Another user with the role Admin already exists.');
+				return res.redirect('/systemAdmin/accounts');
+			}
+		}
 
 		// If the new classAdvisory is not 'None', check for uniqueness
-        if (req.body.editClassAdvisory !== 'None') {
-            const existingUserWithSameClassAdvisory = await User.findOne({
-                classAdvisory: req.body.editClassAdvisory,
-                _id: { $ne: userId }, // Exclude the current user
-            });
+		if (req.body.editClassAdvisory !== 'None') {
+			const existingUserWithSameClassAdvisory = await User.findOne({
+				classAdvisory: req.body.editClassAdvisory,
+				_id: { $ne: userId }, // Exclude the current user
+			});
 
-            if (existingUserWithSameClassAdvisory) {
-                req.flash('error', 'Another user with the same class advisory already exists.');
-                return res.redirect('/systemAdmin/accounts');
-            }
-        }
+			if (existingUserWithSameClassAdvisory) {
+				req.flash(
+					'error',
+					'Another user with the same class advisory already exists.'
+				);
+				return res.redirect('/systemAdmin/accounts');
+			}
+		}
 
 		// If the new subjectAdvisory is not 'None', check for uniqueness
-        if (req.body.editSubjectAdvisory !== 'None') {
-            const existingUserWithSameSubjectAdvisory = await User.findOne({
-                subjectAdvisory: req.body.editSubjectAdvisory,
-                _id: { $ne: userId }, // Exclude the current user
-            });
+		if (req.body.editSubjectAdvisory !== 'None') {
+			const existingUserWithSameSubjectAdvisory = await User.findOne({
+				subjectAdvisory: req.body.editSubjectAdvisory,
+				_id: { $ne: userId }, // Exclude the current user
+			});
 
-            if (existingUserWithSameSubjectAdvisory) {
-                req.flash('error', 'Another user with the same subject advisory already exists.');
-                return res.redirect('/systemAdmin/accounts');
-            }
-        }
+			if (existingUserWithSameSubjectAdvisory) {
+				req.flash(
+					'error',
+					'Another user with the same subject advisory already exists.'
+				);
+				return res.redirect('/systemAdmin/accounts');
+			}
+		}
 
 		// Check if classAdvisory is 'Kinder' and subjectAdvisory is not 'All Kinder Subjects'
-        const isKinderClassAdvisory = req.body.editClassAdvisory === 'Kinder';
-        const isAllKinderSubjects = req.body.editSubjectAdvisory === 'All Kinder Subjects';
+		const isKinderClassAdvisory = req.body.editClassAdvisory === 'Kinder';
+		const isAllKinderSubjects =
+			req.body.editSubjectAdvisory === 'All Kinder Subjects';
 
-        if (isKinderClassAdvisory && !isAllKinderSubjects) {
-            req.flash('error', 'If Class Advisory is Kinder, Subject Advisory must be All Kinder Subjects.');
-            return res.redirect(`/systemAdmin/accounts`);
-        }
+		if (isKinderClassAdvisory && !isAllKinderSubjects) {
+			req.flash(
+				'error',
+				'If Class Advisory is Kinder, Subject Advisory must be All Kinder Subjects.'
+			);
+			return res.redirect(`/systemAdmin/accounts`);
+		}
+
+		if (isAllKinderSubjects && !isKinderClassAdvisory) {
+			req.flash(
+				'error',
+				'If Subject Advisory is All Kinder Subjects, Class Advisory must be Kinder.'
+			);
+			return res.redirect(`/systemAdmin/accounts`);
+		}
 
 		// Update the record with new values
 		user.name = req.body.editName;
@@ -708,7 +723,6 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 		user.role = req.body.editRole;
 		user.classAdvisory = req.body.editClassAdvisory;
 		user.subjectAdvisory = req.body.editSubjectAdvisory;
-		
 
 		// Save the updated record
 		await user.save();
@@ -722,6 +736,30 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 	}
 });
 
+// async function sendVerificationEmail(toEmail, verificationToken) {
+//     // Create a nodemailer transporter
+//     const transporter = nodemailer.createTransport({
+//         // Configure your email service details here
+//         service: 'gmail',
+//         auth: {
+//             user: 'meliboadrian@gmail.com',
+//             pass: 'your-email-password',
+//         },
+//     });
+
+//     // Create the email message with the verification code
+//     const mailOptions = {
+//         from: 'meliboadrian@gmail.com',
+//         to: toEmail,
+//         subject: 'Email Verification',
+//         html: `<p>Your verification code is: <strong>${verificationToken}</strong></p>
+//                <p>Enter this code to verify your new email address.</p>`,
+//     };
+
+//     // Send the email
+//     await transporter.sendMail(mailOptions);
+// }
+
 router.post('/edit-profile/:id', async (req, res) => {
 	try {
 		const userId = req.params.id;
@@ -733,40 +771,111 @@ router.post('/edit-profile/:id', async (req, res) => {
 			editSubjectAdvisory,
 		} = req.body;
 
-		
+		// Assuming editRole is the new role being set for the user
+		const currentRole = req.user.role; // Assuming you have the current user's role in req.user.role
 
-		// Perform a check to see if the user is changing the role to something other than "System Admin"
-		if (editRole !== 'System Admin') {
-			// Count the number of users with the role "System Admin"
-			const systemAdminCount = await User.countDocuments({
-				role: 'System Admin',
-			});
+		// Check if the user is changing the role to something other than the current role
+		if (editRole !== currentRole) {
+			// If the current role is "System Admin" and you are the only one, prevent the role change
+			if (currentRole === 'System Admin') {
+				const systemAdminCount = await User.countDocuments({
+					role: 'System Admin',
+				});
 
-			// Count the number of users with the role "Admin"
-			const adminCount = await User.countDocuments({
-				role: 'Admin',
-			});
-
-			// If there is only one "System Admin" user, prevent the role change
-			if (systemAdminCount === 1) {
-				req.flash(
-					'error',
-					'At least one user must have the role "System Admin".'
-				);
-				return res.redirect('/systemAdmin/profile');
+				if (systemAdminCount === 1) {
+					req.flash(
+						'error',
+						'You are the only user with the role "System Admin". Changing the role is not allowed.'
+					);
+					return res.redirect('/systemAdmin/profile');
+				}
 			}
 
-			// If there is only one "Admin" user, prevent the role change
-			if (adminCount === 1) {
+			// Check if the user is changing the role to "Admin"
+			if (editRole === 'Admin') {
+				// Count the number of users with the role "Admin"
+				const adminCount = await User.countDocuments({
+					role: 'Admin',
+				});
+
+				// If there is already a user with the "Admin" role, prevent the role change
+				if (adminCount > 0) {
+					req.flash(
+						'error',
+						'Only one user is allowed to have the role "Admin".'
+					);
+					return res.redirect('/systemAdmin/profile');
+				}
+			}
+		}
+
+		// If the new classAdvisory is not 'None', check for uniqueness
+		if (req.body.editClassAdvisory !== 'None') {
+			const existingUserWithSameClassAdvisory = await User.findOne({
+				classAdvisory: req.body.editClassAdvisory,
+				_id: { $ne: userId }, // Exclude the current user
+			});
+
+			if (existingUserWithSameClassAdvisory) {
 				req.flash(
 					'error',
-					'Only one user is allowed to have the role "Admin".'
+					'A user with the selected class advisory already exists. Please choose a different one.'
 				);
 				return res.redirect('/systemAdmin/profile');
 			}
 		}
 
-		
+		// If the new subjectAdvisory is not 'None', check for uniqueness
+		if (req.body.editSubjectAdvisory !== 'None') {
+			const existingUserWithSameSubjectAdvisory = await User.findOne({
+				subjectAdvisory: req.body.editSubjectAdvisory,
+				_id: { $ne: userId }, // Exclude the current user
+			});
+
+			if (existingUserWithSameSubjectAdvisory) {
+				req.flash(
+					'error',
+					'Another user with the same subject advisory already exists. Please choose a different one.'
+				);
+				return res.redirect('/systemAdmin/profile');
+			}
+		}
+
+		// Check if the user is changing the email address
+		if (editEmail !== req.user.email) {
+			// Check if the new email address is already in use by another user
+			const existingUserWithSameEmail = await User.findOne({
+				email: editEmail,
+				_id: { $ne: userId }, // Exclude the current user
+			});
+
+			if (existingUserWithSameEmail) {
+				req.flash(
+					'error',
+					'The specified email address is already in use by another user.'
+				);
+				return res.redirect('/systemAdmin/profile');
+			}
+		}
+
+		// Check if the user is changing the email address
+		// if (editEmail !== req.user.email) {
+		// 	// Generate a unique verification token
+		// 	const verificationToken = generateUniqueToken(); // Implement this function
+
+		// 	// Save the verification token and the new email in the database
+		// 	await User.findByIdAndUpdate(userId, {
+		// 		emailVerificationToken: verificationToken,
+		// 		newEmail: editEmail,
+		// 	});
+
+		// 	// Send an email with the verification link
+		// 	await sendVerificationEmail(editEmail, verificationToken);
+
+		// 	// Render a page with the verification code modal
+		// 	return res.render('verifymodal', { userId, editEmail });
+		// }
+
 		// Update the user's details in the database
 		await User.findByIdAndUpdate(userId, {
 			name: editName,
@@ -798,6 +907,108 @@ router.post('/edit-profile/:id', async (req, res) => {
 		res.status(500).send('Internal Server Error');
 	}
 });
+
+// router.post('/edit-profile/:id', async (req, res) => {
+// 	try {
+// 		const userId = req.params.id;
+// 		const {
+// 			editName,
+// 			editEmail,
+// 			editRole,
+// 			editClassAdvisory,
+// 			editSubjectAdvisory,
+// 		} = req.body;
+
+// 		// Perform a check to see if the user is changing the role to something other than "System Admin"
+//         if (editRole !== 'System Admin') {
+//             // Count the number of users with the role "System Admin"
+//             const systemAdminCount = await User.countDocuments({
+//                 role: 'System Admin',
+//             });
+
+//             // Count the number of users with the role "Admin"
+//             // const adminCount = await User.countDocuments({
+//             //     role: 'Admin',
+//             // });
+
+//             // If there is only one "System Admin" user, prevent the role change
+//             if (systemAdminCount === 1 && editRole !== 'Admin') {
+//                 req.flash(
+//                     'error',
+//                     'At least one user must have the role "System Admin".'
+//                 );
+//                 return res.redirect('/systemAdmin/profile');
+//             }
+
+//             // If there is only one "Admin" user, prevent the role change
+//             // if (adminCount === 1 && editRole !== 'Admin') {
+//             //     req.flash(
+//             //         'error',
+//             //         'Only one user is allowed to have the role "Admin".'
+//             //     );
+//             //     return res.redirect('/systemAdmin/profile');
+//             // }
+//         }
+
+// 		// Function to check for duplicate values
+//         // const checkForDuplicates = async (field, value) => {
+//         //     const query = { [field]: value };
+//         //     if (value !== 'None') {
+//         //         const count = await User.countDocuments(query);
+//         //         return count > 0;
+//         //     }
+//         //     return false;
+//         // };
+
+//         // // Check for duplicate email
+//         // if (await checkForDuplicates('email', editEmail)) {
+//         //     req.flash('error', 'Email address is already in use.');
+//         //     return res.redirect('/systemAdmin/profile');
+//         // }
+
+//         // // Check for duplicate classAdvisory (allowing 'None' to be duplicated)
+//         // if (await checkForDuplicates('classAdvisory', editClassAdvisory) && editClassAdvisory !== 'None') {
+//         //     req.flash('error', 'Class Advisory is already assigned to another user.');
+//         //     return res.redirect('/systemAdmin/profile');
+//         // }
+
+//         // // Check for duplicate subjectAdvisory
+//         // if (await checkForDuplicates('subjectAdvisory', editSubjectAdvisory)) {
+//         //     req.flash('error', 'Subject Advisory is already assigned to another user.');
+//         //     return res.redirect('/systemAdmin/profile');
+//         // }
+
+// 		// Update the user's details in the database
+// 		await User.findByIdAndUpdate(userId, {
+// 			name: editName,
+// 			email: editEmail,
+// 			role: editRole,
+// 			classAdvisory: editClassAdvisory,
+// 			subjectAdvisory: editSubjectAdvisory,
+// 		});
+
+// 		// Check if the user's new role is either "Admin" or "Class Advisor"
+// 		if (editRole === 'Admin' || editRole === 'Class Advisor') {
+// 			// Log out the user and destroy the session
+// 			req.logout(() => {
+// 				req.session.destroy(() => {
+// 					// Redirect to the appropriate dashboard
+// 					if (editRole === 'Admin') {
+// 						return res.redirect('/admin/dashboard');
+// 					} else if (editRole === 'Class Advisor') {
+// 						return res.redirect('/classAdvisor/dashboard');
+// 					}
+// 				});
+// 			});
+// 		} else {
+// 			// Redirect to the profile page
+// 			res.redirect('/systemAdmin/profile');
+// 		}
+// 	} catch (error) {
+// 		console.error(error);
+// 		res.status(500).send('Internal Server Error');
+// 	}
+// });
 
 // Add this route to get record counts
 router.get('/get-record-counts', async (req, res, next) => {
@@ -841,5 +1052,34 @@ router.get('/get-gradeLevel-counts', async (req, res, next) => {
 	}
 });
 
+// route for searching records
+// router.post('/search', async (req, res, next) => {
+//     try {
+//         const { lrn, name } = req.body;
+
+//         // Create a query object to build the search conditions
+//         const searchQuery = {};
+
+//         // Check if LRN is provided in the search
+//         if (lrn) {
+//             searchQuery.lrn = lrn;
+//         }
+
+//         // Check if Name is provided in the search
+//         if (name) {
+//             // Use a case-insensitive regular expression for partial name match
+//             searchQuery.studentName = { $regex: new RegExp(name, 'i') };
+//         }
+
+//         // Perform the search using the created query
+//         const searchResults = await Records.find(searchQuery);
+
+//         // Render the search results or pass them to your view
+//         res.render('searchResults', { searchResults });
+//     } catch (error) {
+//         console.error('Error:', error);
+//         next(error);
+//     }
+// });
 
 module.exports = router;

@@ -13,6 +13,17 @@ router.get('/register', ensureAuthenticated, ensureSystemAdminOrAdmin, async (re
 	res.render('credentials/register', { person, currentUserRole });
 });
 
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'meliboadrian@gmail.com',
+        pass: 'igtw pyqi aggb bbyb',
+    },
+    tls: {
+        rejectUnauthorized: false,
+    },
+});
+
 router.post(
     '/register',
     ensureAuthenticated,
@@ -184,8 +195,51 @@ router.post(
             const user = new User(req.body);
             await user.save();
 
-            req.flash('success', `${user.email} is successfully registered`);
-            res.redirect('/auth/register');
+            const systemName = 'Record Management System with Archiving for Bethany Christian Academy of Tagaytay';
+            const schoolName = 'Bethany Christian Academy of Tagaytay'
+            // Send registration confirmation email
+            const mailOptions = {
+                from: 'Bethany Christian Academy',
+                to: user.email,
+                subject: 'Registration Successful',
+                html: `<p>Dear ${user.name},</p>
+                  <p>You are now successfully registered in <strong>${systemName}</strong>. Your credentials are as follows:</p>
+                  <ul>
+                    <li><strong>Email:</strong> ${user.email}</li>
+                    <li><strong>Password:</strong> ${req.body.password}</li>
+                    <li><strong>Role:</strong> ${user.role}</li>
+                    <li><strong>Class Advisory:</strong> ${user.classAdvisory || 'Not assigned'}</li>
+                    <li><strong>Subject Advisory:</strong> ${user.subjectAdvisory || 'Not assigned'}</li>
+                  </ul>
+                  <p>Please note: Do not share your password with anyone for security reasons. You can now log in with your credentials.</p>
+                  <p>Best regards,<br>${schoolName}</p>`,
+            };
+
+            
+            
+
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    console.error('Error sending email:', error.message);
+            
+                    // Handle the error, for example, notify the user that the email could not be sent
+                    req.flash('error', 'Registration confirmation email could not be sent.');
+                    return res.redirect('/auth/register');
+                }
+            
+                console.log('Email sent:', info.response);
+            
+                // Check the response for success or failure
+                if (info.response.includes('250 2.0.0 OK')) {
+                    // Email sent successfully
+                    req.flash('success', `${user.email} is successfully registered`);
+                    return res.redirect('/auth/register');
+                } else {
+                    // Email not delivered (e.g., email address does not exist)
+                    req.flash('error', 'Email delivery failed.');
+                    return res.redirect('/auth/register');
+                }
+            });            
         } catch (error) {
             const person = req.user;
             const currentUserRole = req.user.role;
@@ -443,7 +497,7 @@ router.get('/logout', ensureAuthenticated, async (req, res, next) => {
         if (err) {
             return next(err);
         }
-        // Set Cache-Control header to prevent caching
+        // Cache-Control header to prevent caching
         res.setHeader('Cache-Control','private, no-cache, no-store, must-revalidate');
         res.redirect('/');
     });

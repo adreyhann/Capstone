@@ -1,4 +1,3 @@
-
 const chart2 = document.getElementById('studentChart');
 
 // Function to fetch record counts based on gradeLevel
@@ -13,17 +12,17 @@ async function fetchRecordCounts() {
     }
 }
 
-
+ 
 // Function to update the chart with record counts
 async function updateChart() {
     try {
         const recordCounts = await fetchRecordCounts();
 
-        // Retrieve stored colors from local storage
-        const storedColors = JSON.parse(localStorage.getItem('chartColors')) || {};
+        // // Retrieve stored colors from local storage
+        // const storedColors = JSON.parse(localStorage.getItem('chartColors')) || {};
 
-        // Use stored colors or generate new ones
-        const backgroundColors = storedColors[chart2.id] || generateRandomColors(recordCounts.labels.length);
+        // // Use stored colors or generate new ones
+        // const backgroundColors = storedColors[chart2.id] || generateRandomColors(recordCounts.labels.length);
 
         new Chart(chart2, {
             type: 'bar',

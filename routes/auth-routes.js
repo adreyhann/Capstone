@@ -5,7 +5,10 @@ const passport = require('passport');
 const ResetToken = require('../models/reset.model');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
+// const zerobounce = require('zerobounce');
+require('dotenv').config();
 const crypto = require('crypto');
+
 
 router.get('/register', ensureAuthenticated, ensureSystemAdminOrAdmin, async (req, res, next) => {
 	const person = req.user;
@@ -23,6 +26,7 @@ const transporter = nodemailer.createTransport({
         rejectUnauthorized: false,
     },
 });
+
 
 router.post(
     '/register',
@@ -63,7 +67,25 @@ router.post(
                 });
             }
 
+            
+
             const { email, role, classAdvisory, subjectAdvisory } = req.body;
+
+            // Validate the email using ZeroBounce
+            // try {
+            //     const response = await zerobounce.validateEmail(email, {
+            //         apiKey: process.env.ZEROBOUNCE_API_KEY,
+            //     });
+
+            //     if (response.status !== 'Valid') {
+            //         req.flash('error', 'Invalid email address. Please provide a valid email.');
+            //         return res.redirect('/auth/register');
+            //     }
+            // } catch (error) {
+            //     console.error('Error validating email with ZeroBounce:', error.message);
+            //     req.flash('error', 'Error validating email. Please try again.');
+            //     return res.redirect('/auth/register');
+            // }
 
             // Check if the role is "System Admin"
             if (role === 'System Admin') {
@@ -170,7 +192,7 @@ router.post(
 
             const eppExists = await User.findOne({ subjectAdvisory: 'EPP' });
             if (eppExists && subjectAdvisory === 'EPP') {
-                req.flash('error', 'A user with Subject Advisory of Filipino is already exists.');
+                req.flash('error', 'A user with Subject Advisory of EPP is already exists.');
                 return res.redirect('/auth/register');
             }
 
@@ -188,7 +210,7 @@ router.post(
 
             const mathExists = await User.findOne({ subjectAdvisory: 'Math' });
             if (mathExists && subjectAdvisory === 'Math') {
-                req.flash('error', 'A user with Subject Advisory of Filipino is already exists.');
+                req.flash('error', 'A user with Subject Advisory of Math is already exists.');
                 return res.redirect('/auth/register');
             }
 

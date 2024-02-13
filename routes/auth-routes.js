@@ -5,6 +5,7 @@ const passport = require('passport');
 const ResetToken = require('../models/reset.model');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
+
 // const zerobounce = require('zerobounce');
 require('dotenv').config();
 const crypto = require('crypto');
@@ -73,16 +74,14 @@ router.post(
 
             // Validate the email using ZeroBounce
             // try {
-            //     const response = await zerobounce.validateEmail(email, {
-            //         apiKey: process.env.ZEROBOUNCE_API_KEY,
-            //     });
+            //     const verificationResult = await emailVerifier.verify(email);
 
-            //     if (response.status !== 'Valid') {
+            //     if (!verificationResult.success) {
             //         req.flash('error', 'Invalid email address. Please provide a valid email.');
             //         return res.redirect('/auth/register');
             //     }
             // } catch (error) {
-            //     console.error('Error validating email with ZeroBounce:', error.message);
+            //     console.error('Error validating email with email-verifier:', error.message);
             //     req.flash('error', 'Error validating email. Please try again.');
             //     return res.redirect('/auth/register');
             // }
@@ -221,7 +220,7 @@ router.post(
             const schoolName = 'Bethany Christian Academy of Tagaytay'
             // Send registration confirmation email
             const mailOptions = {
-                from: 'Bethany Christian Academy',
+                from: 'Bethany Christian Academy <meliboadrian@gmail.com>',
                 to: user.email,
                 subject: 'Registration Successful',
                 html: `<p>Dear ${user.name},</p>

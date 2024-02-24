@@ -9,7 +9,11 @@ const UserSchema = new mongoose.Schema({
 		lowercase: true,
 		unique: true,
 	},
-	name: {
+	lname: {
+		type: String,
+		required: true,
+	},
+	fname: {
 		type: String,
 		required: true,
 	},
@@ -26,10 +30,10 @@ const UserSchema = new mongoose.Schema({
 		required: true,
 	
 	},
-	subjectAdvisory: {
-		type: String,
-		required: true,
-	},
+	// subjectAdvisory: {
+	// 	type: String,
+	// 	required: true,
+	// },
 	status: {
 		type: String,
 		enum: ['active', 'deactivated'],

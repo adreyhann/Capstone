@@ -720,11 +720,11 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 		}
 
 		// Update the record with new values
-		user.name = req.body.editName;
+		user.lname = req.body.editLName;
+		user.fname = req.body.editFName;
 		user.email = req.body.editEmail;
 		user.role = req.body.editRole;
 		user.classAdvisory = req.body.editClassAdvisory;
-		user.subjectAdvisory = req.body.editSubjectAdvisory;
 
 		// Save the updated record
 		await user.save();
@@ -766,11 +766,11 @@ router.post('/edit-profile/:id', async (req, res) => {
 	try {
 		const userId = req.params.id;
 		const {
-			editName,
+			editLName,
+			editFName,
 			editEmail,
 			editRole,
 			editClassAdvisory,
-			editSubjectAdvisory,
 		} = req.body;
 
 		// editRole is the new role being set for the user
@@ -827,21 +827,6 @@ router.post('/edit-profile/:id', async (req, res) => {
 			}
 		}
 
-		// If the new subjectAdvisory is not 'None', check for uniqueness
-		if (req.body.editSubjectAdvisory !== 'None') {
-			const existingUserWithSameSubjectAdvisory = await User.findOne({
-				subjectAdvisory: req.body.editSubjectAdvisory,
-				_id: { $ne: userId }, // Exclude the current user
-			});
-
-			if (existingUserWithSameSubjectAdvisory) {
-				req.flash(
-					'error',
-					'Another user with the same subject advisory already exists. Please choose a different one.'
-				);
-				return res.redirect('/systemAdmin/profile');
-			}
-		}
 
 		// Check if the user is changing the email address
 		if (editEmail !== req.user.email) {
@@ -880,11 +865,11 @@ router.post('/edit-profile/:id', async (req, res) => {
 
 		// Update the user's details in the database
 		await User.findByIdAndUpdate(userId, {
-			name: editName,
+			lname: editLName,
+			fname: editFName,
 			email: editEmail,
 			role: editRole,
 			classAdvisory: editClassAdvisory,
-			subjectAdvisory: editSubjectAdvisory,
 		});
 
 		// Check if the user's new role is either "Admin" or "Class Advisor"

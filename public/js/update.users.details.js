@@ -1,7 +1,6 @@
 // Store the initial state when the form is loaded
 var initialRole = document.getElementById('editRole').value;
 var initialClassAdvisory = document.getElementById('editClassAdvisory').value;
-var initialSubjectAdvisory = document.getElementById('editSubjectAdvisory').value;
 
 function updateAdvisoryOptions() {
     var roleSelect = document.getElementById('editRole');

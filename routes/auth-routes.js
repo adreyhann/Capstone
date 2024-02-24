@@ -223,14 +223,13 @@ router.post(
                 from: 'Bethany Christian Academy <noreply@bethany.com>',
                 to: user.email,
                 subject: 'Registration Successful',
-                html: `<p>Dear ${user.name},</p>
+                html: `<p>Dear ${user.fname},</p>
                   <p>You are now successfully registered in <strong>${systemName}</strong>. Your credentials are as follows:</p>
                   <ul>
                     <li><strong>Email:</strong> ${user.email}</li>
                     <li><strong>Password:</strong> ${req.body.password}</li>
                     <li><strong>Role:</strong> ${user.role}</li>
                     <li><strong>Class Advisory:</strong> ${user.classAdvisory || 'Not assigned'}</li>
-                    <li><strong>Subject Advisory:</strong> ${user.subjectAdvisory || 'Not assigned'}</li>
                   </ul>
                   <p>Please note: Do not share your password with anyone for security reasons. You can now log in with your credentials.</p>
                   <p>Best regards,<br>${schoolName}</p>`,

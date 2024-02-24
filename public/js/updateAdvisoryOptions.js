@@ -1,20 +1,15 @@
 function updateAdvisoryOptions() {
     var roleSelect = document.getElementById("role");
     var classAdvisorySelect = document.getElementById("classAdvisory");
-    var subjectAdvisorySelect = document.getElementById("subjectAdvisory");
     
     if (roleSelect.value === 'System Admin') {
         // Set classAdvisory and subjectAdvisory to 'None' and disable other options
         classAdvisorySelect.value = 'None';
-        subjectAdvisorySelect.value = 'None';
         disableOptions(classAdvisorySelect, ['Kinder', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6']);
-        disableOptions(subjectAdvisorySelect, ['All Kinder Subjects', 'Filipino', 'AP', 'Values', 'Civics', 'EPP', 'Science', 'Mapeh', 'Math']);
     } else if (roleSelect.value === 'Admin') {
         // Customize options for the 'Admin' role
         classAdvisorySelect.value = 'None';
-        subjectAdvisorySelect.value = 'None';
         disableOptions(classAdvisorySelect, ['Kinder', 'Grade 1', 'Grade 2','Grade 3', 'Grade 4', 'Grade 5', 'Grade 6']);
-        disableOptions(subjectAdvisorySelect, ['All Kinder Subjects', 'Filipino', 'AP', 'Values', 'Civics', 'EPP', 'Science', 'Mapeh', 'Math']);
        
     } else {
         // Reset classAdvisory and subjectAdvisory to 'None' and enable all options

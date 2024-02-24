@@ -1,83 +1,82 @@
 function updateAdvisoryOptions() {
     var roleSelect = document.getElementById("editRole");
     var classAdvisorySelect = document.getElementById("editClassAdvisory");
-    var subjectAdvisorySelect = document.getElementById("editSubjectAdvisory");
 
     // Disable options by default if the role is 'System Admin' or 'Admin'
     if (roleSelect.value === 'System Admin' || roleSelect.value === 'Admin') {
+		classAdvisorySelect.value = 'None'
         disableAllOptions(classAdvisorySelect);
-        disableAllOptions(subjectAdvisorySelect);
+		
     } else {
         // Reset classAdvisory and subjectAdvisory to 'None' and enable all options
         classAdvisorySelect.value = '';
-        subjectAdvisorySelect.value = '';
         enableAllOptions(classAdvisorySelect);
-        enableAllOptions(subjectAdvisorySelect);
+		disableOptions(classAdvisorySelect, ['None'])
     }
 }
 
-function updateSubjectAdvisory() {
-	var classAdvisorySelect = document.getElementById('editClassAdvisory');
-	var subjectAdvisorySelect = document.getElementById('editSubjectAdvisory');
+// function updateSubjectAdvisory() {
+// 	var classAdvisorySelect = document.getElementById('editClassAdvisory');
+// 	var subjectAdvisorySelect = document.getElementById('editSubjectAdvisory');
 
-	// Check if classAdvisory is 'Kinder'
-	if (classAdvisorySelect.value === 'Kinder') {
-		// Set subjectAdvisory to 'All Kinder subjects' (AKS) and disable other options
-		subjectAdvisorySelect.value = 'All Kinder Subjects';
-		// enableOptions(subjectAdvisorySelect, ['All Kinder Subjects']);
-		disableAllOptions(subjectAdvisorySelect);
-        enableOptions(subjectAdvisorySelect, ['All Kinder Subjects']);
-	} else {
-		// Reset subjectAdvisory to 'Select subject' and enable all options
+// 	// Check if classAdvisory is 'Kinder'
+// 	if (classAdvisorySelect.value === 'Kinder') {
+// 		// Set subjectAdvisory to 'All Kinder subjects' (AKS) and disable other options
+// 		subjectAdvisorySelect.value = 'All Kinder Subjects';
+// 		// enableOptions(subjectAdvisorySelect, ['All Kinder Subjects']);
+// 		disableAllOptions(subjectAdvisorySelect);
+//         enableOptions(subjectAdvisorySelect, ['All Kinder Subjects']);
+// 	} else {
+// 		// Reset subjectAdvisory to 'Select subject' and enable all options
 
-		enableAllOptions(subjectAdvisorySelect);
-	}
+// 		enableAllOptions(subjectAdvisorySelect);
+// 	}
 
-	if (classAdvisorySelect.value !== 'Kinder') {
-		subjectAdvisorySelect.value = '';
-		disableOptions(subjectAdvisorySelect, ['None', 'All Kinder Subjects']);
-	}
-}
+// 	if (classAdvisorySelect.value !== 'Kinder') {
+// 		subjectAdvisorySelect.value = '';
+// 		disableOptions(subjectAdvisorySelect, ['None', 'All Kinder Subjects']);
+// 	}
+// }
 
-function updateClassAdvisory() {
-	var classAdvisorySelect = document.getElementById('editClassAdvisory');
-	var subjectAdvisorySelect = document.getElementById('editSubjectAdvisory');
+// function updateClassAdvisory() {
+// 	var classAdvisorySelect = document.getElementById('editClassAdvisory');
+// 	var subjectAdvisorySelect = document.getElementById('editSubjectAdvisory');
 
-	// Check if classAdvisory is 'Kinder'
-	if (subjectAdvisorySelect.value === 'All Kinder Subjects') {
-		// Set subjectAdvisory to 'All Kinder subjects' (AKS) and disable other options
-		classAdvisorySelect.value = 'Kinder';
-		disableOptions(subjectAdvisorySelect, [
-			'None',
-			'Filipino',
-			'AP',
-			'Values',
-			'Civics',
-			'EPP',
-			'Science',
-			'Mapeh',
-			'Math',
-		]);
-	} else if (subjectAdvisorySelect.value !== 'All Kinder Subjects') {
-		// classAdvisorySelect.value = ''
-		disableOptions(classAdvisorySelect, []);
-	} else {
-		enableAllOptions(subjectAdvisorySelect, [
-			'Filipino',
-			'AP',
-			'Values',
-			'Civics',
-			'EPP',
-			'Science',
-			'Mapeh',
-			'Math',
-		]);
-	}
+// 	// Check if classAdvisory is 'Kinder'
+// 	if (subjectAdvisorySelect.value === 'All Kinder Subjects') {
+// 		// Set subjectAdvisory to 'All Kinder subjects' (AKS) and disable other options
+// 		classAdvisorySelect.value = 'Kinder';
+// 		disableOptions(subjectAdvisorySelect, [
+// 			'None',
+// 			'Filipino',
+// 			'AP',
+// 			'Values',
+// 			'Civics',
+// 			'EPP',
+// 			'Science',
+// 			'Mapeh',
+// 			'Math',
+// 		]);
+// 	} else if (subjectAdvisorySelect.value !== 'All Kinder Subjects') {
+// 		// classAdvisorySelect.value = ''
+// 		disableOptions(classAdvisorySelect, []);
+// 	} else {
+// 		enableAllOptions(subjectAdvisorySelect, [
+// 			'Filipino',
+// 			'AP',
+// 			'Values',
+// 			'Civics',
+// 			'EPP',
+// 			'Science',
+// 			'Mapeh',
+// 			'Math',
+// 		]);
+// 	}
 
-	if (classAdvisorySelect.value !== 'Kinder') {
-		disableOptions(subjectAdvisorySelect, ['None', 'All Kinder Subjects']);
-	}
-}
+// 	if (classAdvisorySelect.value !== 'Kinder') {
+// 		disableOptions(subjectAdvisorySelect, ['None', 'All Kinder Subjects']);
+// 	}
+// }
 
 
 // function updateSubjectAdvisory() {

@@ -220,7 +220,7 @@ router.post(
             const schoolName = 'Bethany Christian Academy of Tagaytay'
             // Send registration confirmation email
             const mailOptions = {
-                from: 'Bethany Christian Academy <meliboadrian@gmail.com>',
+                from: 'Bethany Christian Academy <noreply@bethany.com>',
                 to: user.email,
                 subject: 'Registration Successful',
                 html: `<p>Dear ${user.name},</p>
@@ -523,6 +523,8 @@ router.get('/logout', ensureAuthenticated, async (req, res, next) => {
         res.redirect('/');
     });
 });
+
+
 
 
 module.exports = router;

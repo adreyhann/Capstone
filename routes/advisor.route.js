@@ -3,7 +3,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { PDFDocument } = require('pdf-lib');
-// const User = require('../models/user.model');
+const Event = require('../models/events.model');
+const User = require('../models/user.model');
 const { Records, Archives } = require('../models/records.model');
 
 
@@ -39,8 +40,15 @@ router.get('/archives', async (req, res, next) => {
 });
 
 router.get('/calendar', async (req, res, next) => {
-	const person = req.user;
-	res.render('class-advisor/calendar', { person });
+	try {
+		const person = req.user;
+		const events = await Event.find(); // Assuming you have an Event model
+
+		res.render('class-advisor/calendar', { person, events });
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 router.get('/profile', async (req, res, next) => {

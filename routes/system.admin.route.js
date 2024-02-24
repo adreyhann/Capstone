@@ -162,6 +162,8 @@ router.get('/users', async (req, res, next) => {
 	}
 });
 
+
+
 router.get('/addRecords', async (req, res, next) => {
 	const person = req.user;
 	res.render('system_admn/addRecords', { person });
@@ -771,8 +773,8 @@ router.post('/edit-profile/:id', async (req, res) => {
 			editSubjectAdvisory,
 		} = req.body;
 
-		// Assuming editRole is the new role being set for the user
-		const currentRole = req.user.role; // Assuming you have the current user's role in req.user.role
+		// editRole is the new role being set for the user
+		const currentRole = req.user.role; // current user's role in req.user.role
 
 		// Check if the user is changing the role to something other than the current role
 		if (editRole !== currentRole) {
@@ -908,108 +910,6 @@ router.post('/edit-profile/:id', async (req, res) => {
 	}
 });
 
-// router.post('/edit-profile/:id', async (req, res) => {
-// 	try {
-// 		const userId = req.params.id;
-// 		const {
-// 			editName,
-// 			editEmail,
-// 			editRole,
-// 			editClassAdvisory,
-// 			editSubjectAdvisory,
-// 		} = req.body;
-
-// 		// Perform a check to see if the user is changing the role to something other than "System Admin"
-//         if (editRole !== 'System Admin') {
-//             // Count the number of users with the role "System Admin"
-//             const systemAdminCount = await User.countDocuments({
-//                 role: 'System Admin',
-//             });
-
-//             // Count the number of users with the role "Admin"
-//             // const adminCount = await User.countDocuments({
-//             //     role: 'Admin',
-//             // });
-
-//             // If there is only one "System Admin" user, prevent the role change
-//             if (systemAdminCount === 1 && editRole !== 'Admin') {
-//                 req.flash(
-//                     'error',
-//                     'At least one user must have the role "System Admin".'
-//                 );
-//                 return res.redirect('/systemAdmin/profile');
-//             }
-
-//             // If there is only one "Admin" user, prevent the role change
-//             // if (adminCount === 1 && editRole !== 'Admin') {
-//             //     req.flash(
-//             //         'error',
-//             //         'Only one user is allowed to have the role "Admin".'
-//             //     );
-//             //     return res.redirect('/systemAdmin/profile');
-//             // }
-//         }
-
-// 		// Function to check for duplicate values
-//         // const checkForDuplicates = async (field, value) => {
-//         //     const query = { [field]: value };
-//         //     if (value !== 'None') {
-//         //         const count = await User.countDocuments(query);
-//         //         return count > 0;
-//         //     }
-//         //     return false;
-//         // };
-
-//         // // Check for duplicate email
-//         // if (await checkForDuplicates('email', editEmail)) {
-//         //     req.flash('error', 'Email address is already in use.');
-//         //     return res.redirect('/systemAdmin/profile');
-//         // }
-
-//         // // Check for duplicate classAdvisory (allowing 'None' to be duplicated)
-//         // if (await checkForDuplicates('classAdvisory', editClassAdvisory) && editClassAdvisory !== 'None') {
-//         //     req.flash('error', 'Class Advisory is already assigned to another user.');
-//         //     return res.redirect('/systemAdmin/profile');
-//         // }
-
-//         // // Check for duplicate subjectAdvisory
-//         // if (await checkForDuplicates('subjectAdvisory', editSubjectAdvisory)) {
-//         //     req.flash('error', 'Subject Advisory is already assigned to another user.');
-//         //     return res.redirect('/systemAdmin/profile');
-//         // }
-
-// 		// Update the user's details in the database
-// 		await User.findByIdAndUpdate(userId, {
-// 			name: editName,
-// 			email: editEmail,
-// 			role: editRole,
-// 			classAdvisory: editClassAdvisory,
-// 			subjectAdvisory: editSubjectAdvisory,
-// 		});
-
-// 		// Check if the user's new role is either "Admin" or "Class Advisor"
-// 		if (editRole === 'Admin' || editRole === 'Class Advisor') {
-// 			// Log out the user and destroy the session
-// 			req.logout(() => {
-// 				req.session.destroy(() => {
-// 					// Redirect to the appropriate dashboard
-// 					if (editRole === 'Admin') {
-// 						return res.redirect('/admin/dashboard');
-// 					} else if (editRole === 'Class Advisor') {
-// 						return res.redirect('/classAdvisor/dashboard');
-// 					}
-// 				});
-// 			});
-// 		} else {
-// 			// Redirect to the profile page
-// 			res.redirect('/systemAdmin/profile');
-// 		}
-// 	} catch (error) {
-// 		console.error(error);
-// 		res.status(500).send('Internal Server Error');
-// 	}
-// });
-
 // Add this route to get record counts
 router.get('/get-record-counts', async (req, res, next) => {
 	try {
@@ -1049,6 +949,23 @@ router.get('/get-gradeLevel-counts', async (req, res, next) => {
 	} catch (error) {
 		console.error('Error:', error);
 		res.status(500).json({ error: 'Internal Server Error' });
+	}
+});
+
+router.post('/deactivate/:userid', async (req, res) => {
+	try {
+		const userId = req.params.userid;
+
+		// Update the user's status to 'deactivated' in the database
+		await User.findByIdAndUpdate(userId, { $set: { status: 'deactivated' } });
+
+		req.flash('success', 'Account deactivated successfully');
+		// Redirect or send a response as needed
+		res.redirect('/systemAdmin/accounts'); // You can redirect to the home page or any other page
+	} catch (error) {
+		console.error(error);
+		req.flash('error', 'Error deactivating the account');
+		res.status(500).send('Internal Server Error');
 	}
 });
 

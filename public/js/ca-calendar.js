@@ -1,45 +1,6 @@
 // Load events from local storage on page load
 const events = JSON.parse(localStorage.getItem('events')) || {};
 
-function addEvent() {
-  const dateInput = document.getElementById('datepicker');
-  const selectedDate = dateInput.value;
-  if (selectedDate) {
-    if (!events[selectedDate]) {
-      events[selectedDate] = [];
-    }
-    const eventName = prompt('Enter event name:');
-    if (eventName) {
-      events[selectedDate].push(eventName);
-      displayEvents();
-      saveEventsToLocalStorage();
-    }
-  }
-}
-
-function editEvent(date, eventName) {
-  const newEventName = prompt('Edit event name:', eventName);
-  if (newEventName) {
-    const eventIndex = events[date].indexOf(eventName);
-    if (eventIndex !== -1) {
-      events[date][eventIndex] = newEventName;
-      displayEvents();
-      saveEventsToLocalStorage();
-    }
-  }
-}
-
-function deleteEvent(date, eventName) {
-  const confirmDelete = confirm(`Are you sure you want to delete '${eventName}' on ${date}?`);
-  if (confirmDelete) {
-    events[date] = events[date].filter(e => e !== eventName);
-    if (events[date].length === 0) {
-      delete events[date];
-    }
-    displayEvents();
-    saveEventsToLocalStorage();
-  }
-}
 
 function displayEvents() {
   const eventList = document.getElementById('eventList');
@@ -75,27 +36,7 @@ function displayEvents() {
           eventNameText.style.alignItems = 'center'
           eventNameText.style.marginRight = '70px'; // Push the text to the left
 
-          const buttonContainer = document.createElement('div');
-          buttonContainer.style.display = 'flex'; // Make it a flex container
-          buttonContainer.style.marginLeft = 'auto'; // Push the buttons to the right
-
-          const editButton = document.createElement('button');
-          editButton.textContent = 'Edit';
-          editButton.className = 'btn btn-sm btn-info';
-          editButton.onclick = function () {
-              editEvent(date, eventName);
-          };
-
-          const deleteButton = document.createElement('button');
-          deleteButton.textContent = 'Delete';
-          deleteButton.className = 'btn btn-sm btn-danger ms-1'; // Add margin to separate buttons
-          deleteButton.onclick = function () {
-              deleteEvent(date, eventName);
-          };
-
-
           eventItem.appendChild(eventNameText);
-          eventItem.appendChild(buttonContainer);
           eventSubList.appendChild(eventItem);
       }
 
@@ -103,15 +44,6 @@ function displayEvents() {
       eventList.appendChild(dateItem);
   }
 }
-
-
-
-
-
-
-
-
-
 
 function saveEventsToLocalStorage() {
   localStorage.setItem('events', JSON.stringify(events));

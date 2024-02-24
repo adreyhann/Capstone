@@ -91,7 +91,7 @@ router.get('/archives', async (req, res, next) => {
 router.get('/calendar', async (req, res, next) => {
 	try {
         const person = req.user;
-        const events = await Event.find(); // Assuming you have an Event model
+        const events = await Event.find(); 
 
         res.render('admin/calendar', { person, events });
     } catch (error) {

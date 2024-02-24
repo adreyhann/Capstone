@@ -32,7 +32,8 @@ const UserSchema = new mongoose.Schema({
 	},
 	status: {
 		type: String,
-		default: 'Active',
+		enum: ['active', 'deactivated'],
+		default: 'active',
 		required: true,
 	},
 	resetCode: {

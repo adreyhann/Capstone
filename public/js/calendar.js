@@ -108,13 +108,6 @@ function displayEvents() {
 
 
 
-
-
-
-
-
-
-
 function saveEventsToLocalStorage() {
   localStorage.setItem('events', JSON.stringify(events));
 }

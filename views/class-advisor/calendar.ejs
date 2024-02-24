@@ -161,7 +161,20 @@
 						<div class="card-body">
 							<div>
 								<p class="fs-4">Events list</p>
-								<ul id="eventList"></ul>
+								<ul id="eventList" class="list-group">
+									<% for (const date in events) { %>
+										<li class="list-group-item">
+											<span><%= date %>:</span>
+											<ul>
+												<% for (const eventName of events[date]) { %>
+													<li class="d-flex justify-content-between align-items-center">
+														<%= eventName %>
+													</li>
+												<% } %>
+											</ul>
+										</li>
+									<% } %>
+								</ul>
 							</div>
 						</div>
 					</div>

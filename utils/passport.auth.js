@@ -16,6 +16,13 @@ passport.use(
 						message: 'This email is not registered!',
 					});
 				}
+
+				if (user.status === 'deactivated') {
+					return done(null, false, {
+					  message: 'This account is deactivated.',
+					});
+				  }
+
 				const isMatch = await user.isValidPassword(password);
 
 				return isMatch

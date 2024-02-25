@@ -941,12 +941,10 @@ router.post('/deactivate/:userid', async (req, res) => {
 	try {
 		const userId = req.params.userid;
 
-		// Update the user's status to 'deactivated' in the database
 		await User.findByIdAndUpdate(userId, { $set: { status: 'deactivated' } });
 
 		req.flash('success', 'Account deactivated successfully');
-		// Redirect or send a response as needed
-		res.redirect('/systemAdmin/accounts'); // You can redirect to the home page or any other page
+		res.redirect('/systemAdmin/accounts'); 
 	} catch (error) {
 		console.error(error);
 		req.flash('error', 'Error deactivating the account');

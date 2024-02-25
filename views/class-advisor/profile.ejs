@@ -51,7 +51,7 @@
 								/>
 							</div>
 							<div class="col-md-6">
-								<p class="my-0 pt-2" style="font-size: 15px"><%= person.name %></p>
+								<p class="my-0 pt-2" style="font-size: 15px"><%= person.fname %> <%= person.lname %></p>
 								<span class="badge rounded-pill text-bg-info my-0 fw-normal"
 									><%= person.role %></span
 								>
@@ -152,6 +152,7 @@
 					<h2 class="mt-2">Profile</h2>
 					<hr />
 					<div class="card custom-card-2 border-0">
+						<div class="card-header bg-info border-0"></div>
 						<div class="card-body">
 							<div class="container">
 								<div class="col m-0">
@@ -179,15 +180,27 @@
 
 											<div class="row">
 												<div class="my-2 col-6">
+													<label for="lname" class="form-label"
+														>Last Name</label
+													>
+													<input
+														type="text"
+														class="form-control"
+														id="lname"
+														disabled
+														placeholder="<%= person.lname %>"
+													/>
+												</div>
+												<div class="my-2 col-6">
 													<label for="fname" class="form-label"
-														>Full Name</label
+														>First Name</label
 													>
 													<input
 														type="text"
 														class="form-control"
 														id="fname"
 														disabled
-														placeholder="<%= person.name %>"
+														placeholder="<%= person.fname %>"
 													/>
 												</div>
 												<div class="my-2 col-6">
@@ -210,16 +223,6 @@
 														disabled
 													/>
 												</div>
-												<div class="my-2 col-6">
-													<label for="role" class="form-label">Subject Advisory</label>
-													<input
-														type="Text"
-														class="form-control"
-														id="role"
-														placeholder="<%= person.subjectAdvisory %>"
-														disabled
-													/>
-												</div>
 											</div>
 											
 										</form>
@@ -227,6 +230,7 @@
 								</div>
 							</div>
 						</div>
+						<div class="card-footer bg-info border-0"></div>
 					</div>
 				</div>
 			</div>

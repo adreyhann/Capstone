@@ -5,7 +5,6 @@ const passport = require('passport');
 const ResetToken = require('../models/reset.model');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
-
 // const zerobounce = require('zerobounce');
 require('dotenv').config();
 const crypto = require('crypto');

@@ -13,7 +13,8 @@ router.get('/dashboard', async (req, res, next) => {
 	const person = req.user;
 	const records = await Records.find();
 	const archives = await Archives.find();
-	res.render('class-advisor/dashboard', { person, records, archives });
+	const events = await Event.find();
+	res.render('class-advisor/dashboard', { person, records, archives, events });
 });
 
 router.get('/records', async (req, res, next) => {

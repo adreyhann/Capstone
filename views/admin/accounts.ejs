@@ -67,7 +67,7 @@
 							</div>
 							<div class="col-md-6">
 								<p class="my-0 pt-2" style="font-size: 15px">
-									<%= person.name %>
+									<%= person.fname %> <%= person.lname %>
 								</p>
 								<span class="badge rounded-pill text-bg-info my-0"
 									><%= person.role %></span
@@ -200,7 +200,7 @@
 						<div>Error: <%= error.message %></div>
 						<% } %>
 						<a class="btn btn-success btn-sm my-2" href="/auth/register"
-							>Add users</a
+							>Add user</a
 						>
 
 						<table
@@ -210,11 +210,11 @@
 						>
 							<thead class="table-info">
 								<tr>
-									<th>Account Name</th>
+									<th>Last Name</th>
+									<th>First Name</th>
+									<th>Email</th>
 									<th>Role</th>
 									<th>Class Advisory</th>
-									<th>Subject Advisory</th>
-									<th>Email</th>
 									<th>Status</th>
 									<th>Action</th>
 								</tr>
@@ -223,11 +223,11 @@
 								<% users.forEach(user => { %> <% if (user._id.toString() !==
 								currentUser._id.toString() && user.role !== 'System Admin') { %>
 								<tr>
-									<td><%= user.name %></td>
+									<td><%= user.lname %></td>
+									<td><%= user.fname %></td>
+									<td><%= user.email %></td>
 									<td><%= user.role %></td>
 									<td><%= user.classAdvisory %></td>
-									<td><%= user.subjectAdvisory %></td>
-									<td><%= user.email %></td>
 									<td><%= user.status %></td>
 									<td>
 										<button
@@ -235,7 +235,7 @@
 											class="btn btn-sm"
 											data-bs-toggle="modal"
 											data-bs-target="#editUserModal"
-											onclick="populateUserForm('<%= user._id %>', '<%= user.name %>', '<%= user.role %>', '<%= user.classAdvisory %>', '<%= user.subjectAdvisory %>', '<%= user.email %>')"
+											onclick="populateUserForm('<%= user._id %>', '<%= user.lname %>', '<%= user.fname %>', '<%= user.role %>', '<%= user.classAdvisory %>', '<%= user.subjectAdvisory %>', '<%= user.email %>')"
 										>
 											<span
 												class="material-symbols-outlined"
@@ -253,11 +253,11 @@
 
 							<tfoot class="table-info">
 								<tr>
-									<th>Account Name</th>
+									<th>Last Name</th>
+									<th>First Name</th>
+									<th>Email</th>
 									<th>Role</th>
 									<th>Class Advisory</th>
-									<th>Subject Advisory</th>
-									<th>Email</th>
 									<th>Status</th>
 									<th>Action</th>
 								</tr>

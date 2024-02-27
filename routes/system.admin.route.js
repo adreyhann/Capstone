@@ -9,6 +9,7 @@ const { Records, Archives } = require('../models/records.model');
 const Event = require('../models/events.model');
 const archiver = require('archiver');
 const nodemailer = require('nodemailer');
+require('dotenv').config()
 
 function countVisibleUsersInTable(users, currentUser) {
 	const visibleUsersInTable = users.filter((user) => {
@@ -682,21 +683,6 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			}
 		}
 
-		// If the new subjectAdvisory is not 'None', check for uniqueness
-		if (req.body.editSubjectAdvisory !== 'None') {
-			const existingUserWithSameSubjectAdvisory = await User.findOne({
-				subjectAdvisory: req.body.editSubjectAdvisory,
-				_id: { $ne: userId }, // Exclude the current user
-			});
-
-			if (existingUserWithSameSubjectAdvisory) {
-				req.flash(
-					'error',
-					'Another user with the same subject advisory already exists.'
-				);
-				return res.redirect('/systemAdmin/accounts');
-			}
-		}
 
 		// Check if classAdvisory is 'Kinder' and subjectAdvisory is not 'All Kinder Subjects'
 		const isKinderClassAdvisory = req.body.editClassAdvisory === 'Kinder';

@@ -5,7 +5,6 @@ const passport = require('passport');
 const ResetToken = require('../models/reset.model');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
-// const zerobounce = require('zerobounce');
 require('dotenv').config();
 const crypto = require('crypto');
 
@@ -38,7 +37,24 @@ router.post(
             .isEmail()
             .withMessage('Input valid email')
             .normalizeEmail()
-            .toLowerCase(),
+            .toLowerCase()
+            .custom(async (value, {req}) => {
+                const apiKey = process.env.HUNTER_IO_API_KEY; // Retrieve API key from environment variable
+                const hunterApiUrl = `https://api.hunter.io/v2/email-verifier?email=${value}&api_key=${apiKey}`;
+
+                try {
+                    const response = await fetch(hunterApiUrl);
+                    const result = await response.json();
+
+                    if (result.data.result === 'undeliverable' || result.data.result === 'risky') {
+                        throw new Error('Invalid email');
+                    }
+
+                    return true; // Email is valid
+                } catch (error) {
+                    throw new Error(`Error validating email: ${error.message}`);
+                }
+            }),
         body('password')
             .trim()
             .isLength(8)
@@ -69,21 +85,7 @@ router.post(
 
             
 
-            const { email, role, classAdvisory, subjectAdvisory } = req.body;
-
-            // Validate the email using ZeroBounce
-            // try {
-            //     const verificationResult = await emailVerifier.verify(email);
-
-            //     if (!verificationResult.success) {
-            //         req.flash('error', 'Invalid email address. Please provide a valid email.');
-            //         return res.redirect('/auth/register');
-            //     }
-            // } catch (error) {
-            //     console.error('Error validating email with email-verifier:', error.message);
-            //     req.flash('error', 'Error validating email. Please try again.');
-            //     return res.redirect('/auth/register');
-            // }
+            const { email, role, classAdvisory } = req.body;
 
             // Check if the role is "System Admin"
             if (role === 'System Admin') {
@@ -163,54 +165,6 @@ router.post(
                 return res.redirect('/auth/register');
             }
 
-            // find existing subject advisory
-            const filipinoExists = await User.findOne({ subjectAdvisory: 'Filipino' });
-            if (filipinoExists && subjectAdvisory === 'Filipino') {
-                req.flash('error', 'A user with Subject Advisory of Filipino is already exists.');
-                return res.redirect('/auth/register');
-            }
-
-            const apExists = await User.findOne({ subjectAdvisory: 'AP' });
-            if (apExists && subjectAdvisory === 'AP') {
-                req.flash('error', 'A user with Subject Advisory of AP is already exists.');
-                return res.redirect('/auth/register');
-            }
-
-            const valuesExists = await User.findOne({ subjectAdvisory: 'Values' });
-            if (valuesExists && subjectAdvisory === 'Values') {
-                req.flash('error', 'A user with Subject Advisory of Values is already exists.');
-                return res.redirect('/auth/register');
-            }
-
-            const civicsExists = await User.findOne({ subjectAdvisory: 'Civics' });
-            if (civicsExists && subjectAdvisory === 'Civics') {
-                req.flash('error', 'A user with Subject Advisory of Civics is already exists.');
-                return res.redirect('/auth/register');
-            }
-
-            const eppExists = await User.findOne({ subjectAdvisory: 'EPP' });
-            if (eppExists && subjectAdvisory === 'EPP') {
-                req.flash('error', 'A user with Subject Advisory of EPP is already exists.');
-                return res.redirect('/auth/register');
-            }
-
-            const scienceExists = await User.findOne({ subjectAdvisory: 'Science' });
-            if (scienceExists && subjectAdvisory === 'Science') {
-                req.flash('error', 'A user with Subject Advisory of Science is already exists.');
-                return res.redirect('/auth/register');
-            }
-
-            const mapehExists = await User.findOne({ subjectAdvisory: 'Mapeh' });
-            if (mapehExists && subjectAdvisory === 'Mapeh') {
-                req.flash('error', 'A user with Subject Advisory of Mapeh is already exists.');
-                return res.redirect('/auth/register');
-            }
-
-            const mathExists = await User.findOne({ subjectAdvisory: 'Math' });
-            if (mathExists && subjectAdvisory === 'Math') {
-                req.flash('error', 'A user with Subject Advisory of Math is already exists.');
-                return res.redirect('/auth/register');
-            }
 
             const user = new User(req.body);
             await user.save();

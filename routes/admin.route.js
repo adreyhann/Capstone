@@ -7,6 +7,7 @@ const User = require('../models/user.model');
 const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
 const Event = require('../models/events.model')
+require('dotenv').config()
 
 function countVisibleUsers(users, currentUser) {
 	// Implement your logic to count visible users
@@ -478,11 +479,38 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			return;
 		}
 
+		// Check for duplicate email
+		const existingUserWithSameEmail = await User.findOne({
+			email: req.body.editEmail,
+			_id: { $ne: userId }, // Exclude the current user
+		});
+
+		if (existingUserWithSameEmail) {
+			req.flash('error', 'Another user with the same email already exists.');
+			return res.redirect('/admin/accounts');
+		}
+
+		// If the new classAdvisory is not 'None', check for uniqueness
+		if (req.body.editClassAdvisory !== 'None') {
+			const existingUserWithSameClassAdvisory = await User.findOne({
+				classAdvisory: req.body.editClassAdvisory,
+				_id: { $ne: userId }, // Exclude the current user
+			});
+
+			if (existingUserWithSameClassAdvisory) {
+				req.flash(
+					'error',
+					'Another user with the same class advisory already exists.'
+				);
+				return res.redirect('/admin/accounts');
+			}
+		}
+
 		// Update the record with new values
-		user.name = req.body.editName;
+		user.lname = req.body.editLName;
+		user.fname = req.body.editFName;
 		user.role = req.body.editRole;
 		user.classAdvisory = req.body.editClassAdvisory;
-		user.subjectAdvisory = req.body.editSubjectAdvisory;
 		user.email = req.body.editEmail;
 
 		// Save the updated record

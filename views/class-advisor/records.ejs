@@ -37,6 +37,7 @@
 		></script>
 		<script defer src="/js/toggler.js"></script>
 		<script defer src="/js/tables.js"></script>
+		<script defer src="/js/limit.number2.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<title>Records</title>
 	</head>
@@ -107,7 +108,7 @@
 								Archives
 							</a>
 						</li>
-						<li class="sidebar-item">
+						<!-- <li class="sidebar-item">
 							<a
 								href="/classAdvisor/calendar"
 								class="sidebar-link collapsed"
@@ -118,7 +119,7 @@
 								<i class="fa-regular fa-calendar pe-2"></i>
 								Calendar
 							</a>
-						</li>
+						</li> -->
 					</ul>
 				</div>
 			</aside>
@@ -171,7 +172,7 @@
 							id="addRow"
 							class="btn btn-success btn-sm my-2"
 							href="/classAdvisor/addRecords"
-							>Create new record</a
+							>Add new record</a
 						>
 						
 						<table
@@ -182,7 +183,8 @@
 							<thead class="table-info">
 								<tr>
 									<th>LRN</th>
-									<th>Student Name</th>
+									<th>Last Name</th>
+									<th>First Name</th>
 									<th>Gender</th>
 									<th>Transferee</th>
 									<th>Grade level</th>
@@ -193,7 +195,8 @@
 								<% records.forEach(record => { %>
 								<tr>
 									<td><%= record.lrn %></td>
-									<td><%= record.studentName %></td>
+									<td><%= record.lName %></td>
+									<td><%= record.fName %></td>
 									<td><%= record.gender %></td>
 									<td><%= record.transferee %></td>
 									<td><%= record.gradeLevel %></td>
@@ -208,7 +211,7 @@
 											class="btn btn-sm btn-warning"
 											data-bs-toggle="modal"
 											data-bs-target="#editRecordModal"
-											onclick="populateEditForm('<%= record._id %>', '<%= record.lrn %>', '<%= record.studentName %>', '<%= record.gender %>', '<%= record.transferee %>', '<%= record.gradeLevel %>')"
+											onclick="populateEditForm('<%= record._id %>', '<%= record.lrn %>', '<%= record.lName %>', '<%= record.fName %>', '<%= record.gender %>', '<%= record.transferee %>', '<%= record.gradeLevel %>')"
 										>
 											Edit
 										</button>
@@ -221,7 +224,8 @@
 							<tfoot class="table-info">
 								<tr>
 									<th>LRN</th>
-									<th>Student Name</th>
+									<th>Last Name</th>
+									<th>First Name</th>
 									<th>Gender</th>
 									<th>Transferee</th>
 									<th>Grade level</th>
@@ -258,6 +262,7 @@
 							<div class="form-floating mb-3">
 								<input
 									type="number"
+									onkeydown="return event.keyCode !== 69"
 									class="form-control"
 									name="editLrn"
 									id="editLrn"
@@ -270,12 +275,21 @@
 								<input
 									type="text"
 									class="form-control"
-									name="editName"
-									id="editName"
-									placeholder="Full Name"
+									name="editLName"
+									id="editLName"
 									required
 								/>
-								<label for="editName">Full Name</label>
+								<label for="editLName">Last Name</label>
+							</div>
+							<div class="form-floating mb-3">
+								<input
+									type="text"
+									class="form-control"
+									name="editFName"
+									id="editFName"
+									required
+								/>
+								<label for="editFName">First Name</label>
 							</div>
 
 							<div class="form-floating mb-3">
@@ -297,13 +311,13 @@
 							<div class="form-floating mb-3">
 								<select class="form-select" name="editGradeLevel" id="editGradeLevel" required>
 									<option disabled>Select Grade level</option>
-									<option value="Kinder">Kinder</option>
-									<option value="Grade 1">Grade 1</option>
-									<option value="Grade 2">Grade 2</option>
-									<option value="Grade 3">Grade 3</option>
-									<option value="Grade 4">Grade 4</option>
-									<option value="Grade 5">Grade 5</option>
-									<option value="Grade 6">Grade 6</option>
+									<option value="Kinder" <%= person.classAdvisory === 'Kinder' ? 'selected' : 'disabled' %>>Kinder</option>
+									<option value="Grade 1" <%= person.classAdvisory === 'Grade 1' ? 'selected' : 'disabled' %>>Grade 1</option>
+									<option value="Grade 2" <%= person.classAdvisory === 'Grade 2' ? 'selected' : 'disabled' %>>Grade 2</option>
+									<option value="Grade 3" <%= person.classAdvisory === 'Grade 3' ? 'selected' : 'disabled' %>>Grade 3</option>
+									<option value="Grade 4" <%= person.classAdvisory === 'Grade 4' ? 'selected' : 'disabled' %>>Grade 4</option>
+									<option value="Grade 5" <%= person.classAdvisory === 'Grade 5' ? 'selected' : 'disabled' %>>Grade 5</option>
+									<option value="Grade 6" <%= person.classAdvisory === 'Grade 6' ? 'selected' : 'disabled' %>>Grade 6</option>
 								</select>
 								<label for="editGradeLevel">Grade level</label>
 							</div>
@@ -322,7 +336,8 @@
 			function populateEditForm(
 				recordId,
 				lrn,
-				name,
+				lname,
+				fname,
 				gender,
 				transferee,
 				gradeLevel
@@ -331,7 +346,8 @@
 					.getElementById('editRecordForm')
 					.setAttribute('action', `/classAdvisor/edit-record/${recordId}`);
 				document.getElementById('editLrn').value = lrn;
-				document.getElementById('editName').value = name;
+				document.getElementById('editLName').value = lname;
+				document.getElementById('editFName').value = fname;
 				document.getElementById('editGender').value = gender;
 				document.getElementById('editTransferee').value = transferee;
 				document.getElementById('editGradeLevel').value = gradeLevel;

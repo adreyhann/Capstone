@@ -7,7 +7,11 @@ const RecordsSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
-    studentName: {
+    lName: {
+        type: String,
+        required: true,
+    },
+    fName: {
         type: String,
         required: true,
     },

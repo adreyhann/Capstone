@@ -73,15 +73,17 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({
-	storage: storage,
-	limits: { fileSize: 5 * 1024 * 1024 },
-	fileFilter: function (req, file, cb) {
-		if (file.mimetype === 'application/pdf') {
-			cb(null, true);
-		} else {
-			cb(new Error('Only PDF files are allowed!'), false);
-		}
-	},
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: function (req, file, cb) {
+        if (file.mimetype === 'application/pdf') {
+            cb(null, true);
+        } else {
+            // Instead of throwing an error, use a flash message
+            req.flash('error', 'Only PDF files are allowed!');
+            cb(null, false);
+        }
+    },
 });
 
 router.get('/view-files/:id', async (req, res, next) => {
@@ -131,7 +133,7 @@ router.get('/view-files/:id', async (req, res, next) => {
 
 router.post('/submit-form', upload.array('pdfFile'), async (req, res, next) => {
 	try {
-		const { lrn, name, gender, transferee, gradeLevel } = req.body;
+		const { lrn, lName, fName, gender, transferee, gradeLevel } = req.body;
 
 		const files = req.files;
 
@@ -156,12 +158,17 @@ router.post('/submit-form', upload.array('pdfFile'), async (req, res, next) => {
 
 		const newRecord = new Records({
 			lrn: parseInt(lrn),
-			studentName: name,
+			lName: lName,
+			fName: fName,
 			gender: gender,
 			transferee: transferee,
 			gradeLevel: gradeLevel,
 			pdfFilePath: filePaths,
 		});
+
+		// Concatenate lName and fName to form studentName
+		const studentName = `${lName} ${fName}`;
+		newRecord.studentName = studentName;
 
 		const savedRecord = await newRecord.save();
 
@@ -181,6 +188,8 @@ router.post('/submit-form', upload.array('pdfFile'), async (req, res, next) => {
 		}
 	}
 });
+
+
 
 router.post(
 	'/addFile/:recordId',
@@ -216,8 +225,8 @@ router.post(
 					res.redirect(`/classAdvisor/view-files/${recordId}`);
 				}
 			} else {
-				req.flash('error', 'No file uploaded');
-				res.status(400).send('No file uploaded');
+				req.flash('error', 'No PDF file uploaded');
+				res.redirect(`/classAdvisor/view-files/${recordId}`);
 			}
 		} catch (error) {
 			console.error('Error:', error);
@@ -276,7 +285,8 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 
 		// Update the record with new values
 		record.lrn = req.body.editLrn;
-		record.studentName = req.body.editName;
+		record.lName = req.body.editLName;
+		record.fName = req.body.editFName;
 		record.gender = req.body.editGender;
 		record.transferee = req.body.editTransferee;
 		record.gradeLevel = req.body.editGradeLevel;

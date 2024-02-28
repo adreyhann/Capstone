@@ -96,7 +96,7 @@
 							Archives
 						</a>
 					</li>
-					<li class="sidebar-item">
+					<!-- <li class="sidebar-item">
 						<a
 							href="/classAdvisor/calendar"
 							class="sidebar-link collapsed"
@@ -107,7 +107,7 @@
 							<i class="fa-regular fa-calendar pe-2"></i>
 							Calendar
 						</a>
-					</li>
+					</li> -->
 				</ul>
 			</div>
 		</aside>
@@ -159,22 +159,13 @@
 					  <% } catch (error) { %>
 						<div>Error: <%= error.message %></div>
 					  <% } %>
-					<div class="row">
-						<div class="col-3">
-							<p>LRN: <span style="font-weight: bold;"><%= student.lrn %></span> </p>
-						</div>
-						<div class="col-3">
-							<p>Student Name: <span style="font-weight: bold;"><%= student.studentName %></span> </p>
-						</div>
-						
-					</div>
 					
 					
 					<!-- Form to upload additional files -->
 					<form action="/classAdvisor/addFile/<%= student._id %>" method="post" enctype="multipart/form-data" class="mb-3">
 						<div class="row">
 							<input class="form-control mb-3" type="file" name="pdfFile" accept=".pdf" required>
-							<button type="submit" class="btn btn-primary">Upload new File</button>
+							<button type="submit" class="btn btn-success">Submit</button>
 						</div>
 					</form>
 				

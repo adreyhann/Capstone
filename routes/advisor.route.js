@@ -135,6 +135,12 @@ router.post('/submit-form', upload.array('pdfFile'), async (req, res, next) => {
 	try {
 		const { lrn, lName, fName, gender, transferee, gradeLevel } = req.body;
 
+		// Validate LRN: should be a 12-digit number
+        if (!/^\d{12}$/.test(lrn)) {
+            req.flash('error', 'LRN should be a 12-digit number.');
+            return res.redirect('/classAdvisor/addRecords');
+        }
+
 		const files = req.files;
 
 		if (files.length > 2) {
@@ -282,6 +288,14 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 			res.status(404).send('Record not found');
 			return;
 		}
+
+		// Validate LRN
+        const editLrn = req.body.editLrn;
+        if (!/^\d{12}$/.test(editLrn)) {
+            // If LRN is not exactly 12 digits, throw an error
+            req.flash('error', 'LRN should be a 12-digit number.');
+            return res.redirect('/classAdvisor/records');
+        }
 
 		// Update the record with new values
 		record.lrn = req.body.editLrn;

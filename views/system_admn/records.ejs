@@ -40,6 +40,7 @@
 		<script defer src="/js/toggler.js"></script>
 		<script defer src="/js/tables.js"></script>
 		<script defer src="/js/tooltip.js"></script>
+		<script defer src="/js/limit.number2.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<title>Records</title>
 	</head>
@@ -235,7 +236,8 @@
 												></label>
 									</th>
 									<th>LRN</th>
-									<th>Student Name</th>
+									<th>Last Name</th>
+									<th>First Name</th>
 									<th>Gender</th>
 									<th>Transferee</th>
 									<th>Grade level</th>
@@ -254,7 +256,8 @@
 										/>
 									</td>
 									<td><%= record.lrn %></td>
-									<td><%= record.studentName %></td>
+									<td><%= record.lName %></td>
+									<td><%= record.fName %></td>
 									<td><%= record.gender %></td>
 									<td><%= record.transferee %></td>
 									<td><%= record.gradeLevel %></td>
@@ -269,22 +272,7 @@
 												folder
 											</span></a
 										>
-										<button
-											type="button"
-											class="btn btn-sm"
-											data-bs-toggle="modal"
-											data-bs-target="#editRecordModal"
-											onclick="populateEditForm('<%= record._id %>', '<%= record.lrn %>', '<%= record.studentName %>', '<%= record.gender %>', '<%= record.transferee %>', '<%= record.gradeLevel %>')"
-										>
-											<span
-												class="material-symbols-outlined"
-												data-bs-toggle="tooltip"
-												data-bs-placement="top"
-												data-bs-title="Edit"
-											>
-												edit
-											</span>
-										</button>
+										
 										<button
 											type="button"
 											class="btn btn-sm"
@@ -305,7 +293,8 @@
 								<tr>
 									<th><span>Select</span></th>
 									<th>LRN</th>
-									<th>Student Name</th>
+									<th>Last Name</th>
+									<th>First Name</th>
 									<th>Gender</th>
 									<th>Transferee</th>
 									<th>Grade level</th>
@@ -354,12 +343,21 @@
 								<input
 									type="text"
 									class="form-control"
-									name="editName"
-									id="editName"
-									placeholder="Full Name"
+									name="editLName"
+									id="editLName"
 									required
 								/>
-								<label for="editName">Full Name</label>
+								<label for="editLName">Last Name</label>
+							</div>
+							<div class="form-floating mb-3">
+								<input
+									type="text"
+									class="form-control"
+									name="editFName"
+									id="editFName"
+									required
+								/>
+								<label for="editFName">First Name</label>
 							</div>
 
 							<div class="form-floating mb-3">
@@ -433,7 +431,8 @@
 			function populateEditForm(
 				recordId,
 				lrn,
-				name,
+				lname,
+				fname,
 				gender,
 				transferee,
 				gradeLevel
@@ -442,7 +441,8 @@
 					.getElementById('editRecordForm')
 					.setAttribute('action', `/systemAdmin/edit-record/${recordId}`);
 				document.getElementById('editLrn').value = lrn;
-				document.getElementById('editName').value = name;
+				document.getElementById('editLName').value = lname;
+				document.getElementById('editFName').value = fname;
 				document.getElementById('editGender').value = gender;
 				document.getElementById('editTransferee').value = transferee;
 				document.getElementById('editGradeLevel').value = gradeLevel;

@@ -34,23 +34,23 @@ router.get('/records', async (req, res, next) => {
     }
 });
 
-router.get('/archives', async (req, res, next) => {
-	const person = req.user;
-	const archivedRecord = await Archives.find();
-	res.render('class-advisor/archives', { person, archivedRecord });
-});
+// router.get('/archives', async (req, res, next) => {
+// 	const person = req.user;
+// 	const archivedRecord = await Archives.find();
+// 	res.render('class-advisor/archives', { person, archivedRecord });
+// });
 
-router.get('/calendar', async (req, res, next) => {
-	try {
-		const person = req.user;
-		const events = await Event.find(); // Assuming you have an Event model
+// router.get('/calendar', async (req, res, next) => {
+// 	try {
+// 		const person = req.user;
+// 		const events = await Event.find(); // Assuming you have an Event model
 
-		res.render('class-advisor/calendar', { person, events });
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
-});
+// 		res.render('class-advisor/calendar', { person, events });
+// 	} catch (error) {
+// 		console.error('Error:', error);
+// 		next(error);
+// 	}
+// });
 
 router.get('/profile', async (req, res, next) => {
 	const person = req.user;
@@ -231,7 +231,7 @@ router.post(
 					res.redirect(`/classAdvisor/view-files/${recordId}`);
 				}
 			} else {
-				req.flash('error', 'No PDF file uploaded');
+				// req.flash('error', 'No PDF file uploaded');
 				res.redirect(`/classAdvisor/view-files/${recordId}`);
 			}
 		} catch (error) {
@@ -297,6 +297,13 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
             return res.redirect('/classAdvisor/records');
         }
 
+		// Check if the LRN is already in use by another record
+        const existingRecordWithSameLRN = await Records.findOne({ lrn: editLrn, _id: { $ne: recordId } });
+        if (existingRecordWithSameLRN) {
+            req.flash('error', 'LRN is already in use');
+            return res.redirect('/classAdvisor/records');
+        }
+
 		// Update the record with new values
 		record.lrn = req.body.editLrn;
 		record.lName = req.body.editLName;
@@ -317,52 +324,52 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 	}
 });
 
-router.get('/archived-files/:recordId', async (req, res, next) => {
-	try {
-		const recordId = req.params.recordId;
-		const student = await Archives.findById(recordId);
-		// Find the archived record by ID
-		const archivedRecord = await Archives.findById(recordId);
+// router.get('/archived-files/:recordId', async (req, res, next) => {
+// 	try {
+// 		const recordId = req.params.recordId;
+// 		const student = await Archives.findById(recordId);
+// 		// Find the archived record by ID
+// 		const archivedRecord = await Archives.findById(recordId);
 
-		if (!archivedRecord) {
-			res.status(404).send('Archived Record not found');
-			return;
-		}
+// 		if (!archivedRecord) {
+// 			res.status(404).send('Archived Record not found');
+// 			return;
+// 		}
 
-		const base64PDF = await Promise.all(
-			student.pdfFilePath.map(async (filePath) => {
-				if (filePath) {
-					const pdfData = await fs.promises.readFile(filePath);
-					const pdfDoc = await PDFDocument.load(pdfData);
-					const pdfBytes = await pdfDoc.save();
-					return Buffer.from(pdfBytes).toString('base64');
-				} else {
-					return null; // or handle the case where filePath is null
-				}
-			})
-		);
+// 		const base64PDF = await Promise.all(
+// 			student.pdfFilePath.map(async (filePath) => {
+// 				if (filePath) {
+// 					const pdfData = await fs.promises.readFile(filePath);
+// 					const pdfDoc = await PDFDocument.load(pdfData);
+// 					const pdfBytes = await pdfDoc.save();
+// 					return Buffer.from(pdfBytes).toString('base64');
+// 				} else {
+// 					return null; // or handle the case where filePath is null
+// 				}
+// 			})
+// 		);
 
-		// Assuming pdfFilePath is an array of file paths
-		const filename = base64PDF.map((_, index) => {
-			return student.pdfFilePath[index]
-				? path.basename(student.pdfFilePath[index])
-				: null;
-		});
+// 		// Assuming pdfFilePath is an array of file paths
+// 		const filename = base64PDF.map((_, index) => {
+// 			return student.pdfFilePath[index]
+// 				? path.basename(student.pdfFilePath[index])
+// 				: null;
+// 		});
 
-		const person = req.user;
+// 		const person = req.user;
 
-		res.render('class-advisor/archived-files', {
-			archivedRecord,
-			student,
-			person,
-			base64PDF,
-			filename,
-		}); // Adjust the view name as needed
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
-});
+// 		res.render('class-advisor/archived-files', {
+// 			archivedRecord,
+// 			student,
+// 			person,
+// 			base64PDF,
+// 			filename,
+// 		}); // Adjust the view name as needed
+// 	} catch (error) {
+// 		console.error('Error:', error);
+// 		next(error);
+// 	}
+// });
 
 
 

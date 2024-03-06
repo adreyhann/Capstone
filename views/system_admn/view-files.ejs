@@ -85,7 +85,7 @@
 							Account Management
 						</a>
 					</li>
-					<li class="sidebar-item">
+					<li class="sidebar-item" style="border-right: 2px solid #007bff; background: #e3edf0;">
 						<a
 							href="/systemAdmin/records-menu"
 							class="sidebar-link"
@@ -191,24 +191,22 @@
 					  <% } catch (error) { %>
 						<div>Error: <%= error.message %></div>
 					  <% } %>
-					<div class="row">
+
+					  <div class="row">
 						<div class="col-3">
-							<p>LRN: <span style="font-weight: bold;"><%= student.lrn %></span> </p>
-						</div>
-						<div class="col-3">
-							<p>Student Name: <span style="font-weight: bold;"><%= student.studentName %></span> </p>
+							<p style="font-weight: bold;">LRN: <span style="font-weight: lighter;"><%= student.lrn %></span> </p>
 						</div>
 						
 					</div>
 					
 					
 					<!-- Form to upload additional files -->
-					<form action="/systemAdmin/addFile/<%= student._id %>" method="post" enctype="multipart/form-data" class="mb-3">
+					<!-- <form action="/systemAdmin/addFile/<%= student._id %>" method="post" enctype="multipart/form-data" class="mb-3">
 						<div class="row">
 							<input class="form-control mb-3" type="file" name="pdfFile" accept=".pdf" required>
 							<button type="submit" class="btn btn-success btn-sm">Upload new File</button>
 						</div>
-					</form>
+					</form> -->
 				
 					<!-- Loop to display up to 2 PDF files -->
 					<% for (let i = 0; i < Math.min(2, filename.length); i++) { %>

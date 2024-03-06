@@ -180,15 +180,17 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({
-	storage: storage,
-	limits: { fileSize: 5 * 1024 * 1024 },
-	fileFilter: function (req, file, cb) {
-		if (file.mimetype === 'application/pdf') {
-			cb(null, true);
-		} else {
-			cb(new Error('Only PDF files are allowed!'), false);
-		}
-	},
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: function (req, file, cb) {
+        if (file.mimetype === 'application/pdf') {
+            cb(null, true);
+        } else {
+            // Instead of throwing an error, use a flash message
+            req.flash('error', 'Only PDF files are allowed!');
+            cb(null, false);
+        }
+    },
 });
 
 router.get('/view-files/:id', async (req, res, next) => {
@@ -323,8 +325,8 @@ router.post(
 					res.redirect(`/systemAdmin/view-files/${recordId}`);
 				}
 			} else {
-				req.flash('error', 'No file uploaded');
-				res.status(400).send('No file uploaded');
+				// req.flash('error', 'No PDF file uploaded');
+				res.redirect(`/systemAdmin/view-files/${recordId}`)
 			}
 		} catch (error) {
 			console.error('Error:', error);
@@ -434,8 +436,11 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
 		// Move the record to the ArchivedRecords collection
 		const archivedRecord = new Archives({
 			lrn: record.lrn,
-			studentName: record.studentName,
+			lName: record.lName,
+			fName: record.fName,
 			gender: record.gender,
+			transferee: record.transferee,
+			gradeLevel: record.gradeLevel,
 			dateAddedToArchive: new Date(),
 			pdfFilePath: record.pdfFilePath, // Check if you need to handle PDF files
 		});
@@ -454,6 +459,46 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
 		req.flash('error', 'Failed to move record to archive');
 		res.redirect('/systemAdmin/records');
 	}
+});
+
+// Route to unarchive a record
+router.post('/unarchive/:archivedRecordId', async (req, res, next) => {
+    try {
+        const archivedRecordId = req.params.archivedRecordId;
+
+        // Find the archived record by ID
+        const archivedRecord = await Archives.findById(archivedRecordId);
+
+        if (!archivedRecord) {
+            res.status(404).send('Archived Record not found');
+            return;
+        }
+
+        // Move the record back to the Records collection
+        const record = new Records({
+            lrn: archivedRecord.lrn,
+            lName: archivedRecord.lName,
+            fName: archivedRecord.fName,
+            gender: archivedRecord.gender,
+            transferee: archivedRecord.transferee, // Add missing fields
+            gradeLevel: archivedRecord.gradeLevel, // Add missing fields
+			pdfFilePath: archivedRecord.pdfFilePath,
+        });
+
+        // Save the unarchived record
+        await record.save();
+
+        // Delete the record from the ArchivedRecords collection
+        await Archives.findByIdAndDelete(archivedRecordId);
+
+        req.flash('success', 'Record unarchived successfully');
+        res.redirect('/systemAdmin/archives');
+    } catch (error) {
+        console.error('Error:', error);
+        // Handle errors appropriately, e.g., flash an error message
+        req.flash('error', 'Failed to unarchive record');
+        res.redirect('/systemAdmin/archives');
+    }
 });
 
 // Add this route for viewing files of an archived record
@@ -524,8 +569,11 @@ router.post('/archive-selected', async (req, res, next) => {
 		const archivedRecords = selectedRecords.map((record) => {
 			return {
 				lrn: record.lrn,
-				studentName: record.studentName,
+				lName: record.lName,
+				fName: record.fName,
 				gender: record.gender,
+				transferee: record.transferee,
+				gradeLevel: record.gradeLevel,
 				dateAddedToArchive: new Date(),
 				pdfFilePath: record.pdfFilePath, // Check if you need to handle PDF files
 			};

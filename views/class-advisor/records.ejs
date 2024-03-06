@@ -37,6 +37,7 @@
 		></script>
 		<script defer src="/js/toggler.js"></script>
 		<script defer src="/js/tables.js"></script>
+		<script defer src="/js/tooltip.js"></script>
 		<script defer src="/js/limit.number2.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<title>Records</title>
@@ -97,7 +98,7 @@
 								Records Management
 							</a>
 						</li>
-						<li class="sidebar-item">
+						<!-- <li class="sidebar-item">
 							<a
 								href="/classAdvisor/archives"
 								class="sidebar-link"
@@ -107,7 +108,7 @@
 								<i class="fa-solid fa-archive pe-2"></i>
 								Archives
 							</a>
-						</li>
+						</li> -->
 						<!-- <li class="sidebar-item">
 							<a
 								href="/classAdvisor/calendar"
@@ -202,18 +203,31 @@
 									<td><%= record.gradeLevel %></td>
 									<td>
 										<a
-											class="btn btn-info btn-sm"
+											class="btn btn-sm"
 											href="/classAdvisor/view-files/<%= record._id %>"
-											>View Files</a
+											data-bs-toggle="tooltip"
+											data-bs-placement="top"
+											data-bs-title="View files"
+											><span class="material-symbols-outlined">
+												folder
+											</span>
+											</a
 										>
 										<button
 											type="button"
-											class="btn btn-sm btn-warning"
+											class="btn btn-sm"
 											data-bs-toggle="modal"
 											data-bs-target="#editRecordModal"
 											onclick="populateEditForm('<%= record._id %>', '<%= record.lrn %>', '<%= record.lName %>', '<%= record.fName %>', '<%= record.gender %>', '<%= record.transferee %>', '<%= record.gradeLevel %>')"
 										>
-											Edit
+											<span 
+												class="material-symbols-outlined"
+												data-bs-toggle="tooltip"
+												data-bs-placement="top"
+												data-bs-title="Edit"
+											>
+												edit
+											</span>
 										</button>
 									</td>
 
@@ -240,6 +254,8 @@
 		<!-- Add a modal for editing records -->
 		<div
 			class="modal fade"
+			data-bs-backdrop="static" 
+			data-bs-keyboard="false"
 			id="editRecordModal"
 			tabindex="-1"
 			aria-labelledby="editRecordModalLabel"

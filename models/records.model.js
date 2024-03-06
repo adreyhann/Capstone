@@ -39,11 +39,23 @@ const ArchivedRecords = new mongoose.Schema({
         required: true,
         unique: true,
     },
-    studentName: {
+    lName: {
+        type: String,
+        required: true,
+    },
+    fName: {
         type: String,
         required: true,
     },
     gender: {
+        type: String,
+        required: true,
+    },
+    transferee: {
+        type: String,
+        required: true,
+    },
+    gradeLevel: {
         type: String,
         required: true,
     },

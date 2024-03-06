@@ -37,6 +37,7 @@
 		<script defer src="/js/tables.js"></script>
 		<script defer src="/js/toggler.js"></script>
 		<script defer src="/js/tooltip.js"></script>
+		<script defer src="/js/archived-to-records.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<title>Archives</title>
 	</head>
@@ -111,7 +112,7 @@
 							</a>
 						</li>
 
-						<li class="sidebar-item">
+						<li class="sidebar-item" style="border-right: 2px solid #007bff; background: #e3edf0;">
 							<a
 								href="/systemAdmin/archives"
 								class="sidebar-link"
@@ -214,7 +215,8 @@
 							<thead class="table-info">
 								<tr>
 									<th>LRN</th>
-									<th>Student Name</th>
+									<th>Last Name</th>
+									<th>First Name</th>
 									<th>Gender</th>
 									<th>Date Added</th>
 									<th>Action</th>
@@ -224,7 +226,8 @@
 								<% archivedRecord.forEach(record => { %>
 								<tr>
 									<td><%= record.lrn %></td>
-									<td><%= record.studentName %></td>
+									<td><%= record.lName %></td>
+									<td><%= record.fName %></td>
 									<td><%= record.gender %></td>
 									<td>
 										<%= new Date(record.dateAddedToArchive).toLocaleString() %>
@@ -240,6 +243,17 @@
 												folder
 											</span></a
 										>
+
+										<a
+											class="btn btn-sm"
+											data-bs-toggle="tooltip"
+											data-bs-placement="top"
+											data-bs-title="Unarchive"
+											onclick="moveFromArchive('<%= record._id %>')"
+											><span class="material-symbols-outlined">
+												unarchive
+											</span></a
+										>
 									</td>
 									<!-- Add more cells based on your schema -->
 								</tr>
@@ -249,7 +263,8 @@
 							<tfoot class="table-info">
 								<tr>
 									<th>LRN</th>
-									<th>Student Name</th>
+									<th>Last Name</th>
+									<th>First Name</th>
 									<th>Gender</th>
 									<th>Date Added</th>
 									<th>Action</th>

@@ -207,7 +207,8 @@
 							<thead class="table-info">
 								<tr>
 									<th>LRN</th>
-									<th>Student Name</th>
+									<th>Last Name</th>
+									<th>First Name</th>
 									<th>Gender</th>
 									<th>Date Added</th>
 									<th>Action</th>
@@ -217,7 +218,8 @@
 								<% archivedRecord.forEach(record => { %>
 								<tr>
 									<td><%= record.lrn %></td>
-									<td><%= record.studentName %></td>
+									<td><%= record.lName %></td>
+									<td><%= record.fName %></td>
 									<td><%= record.gender %></td>
 									<td><%= new Date(record.dateAddedToArchive).toLocaleString() %></td>
 									<td>
@@ -240,7 +242,8 @@
 							<tfoot class="table-info">
 								<tr>
 									<th>LRN</th>
-									<th>Student Name</th>
+									<th>Last Name</th>
+									<th>First Name</th>
 									<th>Gender</th>
 									<th>Date Added</th>
 									<th>Action</th>

@@ -6,38 +6,60 @@ const { PDFDocument } = require('pdf-lib');
 const User = require('../models/user.model');
 const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
-const Event = require('../models/events.model')
-require('dotenv').config()
+const Event = require('../models/events.model');
+require('dotenv').config();
 
 function countVisibleUsers(users, currentUser) {
 	// Implement your logic to count visible users
-	const visibleUsers = users.filter(user => {
-	  return user._id.toString() !== currentUser._id.toString() && user.role !== 'System Admin';
+	const visibleUsers = users.filter((user) => {
+		return (
+			user._id.toString() !== currentUser._id.toString() &&
+			user.role !== 'System Admin'
+		);
 	});
 	return visibleUsers.length;
-  }
-  
-  router.get('/dashboard', async (req, res, next) => {
+}
+
+// Function to validate email using Hunter.io API
+async function validateEmail(email) {
+	const apiKey = process.env.HUNTER_IO_API_KEY; // Replace with your actual Hunter.io API key
+
+	try {
+		const response = await fetch(
+			`https://api.hunter.io/v2/email-verifier?email=${email}&api_key=${apiKey}`
+		);
+		const data = await response.json();
+
+		if (data.data.result === 'deliverable') {
+			return true; // Email is valid
+		} else {
+			return false; // Email is not deliverable
+		}
+	} catch (error) {
+		console.error('Error validating email:', error.message);
+		throw error;
+	}
+}
+
+router.get('/dashboard', async (req, res, next) => {
 	// console.log(req.user)
 	const person = req.user;
 	const currentUserRole = req.user.role;
 	const users = await User.find();
 	const records = await Records.find();
 	const archives = await Archives.find();
-	
+
 	res.render('admin/dashboard', {
-	  person,
-	  users,
-	  records,
-	  archives,
-	  currentUserRole,
-	  countVisibleUsers: countVisibleUsers(users, person)
+		person,
+		users,
+		records,
+		archives,
+		currentUserRole,
+		countVisibleUsers: countVisibleUsers(users, person),
 	});
-  });
-  
+});
 
 router.get('/accounts', async (req, res, next) => {
-
 	const person = req.user;
 	const currentUserRole = req.user.role;
 	const users = await User.find();
@@ -46,7 +68,7 @@ router.get('/accounts', async (req, res, next) => {
 		person,
 		users,
 		currentUserRole,
-		currentUser
+		currentUser,
 	});
 });
 
@@ -57,31 +79,31 @@ router.get('/records', async (req, res, next) => {
 	let records;
 	let levels;
 
-    // Check if gradeLevel is provided in the query parameter
-    if (req.query.gradeLevel) {
-        // If gradeLevel is provided, filter records based on it
-        records = await Records.find({ gradeLevel: req.query.gradeLevel });
-    } else {
-        // If gradeLevel is not provided, retrieve all records
-        records = await Records.find();
-    }
+	// Check if gradeLevel is provided in the query parameter
+	if (req.query.gradeLevel) {
+		// If gradeLevel is provided, filter records based on it
+		records = await Records.find({ gradeLevel: req.query.gradeLevel });
+	} else {
+		// If gradeLevel is not provided, retrieve all records
+		records = await Records.find();
+	}
 
 	// Check if gradeLevel is provided in the query parameter
-    if (gradeLevel !== 'All Grades') {
-        // If gradeLevel is provided, filter records based on it
-        levels = await Records.find({ gradeLevel });
-    } else {
-        // If gradeLevel is not provided, retrieve all records
-        levels = await Records.find();
-    }
+	if (gradeLevel !== 'All Grades') {
+		// If gradeLevel is provided, filter records based on it
+		levels = await Records.find({ gradeLevel });
+	} else {
+		// If gradeLevel is not provided, retrieve all records
+		levels = await Records.find();
+	}
 	res.render('admin/records', { person, records, currentUserRole, gradeLevel });
 });
 
 router.get('/records-menu', async (req, res, next) => {
 	const person = req.user;
 
-	res.render('admin/records-menu', {person})
-})
+	res.render('admin/records-menu', { person });
+});
 
 router.get('/archives', async (req, res, next) => {
 	const person = req.user;
@@ -91,14 +113,14 @@ router.get('/archives', async (req, res, next) => {
 
 router.get('/calendar', async (req, res, next) => {
 	try {
-        const person = req.user;
-        const events = await Event.find(); 
+		const person = req.user;
+		const events = await Event.find();
 
-        res.render('admin/calendar', { person, events });
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		res.render('admin/calendar', { person, events });
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 router.get('/reports', async (req, res, next) => {
@@ -466,7 +488,6 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
 	}
 });
 
-
 router.post('/edit-users/:_id', async (req, res, next) => {
 	try {
 		const userId = req.params._id;
@@ -489,6 +510,20 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			req.flash('error', 'Another user with the same email already exists.');
 			return res.redirect('/admin/accounts');
 		}
+
+		// Validate the new email using Hunter.io API
+		try {
+			const isEmailValid = await validateEmail(req.body.editEmail);
+	  
+			if (!isEmailValid) {
+			  req.flash('error', 'Invalid email! Please enter a valid email.');
+			  return res.redirect('/admin/accounts');
+			}
+		  } catch (validationError) {
+			console.error(validationError);
+			req.flash('error', 'Error validating email. Please try again later.');
+			return res.redirect('/admin/accounts');
+		  }
 
 		// If the new classAdvisory is not 'None', check for uniqueness
 		if (req.body.editClassAdvisory !== 'None') {
@@ -525,7 +560,6 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 	}
 });
 
-
 // Add this route to get record counts
 router.get('/get-record-counts', async (req, res, next) => {
 	try {
@@ -543,25 +577,29 @@ router.get('/get-record-counts', async (req, res, next) => {
 
 // Add this route to get record counts based on gradeLevel
 router.get('/get-gradeLevel-counts', async (req, res, next) => {
-    try {
-        // Assuming 'gradeLevel' is a property in the 'Records' collection
-        const gradeLevelCounts = await Records.aggregate([
-            {
-                $group: {
-                    _id: '$gradeLevel',
-                    count: { $sum: 1 },
-                },
-            },
-        ]);
+	try {
+		// Assuming 'gradeLevel' is a property in the 'Records' collection
+		const gradeLevelCounts = await Records.aggregate([
+			{
+				$group: {
+					_id: '$gradeLevel',
+					count: { $sum: 1 },
+				},
+			},
+		]);
 
-        const labels = gradeLevelCounts.map((gradeLevelCount) => gradeLevelCount._id);
-        const counts = gradeLevelCounts.map((gradeLevelCount) => gradeLevelCount.count);
+		const labels = gradeLevelCounts.map(
+			(gradeLevelCount) => gradeLevelCount._id
+		);
+		const counts = gradeLevelCounts.map(
+			(gradeLevelCount) => gradeLevelCount.count
+		);
 
-        res.json({ labels, counts });
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
+		res.json({ labels, counts });
+	} catch (error) {
+		console.error('Error:', error);
+		res.status(500).json({ error: 'Internal Server Error' });
+	}
 });
 
 module.exports = router;

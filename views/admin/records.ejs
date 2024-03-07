@@ -235,32 +235,6 @@
 												folder
 											</span></a
 										>
-										<button
-											type="button"
-											class="btn btn-sm"
-											data-bs-toggle="modal"
-											data-bs-target="#editRecordModal"
-											onclick="populateEditForm('<%= record._id %>', '<%= record.lrn %>', '<%= record.lName %>', '<%= record.fName %>', '<%= record.gender %>', '<%= record.transferee %>', '<%= record.gradeLevel %>')"
-										>
-											<span
-												class="material-symbols-outlined"
-												data-bs-toggle="tooltip"
-												data-bs-placement="top"
-												data-bs-title="Edit"
-											>
-												edit
-											</span>
-										</button>
-										<button
-											type="button"
-											class="btn btn-sm"
-											data-bs-toggle="tooltip"
-											data-bs-placement="top"
-											data-bs-title="Add to archives"
-											onclick="moveToArchive('<%= record._id %>')"
-										>
-											<span class="material-symbols-outlined"> archive </span>
-										</button>
 									</td>
 
 									<!-- Add more cells based on your user schema -->

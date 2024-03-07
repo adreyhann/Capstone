@@ -9,7 +9,7 @@ const { Records, Archives } = require('../models/records.model');
 const Event = require('../models/events.model');
 const archiver = require('archiver');
 const nodemailer = require('nodemailer');
-require('dotenv').config()
+require('dotenv').config();
 
 function countVisibleUsersInTable(users, currentUser) {
 	const visibleUsersInTable = users.filter((user) => {
@@ -30,6 +30,27 @@ async function addHistoryLog(userId, action, details) {
 		await historyLog.save();
 	} catch (error) {
 		console.error('Error adding history log:', error);
+	}
+}
+
+// Function to validate email using Hunter.io API
+async function validateEmail(email) {
+	const apiKey = process.env.HUNTER_IO_API_KEY; // Replace with your actual Hunter.io API key
+
+	try {
+		const response = await fetch(
+			`https://api.hunter.io/v2/email-verifier?email=${email}&api_key=${apiKey}`
+		);
+		const data = await response.json();
+
+		if (data.data.result === 'deliverable') {
+			return true; // Email is valid
+		} else {
+			return false; // Email is not deliverable
+		}
+	} catch (error) {
+		console.error('Error validating email:', error.message);
+		throw error;
 	}
 }
 
@@ -163,8 +184,6 @@ router.get('/users', async (req, res, next) => {
 	}
 });
 
-
-
 router.get('/addRecords', async (req, res, next) => {
 	const person = req.user;
 	res.render('system_admn/addRecords', { person });
@@ -180,17 +199,17 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({
-    storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 },
-    fileFilter: function (req, file, cb) {
-        if (file.mimetype === 'application/pdf') {
-            cb(null, true);
-        } else {
-            // Instead of throwing an error, use a flash message
-            req.flash('error', 'Only PDF files are allowed!');
-            cb(null, false);
-        }
-    },
+	storage: storage,
+	limits: { fileSize: 5 * 1024 * 1024 },
+	fileFilter: function (req, file, cb) {
+		if (file.mimetype === 'application/pdf') {
+			cb(null, true);
+		} else {
+			// Instead of throwing an error, use a flash message
+			req.flash('error', 'Only PDF files are allowed!');
+			cb(null, false);
+		}
+	},
 });
 
 router.get('/view-files/:id', async (req, res, next) => {
@@ -326,7 +345,7 @@ router.post(
 				}
 			} else {
 				// req.flash('error', 'No PDF file uploaded');
-				res.redirect(`/systemAdmin/view-files/${recordId}`)
+				res.redirect(`/systemAdmin/view-files/${recordId}`);
 			}
 		} catch (error) {
 			console.error('Error:', error);
@@ -463,42 +482,42 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
 
 // Route to unarchive a record
 router.post('/unarchive/:archivedRecordId', async (req, res, next) => {
-    try {
-        const archivedRecordId = req.params.archivedRecordId;
+	try {
+		const archivedRecordId = req.params.archivedRecordId;
 
-        // Find the archived record by ID
-        const archivedRecord = await Archives.findById(archivedRecordId);
+		// Find the archived record by ID
+		const archivedRecord = await Archives.findById(archivedRecordId);
 
-        if (!archivedRecord) {
-            res.status(404).send('Archived Record not found');
-            return;
-        }
+		if (!archivedRecord) {
+			res.status(404).send('Archived Record not found');
+			return;
+		}
 
-        // Move the record back to the Records collection
-        const record = new Records({
-            lrn: archivedRecord.lrn,
-            lName: archivedRecord.lName,
-            fName: archivedRecord.fName,
-            gender: archivedRecord.gender,
-            transferee: archivedRecord.transferee, // Add missing fields
-            gradeLevel: archivedRecord.gradeLevel, // Add missing fields
+		// Move the record back to the Records collection
+		const record = new Records({
+			lrn: archivedRecord.lrn,
+			lName: archivedRecord.lName,
+			fName: archivedRecord.fName,
+			gender: archivedRecord.gender,
+			transferee: archivedRecord.transferee, // Add missing fields
+			gradeLevel: archivedRecord.gradeLevel, // Add missing fields
 			pdfFilePath: archivedRecord.pdfFilePath,
-        });
+		});
 
-        // Save the unarchived record
-        await record.save();
+		// Save the unarchived record
+		await record.save();
 
-        // Delete the record from the ArchivedRecords collection
-        await Archives.findByIdAndDelete(archivedRecordId);
+		// Delete the record from the ArchivedRecords collection
+		await Archives.findByIdAndDelete(archivedRecordId);
 
-        req.flash('success', 'Record unarchived successfully');
-        res.redirect('/systemAdmin/archives');
-    } catch (error) {
-        console.error('Error:', error);
-        // Handle errors appropriately, e.g., flash an error message
-        req.flash('error', 'Failed to unarchive record');
-        res.redirect('/systemAdmin/archives');
-    }
+		req.flash('success', 'Record unarchived successfully');
+		res.redirect('/systemAdmin/archives');
+	} catch (error) {
+		console.error('Error:', error);
+		// Handle errors appropriately, e.g., flash an error message
+		req.flash('error', 'Failed to unarchive record');
+		res.redirect('/systemAdmin/archives');
+	}
 });
 
 // Add this route for viewing files of an archived record
@@ -687,6 +706,20 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			return res.redirect('/systemAdmin/accounts');
 		}
 
+		// Validate the new email using Hunter.io API
+		try {
+			const isEmailValid = await validateEmail(req.body.editEmail);
+	  
+			if (!isEmailValid) {
+			  req.flash('error', 'Invalid email! Please enter a valid email.');
+			  return res.redirect('/systemAdmin/accounts');
+			}
+		  } catch (validationError) {
+			console.error(validationError);
+			req.flash('error', 'Error validating email. Please try again later.');
+			return res.redirect('/systemAdmin/accounts');
+		  }
+
 		// Check if the user is changing the role to "System Admin"
 		if (req.body.editRole === 'System Admin') {
 			// Count the number of users with the role "System Admin"
@@ -730,7 +763,6 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 				return res.redirect('/systemAdmin/accounts');
 			}
 		}
-
 
 		// Check if classAdvisory is 'Kinder' and subjectAdvisory is not 'All Kinder Subjects'
 		const isKinderClassAdvisory = req.body.editClassAdvisory === 'Kinder';
@@ -799,13 +831,8 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 router.post('/edit-profile/:id', async (req, res) => {
 	try {
 		const userId = req.params.id;
-		const {
-			editLName,
-			editFName,
-			editEmail,
-			editRole,
-			editClassAdvisory,
-		} = req.body;
+		const { editLName, editFName, editEmail, editRole, editClassAdvisory } =
+			req.body;
 
 		// editRole is the new role being set for the user
 		const currentRole = req.user.role; // current user's role in req.user.role
@@ -861,6 +888,21 @@ router.post('/edit-profile/:id', async (req, res) => {
 			}
 		}
 
+		// Check if the user is changing the email address
+		if (editEmail !== req.user.email) {
+			// Validate the new email using Hunter.io API
+			try {
+				const isEmailValid = await validateEmail(editEmail);
+
+				if (!isEmailValid) {
+					req.flash('error', 'Invalid email! Please enter a valid email.');
+					return res.redirect('/systemAdmin/profile');
+				}
+			} catch (validationError) {
+				console.error(validationError);
+				return res.status(500).send('Error validating email');
+			}
+		}
 
 		// Check if the user is changing the email address
 		if (editEmail !== req.user.email) {
@@ -906,6 +948,8 @@ router.post('/edit-profile/:id', async (req, res) => {
 			classAdvisory: editClassAdvisory,
 		});
 
+		req.flash('success', 'Profile updated successfully');
+		
 		// Check if the user's new role is either "Admin" or "Class Advisor"
 		if (editRole === 'Admin' || editRole === 'Class Advisor') {
 			// Log out the user and destroy the session
@@ -978,7 +1022,7 @@ router.post('/deactivate/:userid', async (req, res) => {
 		await User.findByIdAndUpdate(userId, { $set: { status: 'deactivated' } });
 
 		req.flash('success', 'Account deactivated successfully');
-		res.redirect('/systemAdmin/accounts'); 
+		res.redirect('/systemAdmin/accounts');
 	} catch (error) {
 		console.error(error);
 		req.flash('error', 'Error deactivating the account');

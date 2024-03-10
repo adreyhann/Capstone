@@ -35,7 +35,7 @@ async function addHistoryLog(userId, action, details) {
 
 // Function to validate email using Hunter.io API
 async function validateEmail(email) {
-	const apiKey = process.env.HUNTER_IO_API_KEY; // Replace with your actual Hunter.io API key
+	const apiKey = process.env.HUNTER_IO_API_KEY; // Hunter.io API key
 
 	try {
 		const response = await fetch(
@@ -804,29 +804,6 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 	}
 });
 
-// async function sendVerificationEmail(toEmail, verificationToken) {
-//     // Create a nodemailer transporter
-//     const transporter = nodemailer.createTransport({
-//         // Configure your email service details here
-//         service: 'gmail',
-//         auth: {
-//             user: 'meliboadrian@gmail.com',
-//             pass: 'your-email-password',
-//         },
-//     });
-
-//     // Create the email message with the verification code
-//     const mailOptions = {
-//         from: 'meliboadrian@gmail.com',
-//         to: toEmail,
-//         subject: 'Email Verification',
-//         html: `<p>Your verification code is: <strong>${verificationToken}</strong></p>
-//                <p>Enter this code to verify your new email address.</p>`,
-//     };
-
-//     // Send the email
-//     await transporter.sendMail(mailOptions);
-// }
 
 router.post('/edit-profile/:id', async (req, res) => {
 	try {
@@ -921,24 +898,6 @@ router.post('/edit-profile/:id', async (req, res) => {
 			}
 		}
 
-		// Check if the user is changing the email address
-		// if (editEmail !== req.user.email) {
-		// 	// Generate a unique verification token
-		// 	const verificationToken = generateUniqueToken(); // Implement this function
-
-		// 	// Save the verification token and the new email in the database
-		// 	await User.findByIdAndUpdate(userId, {
-		// 		emailVerificationToken: verificationToken,
-		// 		newEmail: editEmail,
-		// 	});
-
-		// 	// Send an email with the verification link
-		// 	await sendVerificationEmail(editEmail, verificationToken);
-
-		// 	// Render a page with the verification code modal
-		// 	return res.render('verifymodal', { userId, editEmail });
-		// }
-
 		// Update the user's details in the database
 		await User.findByIdAndUpdate(userId, {
 			lname: editLName,
@@ -1030,34 +989,5 @@ router.post('/deactivate/:userid', async (req, res) => {
 	}
 });
 
-// route for searching records
-// router.post('/search', async (req, res, next) => {
-//     try {
-//         const { lrn, name } = req.body;
-
-//         // Create a query object to build the search conditions
-//         const searchQuery = {};
-
-//         // Check if LRN is provided in the search
-//         if (lrn) {
-//             searchQuery.lrn = lrn;
-//         }
-
-//         // Check if Name is provided in the search
-//         if (name) {
-//             // Use a case-insensitive regular expression for partial name match
-//             searchQuery.studentName = { $regex: new RegExp(name, 'i') };
-//         }
-
-//         // Perform the search using the created query
-//         const searchResults = await Records.find(searchQuery);
-
-//         // Render the search results or pass them to your view
-//         res.render('searchResults', { searchResults });
-//     } catch (error) {
-//         console.error('Error:', error);
-//         next(error);
-//     }
-// });
 
 module.exports = router;

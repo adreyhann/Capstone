@@ -22,7 +22,7 @@ function countVisibleUsers(users, currentUser) {
 
 // Function to validate email using Hunter.io API
 async function validateEmail(email) {
-	const apiKey = process.env.HUNTER_IO_API_KEY; // Replace with your actual Hunter.io API key
+	const apiKey = process.env.HUNTER_IO_API_KEY; //Hunter.io API key
 
 	try {
 		const response = await fetch(
@@ -147,7 +147,7 @@ router.get('/historyLogs', async (req, res, next) => {
 		const person = req.user;
 
 		// Fetch history logs from the database
-		const historyLogs = await History.find().populate('userId', 'name'); // Assuming 'User' model has 'name' field
+		const historyLogs = await History.find().populate('userId', 'name'); 
 
 		res.render('admin/history-logs', { person, historyLogs });
 	} catch (error) {

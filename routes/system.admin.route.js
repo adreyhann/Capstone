@@ -743,10 +743,16 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			});
 
 			if (existingAdmin) {
-				req.flash('error', 'Another user with the role Admin already exists.');
+				req.flash('error', 'Only one user can have the role "Admin".');
 				return res.redirect('/systemAdmin/accounts');
 			}
 		}
+
+		// If the new role is 'Class Advisor', make sure 'None' is not selected
+        if (req.body.editRole === 'Class Advisor' && req.body.editClassAdvisory === 'None') {
+            req.flash('error', 'Invalid selection! Please choose a class advisory.');
+            return res.redirect('/systemAdmin/accounts');
+        }
 
 		// If the new classAdvisory is not 'None', check for uniqueness
 		if (req.body.editClassAdvisory !== 'None') {
@@ -764,26 +770,7 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			}
 		}
 
-		// Check if classAdvisory is 'Kinder' and subjectAdvisory is not 'All Kinder Subjects'
-		const isKinderClassAdvisory = req.body.editClassAdvisory === 'Kinder';
-		const isAllKinderSubjects =
-			req.body.editSubjectAdvisory === 'All Kinder Subjects';
-
-		if (isKinderClassAdvisory && !isAllKinderSubjects) {
-			req.flash(
-				'error',
-				'If Class Advisory is Kinder, Subject Advisory must be All Kinder Subjects.'
-			);
-			return res.redirect(`/systemAdmin/accounts`);
-		}
-
-		if (isAllKinderSubjects && !isKinderClassAdvisory) {
-			req.flash(
-				'error',
-				'If Subject Advisory is All Kinder Subjects, Class Advisory must be Kinder.'
-			);
-			return res.redirect(`/systemAdmin/accounts`);
-		}
+		
 
 		// Update the record with new values
 		user.lname = req.body.editLName;

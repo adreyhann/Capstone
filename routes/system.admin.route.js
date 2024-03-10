@@ -111,10 +111,32 @@ router.get('/records', async (req, res, next) => {
 });
 
 router.get('/records-menu', async (req, res, next) => {
-	const person = req.user;
+    try {
+        const person = req.user;
+        const records = await Records.find();
+        const archives = await Archives.find();
 
-	res.render('system_admn/records-menu', { person });
+        // Assuming 'gradeLevel' is the property name in your data structure
+        const gradeLevelCounts = {};
+
+        // Count the number of records for each grade level
+        records.forEach(record => {
+            const gradeLevel = record.gradeLevel;
+
+            if (!gradeLevelCounts[gradeLevel]) {
+                gradeLevelCounts[gradeLevel] = 1;
+            } else {
+                gradeLevelCounts[gradeLevel]++;
+            }
+        });
+
+        res.render('system_admn/records-menu', { person, records, archives, gradeLevelCounts });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
+
 
 router.get('/archives', async (req, res, next) => {
 	const person = req.user;

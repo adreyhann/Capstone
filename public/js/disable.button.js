@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-  const form = document.getElementById('editUserForm'); // Replace with your actual form id
+  const form = document.getElementById('editUserForm'); // form id
   const submitButton = document.getElementById('submitButton');
 
   // Initial form data

@@ -792,6 +792,13 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			}
 		}
 
+		if (req.body.editRole === 'System Admin' || req.body.editRole === 'Admin') {
+            // If the new role is "System Admin" or "Admin", make sure class advisory is set to 'None'
+            if (req.body.editClassAdvisory !== 'None') {
+                req.flash('error', 'Invalid Selection');
+                return res.redirect('/systemAdmin/accounts');
+            }
+        }
 		
 
 		// Update the record with new values

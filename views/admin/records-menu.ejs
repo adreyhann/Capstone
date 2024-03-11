@@ -50,11 +50,9 @@
 					<div class="container my-2">
 						<div class="row">
 							<div class="col-md-4 mx-2">
-								<img
-									src="/img/pain.jpg"
-									class="img-fluid img-thumbnail"
-									alt="..."
-								/>
+								<span class="material-symbols-outlined" style="font-size: 5rem">
+									account_circle
+								</span>
 							</div>
 							<div class="col-md-6">
 								<p class="my-0 pt-2" style="font-size: 15px"><%= person.fname %> <%= person.lname %></p>
@@ -91,7 +89,7 @@
 								Account Management
 							</a>
 						</li>
-						<li class="sidebar-item">
+						<li class="sidebar-item" style="border-right: 2px solid #007bff; background: #e3edf0;">
 							<a
 								href="/admin/records-menu"
 								class="sidebar-link"
@@ -110,7 +108,7 @@
 								aria-expanded="false"
 								data-menuitem="archives"
 							>
-								<i class="fa-regular fa-user pe-2"></i>
+								<i class="fa-solid fa-archive pe-2"></i>
 								Archives
 							</a>
 						</li>
@@ -209,7 +207,15 @@
 							<div class="card-header bg-info border-0"></div>	
 							<div class="card-body">
 								
-								<h5 class="card-title">Kinder</h5>
+								<h5 class="card-title">Kinder
+									<span class="badge text-bg-secondary position-absolute" style="margin-left: 10rem;">
+										<% if (gradeLevelCounts['Kinder']) { %>
+											<%= gradeLevelCounts['Kinder'] %>
+										<% } else { %>
+											0
+										<% } %>
+									</span>
+								</h5>
 								<p class="card-text">View records of Kinder students</p><br>
 								<a href="/admin/records?gradeLevel=Kinder" class="card-link">View</a>
 							</div>
@@ -220,7 +226,15 @@
 						>
 						<div class="card-header bg-info border-0"></div>
 							<div class="card-body">
-								<h5 class="card-title">Grade 1</h5>
+								<h5 class="card-title">Grade 1
+									<span class="badge text-bg-secondary position-absolute" style="margin-left: 9.5rem;">
+										<% if (gradeLevelCounts['Grade 1']) { %>
+											<%= gradeLevelCounts['Grade 1'] %>
+										<% } else { %>
+											0
+										<% } %>
+									</span>
+								</h5>
 								<p class="card-text">View records of Grade 1 students</p>
 								<a href="/admin/records?gradeLevel=Grade 1" class="card-link">View</a>
 							</div>
@@ -231,7 +245,15 @@
 						>
 						<div class="card-header bg-info border-0"></div>
 							<div class="card-body">
-								<h5 class="card-title">Grade 2</h5>
+								<h5 class="card-title">Grade 2
+									<span class="badge text-bg-secondary position-absolute" style="margin-left: 9rem;">
+										<% if (gradeLevelCounts['Grade 2']) { %>
+											<%= gradeLevelCounts['Grade 2'] %>
+										<% } else { %>
+											0
+										<% } %>
+									</span>
+								</h5>
 								<p class="card-text">View records of Grade 2 students</p>
 								<a href="/admin/records?gradeLevel=Grade 2" class="card-link">View</a>
 							</div>
@@ -242,7 +264,15 @@
 						>
 						<div class="card-header bg-info border-0"></div>
 							<div class="card-body">
-								<h5 class="card-title">Grade 3</h5>
+								<h5 class="card-title">Grade 3
+									<span class="badge text-bg-secondary position-absolute" style="margin-left: 9rem;">
+										<% if (gradeLevelCounts['Grade 3']) { %>
+											<%= gradeLevelCounts['Grade 3'] %>
+										<% } else { %>
+											0
+										<% } %>
+									</span>
+								</h5>
 								<p class="card-text">View records of Grade 3 students</p>
 								<a href="/admin/records?gradeLevel=Grade 3" class="card-link">View</a>
 							</div>
@@ -253,7 +283,15 @@
 						>
 						<div class="card-header bg-info border-0"></div>
 							<div class="card-body">
-								<h5 class="card-title">Grade 4</h5>
+								<h5 class="card-title">Grade 4
+									<span class="badge text-bg-secondary position-absolute" style="margin-left: 9rem;">
+										<% if (gradeLevelCounts['Grade 4']) { %>
+											<%= gradeLevelCounts['Grade 4'] %>
+										<% } else { %>
+											0
+										<% } %>
+									</span>
+								</h5>
 								<p class="card-text">View records of Grade 4 students</p>
 								<a href="/admin/records?gradeLevel=Grade 4" class="card-link">View</a>
 							</div>
@@ -264,7 +302,15 @@
 						>
 						<div class="card-header bg-info border-0"></div>
 							<div class="card-body">
-								<h5 class="card-title">Grade 5</h5>
+								<h5 class="card-title">Grade 5
+									<span class="badge text-bg-secondary position-absolute" style="margin-left: 9rem;">
+										<% if (gradeLevelCounts['Grade 5']) { %>
+											<%= gradeLevelCounts['Grade 5'] %>
+										<% } else { %>
+											0
+										<% } %>
+									</span>
+								</h5>
 								<p class="card-text">View records of Grade 5 students</p>
 								<a href="/admin/records?gradeLevel=Grade 5" class="card-link">View</a>
 							</div>
@@ -275,7 +321,15 @@
 						>
 						<div class="card-header bg-info border-0"></div>
 							<div class="card-body">
-								<h5 class="card-title">Grade 6</h5>
+								<h5 class="card-title">Grade 6
+									<span class="badge text-bg-secondary position-absolute" style="margin-left: 9rem;">
+										<% if (gradeLevelCounts['Grade 6']) { %>
+											<%= gradeLevelCounts['Grade 6'] %>
+										<% } else { %>
+											0
+										<% } %>
+									</span>
+								</h5>
 								<p class="card-text">View records of Grade 6 students</p>
 								<a href="/admin/records?gradeLevel=Grade 6" class="card-link">View</a>
 							</div>

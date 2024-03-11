@@ -118,7 +118,7 @@ router.post(
             // Check if the email already exists
             const doesExist = await User.findOne({ email });
             if (doesExist) {
-                req.flash('error', 'Username/email already exists');
+                req.flash('error', 'Sorry, this username or email is already in use. Please choose a different one.');
                 return res.redirect('/auth/register');
             }
 

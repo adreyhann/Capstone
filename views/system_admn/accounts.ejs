@@ -44,7 +44,7 @@
 		<script defer src="/js/deactivation.script.js"></script>
 		<script defer src="/js/escape.js"></script>
 		<script defer src="/js/spinner3.js"></script>
-		
+
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 
 		<title>Accounts</title>
@@ -66,11 +66,9 @@
 					<div class="container my-2">
 						<div class="row">
 							<div class="col-md-4 mx-2">
-								<img
-									src="../img/pain.jpg"
-									class="img-fluid img-thumbnail"
-									alt="..."
-								/>
+								<span class="material-symbols-outlined" style="font-size: 5rem">
+									account_circle
+								</span>
 							</div>
 							<div class="col-md-6">
 								<p class="my-0 pt-2" style="font-size: 15px">
@@ -96,7 +94,10 @@
 								Dashboard
 							</a>
 						</li>
-						<li class="sidebar-item" style="border-right: 2px solid #007bff; background: #e3edf0;">
+						<li
+							class="sidebar-item"
+							style="border-right: 2px solid #007bff; background: #e3edf0"
+						>
 							<a
 								href="/systemAdmin/accounts"
 								class="sidebar-link"
@@ -201,7 +202,7 @@
 				<div class="container-lg">
 					<h2 class="my-1">Account Management</h2>
 					<hr />
-					<div class="container w-100">
+					<div class="container w-100 position-relative">
 						<% try { %> <%- include('../credentials/flash-message.ejs') %> <% }
 						catch (error) { %>
 						<div>Error: <%= error.message %></div>
@@ -209,7 +210,21 @@
 						<a class="btn btn-success btn-sm my-2" href="/auth/register"
 							>Add users</a
 						>
-						
+						<a
+							class="btn btn-md position-absolute top-0 end-0"
+							style="margin-right: 11px"
+							href=""
+						>
+							<span
+								class="material-symbols-outlined"
+								data-bs-toggle="tooltip"
+								data-bs-placement="left"
+								data-bs-title="Inactive users"
+							>
+								account_circle_off
+							</span>
+						</a>
+
 						<table
 							id="example"
 							class="table table-striped hover"
@@ -251,7 +266,7 @@
 												data-bs-placement="top"
 												data-bs-title="Edit"
 											>
-												edit
+												person_edit
 											</span>
 										</button>
 										<button
@@ -259,19 +274,16 @@
 											class="btn btn-sm"
 											data-bs-toggle="modal"
 											data-user-id="<%= user._id %>"
- 											onclick="deactivateUser('<%= user._id %>')"
-											
+											onclick="deactivateUser('<%= user._id %>')"
 										>
 											<span
 												class="material-symbols-outlined"
 												data-bs-toggle="tooltip"
 												data-bs-placement="top"
 												data-bs-title="Deactivate user"
-												
 											>
 												person_off
 											</span>
-											
 										</button>
 									</td>
 								</tr>
@@ -295,7 +307,7 @@
 					<div
 						class="modal fade"
 						id="editUserModal"
-						data-bs-backdrop="static" 
+						data-bs-backdrop="static"
 						data-bs-keyboard="false"
 						tabindex="-1"
 						aria-labelledby="editRecordModalLabel"
@@ -315,8 +327,11 @@
 									></button>
 								</div>
 								<div class="modal-body">
-									<form id="editUserForm" action="/systemAdmin/edit-users/<%= user._id %>" method="post">
-										
+									<form
+										id="editUserForm"
+										action="/systemAdmin/edit-users/<%= user._id %>"
+										method="post"
+									>
 										<div class="form-floating mb-3">
 											<input
 												type="text"
@@ -354,16 +369,13 @@
 												id="editRole"
 												required
 												onchange="updateAdvisoryOptions()"
-												
 											>
 												<% if (currentUserRole === 'System Admin') { %>
 												<option value="System Admin">System Admin</option>
 												<option value="Admin">Admin</option>
 												<option value="Class Advisor">Class Advisor</option>
 												<% } else if (currentUserRole === 'Admin') { %>
-												<option value="" selected disabled>
-													Select role
-												</option>
+												<option value="" selected disabled>Select role</option>
 												<option value="Class Advisor">Class Advisor</option>
 												<% } else { %>
 												<option disabled>Select role</option>
@@ -390,10 +402,18 @@
 											</select>
 											<label for="editClassAdvisory">Class Advisory</label>
 										</div>
-										
+
 										<div class="d-flex justify-content-end">
-											<button type="submit" id="submitButton" class="btn btn-success">
-												<span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+											<button
+												type="submit"
+												id="submitButton"
+												class="btn btn-success"
+											>
+												<span
+													class="spinner-border spinner-border-sm d-none"
+													role="status"
+													aria-hidden="true"
+												></span>
 												Update
 											</button>
 										</div>
@@ -403,11 +423,8 @@
 						</div>
 					</div>
 					<!-- ========== modal for deactivate confirmation ========== -->
-
-					
 				</div>
 			</div>
 		</div>
-		
 	</body>
 </html>

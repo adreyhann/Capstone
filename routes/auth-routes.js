@@ -310,7 +310,7 @@ router.post('/forgot', async (req, res, next) => {
 		});
 
 		const mailOptions = {
-			from: 'meliboadrian@gmail.com',
+			from: 'Bethany Christian Academy',
 			to: user.email,
 			subject: 'Password Reset Code',
 			text: `Your password reset code is: ${resetCode}`,
@@ -403,7 +403,7 @@ router.get('/resend-code', async (req, res) => {
         });
 
         const mailOptions = {
-            from: 'meliboadrian@gmail.com',
+            from: 'Bethany Christian Academy',
             to: user.email,
             subject: 'Password Reset Code',
             text: `Your new password reset code is: ${resetCode}`,

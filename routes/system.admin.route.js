@@ -1026,11 +1026,17 @@ router.post('/deactivate/:userId', async (req, res, next) => {
             return;
         }
 
-        // create a new inactive user
-        const inactiveUser = new InactiveUser(userToDeactivate.toObject());
-
-		// set the status to 'Inactive'
-        inactiveUser.status = 'Inactive';
+        /// Create a new InactiveUser based on the userToDeactivate
+        const inactiveUser = new InactiveUser({
+            _id: userToDeactivate._id,
+            email: userToDeactivate.email,
+            lname: userToDeactivate.lname,
+            fname: userToDeactivate.fname,
+            role: userToDeactivate.role,
+            classAdvisory: userToDeactivate.classAdvisory,
+            status: 'Inactive', // Set the status to 'deactivated'
+            password: userToDeactivate.password, // Preserve the original password
+        });
         // save the inactive user
         await inactiveUser.save();
 
@@ -1059,10 +1065,17 @@ router.post('/activate/:userId', async (req, res) => {
         }
 
         // Create a new User based on the inactiveUser
-        const activatedUser = new User(inactiveUser.toObject());
+        const activatedUser = new User({
+            _id: inactiveUser._id,
+            email: inactiveUser.email,
+            lname: inactiveUser.lname,
+            fname: inactiveUser.fname,
+            role: inactiveUser.role,
+            classAdvisory: inactiveUser.classAdvisory,
+            status: 'active', // Set the status to 'active'
+            password: inactiveUser.password, // Preserve the original password
+        });
 
-		// Set the status to 'active'
-        activatedUser.status = 'active';
         // Save the activated user
         await activatedUser.save();
 
@@ -1077,6 +1090,8 @@ router.post('/activate/:userId', async (req, res) => {
         res.redirect('/systemAdmin/accounts');
     }
 });
+
+
 
 
 module.exports = router;

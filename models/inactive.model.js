@@ -30,7 +30,6 @@ const InactiveUserSchema = new mongoose.Schema({
 	},
 	status: {
 		type: String,
-		default: 'Inactive',
 		required: true,
 	},
 	resetCode: {

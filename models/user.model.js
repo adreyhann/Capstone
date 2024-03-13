@@ -30,13 +30,9 @@ const UserSchema = new mongoose.Schema({
 		required: true,
 	
 	},
-	// subjectAdvisory: {
-	// 	type: String,
-	// 	required: true,
-	// },
 	status: {
 		type: String,
-		enum: ['active', 'deactivated'],
+		enum: ['active', 'Inactive'],
 		default: 'active',
 		required: true,
 	},
@@ -45,6 +41,7 @@ const UserSchema = new mongoose.Schema({
 		
 	}
 });
+
 
 UserSchema.pre('save', async function (next) {
 	try {
@@ -69,5 +66,7 @@ UserSchema.methods.isValidPassword = async function (password) {
 };
 
 const User = mongoose.model('user', UserSchema);
+
+
 
 module.exports = User;

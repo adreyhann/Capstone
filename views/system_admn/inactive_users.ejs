@@ -42,12 +42,13 @@
 		<script defer src="/js/update.users.details.js"></script>
 		<script defer src="/js/disable.button.js"></script>
 		<script defer src="/js/deactivation.script.js"></script>
+		<script defer src="/js/activation.script.js"></script>
 		<script defer src="/js/escape.js"></script>
 		<script defer src="/js/spinner3.js"></script>
 
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 
-		<title>Accounts</title>
+		<title>Inactive Users</title>
 	</head>
 	<body>
 		<div class="wrapper">
@@ -200,29 +201,13 @@
 					</div>
 				</nav>
 				<div class="container-lg">
-					<h2 class="my-1">Account Management</h2>
+					<h2 class="my-1">Inactive users</h2>
 					<hr />
 					<div class="container w-100 position-relative">
 						<% try { %> <%- include('../credentials/flash-message.ejs') %> <% }
 						catch (error) { %>
 						<div>Error: <%= error.message %></div>
 						<% } %>
-						<a class="btn btn-success btn-sm my-2" href="/auth/register"
-							>Add users</a
-						>
-						<a
-							class="btn btn-md mt-2"
-							href="/systemAdmin/inactive"
-						>
-							<span
-								class="material-symbols-outlined"
-								data-bs-toggle="tooltip"
-								data-bs-placement="top"
-								data-bs-title="Inactive users"
-							>
-								account_circle_off
-							</span>
-						</a>
 
 						<table
 							id="example"
@@ -242,51 +227,34 @@
 								</tr>
 							</thead>
 							<tbody>
-								<% users.forEach(user => { %> <% if (user._id.toString() !==
-								currentUser._id.toString()) { %>
-								<tr>
-									<td><%= user.lname %></td>
-									<td><%= user.fname %></td>
-									<td><%= user.email %></td>
-									<td><%= user.role %></td>
-									<td><%= user.classAdvisory %></td>
-									<td class="status-cell"><%= user.status %></td>
-									<td>
-										<button
-											type="button"
-											class="btn btn-sm"
-											data-bs-toggle="modal"
-											data-bs-target="#editUserModal"
-											onclick="populateUserForm('<%= user._id %>', '<%= user.lname %>', '<%= user.fname %>', '<%= user.role %>', '<%= user.classAdvisory %>', '<%= user.email %>')"
-										>
-											<span
-												class="material-symbols-outlined"
-												data-bs-toggle="tooltip"
-												data-bs-placement="top"
-												data-bs-title="Edit"
-											>
-												person_edit
-											</span>
-										</button>
-										<button
-											type="button"
-											class="btn btn-sm"
-											data-bs-toggle="modal"
-											data-user-id="<%= user._id %>"
-											onclick="moveUserToInactive('<%= user._id %>')"
-										>
-											<span
-												class="material-symbols-outlined"
-												data-bs-toggle="tooltip"
-												data-bs-placement="top"
-												data-bs-title="Deactivate user"
-											>
-												person_off
-											</span>
-										</button>
-									</td>
-								</tr>
-								<% } %> <% }); %>
+								<% inactiveUsers.forEach(user => { %>
+                                <tr>
+                                    <td><%= user.lname %></td>
+                                    <td><%= user.fname %></td>
+                                    <td><%= user.email %></td>
+                                    <td><%= user.role %></td>
+                                    <td><%= user.classAdvisory %></td>
+                                    <td class="status-cell"><%= user.status %></td>
+                                    <td>
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm"
+                                            data-bs-toggle="modal"
+                                            data-user-id="<%= user._id %>"
+                                            onclick="moveUserToActive('<%= user._id %>')"
+                                        >
+                                            <span
+                                                class="material-symbols-outlined"
+                                                data-bs-toggle="tooltip"
+                                                data-bs-placement="top"
+                                                data-bs-title="Activate user"
+                                            >
+                                                person_add
+                                            </span>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <% }); %>
 							</tbody>
 
 							<tfoot class="table-info">
@@ -302,126 +270,6 @@
 							</tfoot>
 						</table>
 					</div>
-					<!-- ========== modal for edit user details ========== -->
-					<div
-						class="modal fade"
-						id="editUserModal"
-						data-bs-backdrop="static"
-						data-bs-keyboard="false"
-						tabindex="-1"
-						aria-labelledby="editRecordModalLabel"
-						aria-hidden="true"
-					>
-						<div class="modal-dialog">
-							<div class="modal-content">
-								<div class="modal-header">
-									<h5 class="modal-title" id="editRecordModalLabel">
-										Edit Account details
-									</h5>
-									<button
-										type="button"
-										class="btn-close"
-										data-bs-dismiss="modal"
-										aria-label="Close"
-									></button>
-								</div>
-								<div class="modal-body">
-									<form
-										id="editUserForm"
-										action="/systemAdmin/edit-users/<%= user._id %>"
-										method="post"
-									>
-										<div class="form-floating mb-3">
-											<input
-												type="text"
-												class="form-control"
-												name="editLName"
-												id="editLName"
-												required
-											/>
-											<label for="editLName">Last Name</label>
-										</div>
-										<div class="form-floating mb-3">
-											<input
-												type="text"
-												class="form-control"
-												name="editFName"
-												id="editFName"
-												required
-											/>
-											<label for="editFName">First Name</label>
-										</div>
-										<div class="form-floating mb-3">
-											<input
-												type="email"
-												class="form-control"
-												name="editEmail"
-												id="editEmail"
-												required
-											/>
-											<label for="editEmail">Email</label>
-										</div>
-										<div class="form-floating mb-3">
-											<select
-												class="form-select"
-												name="editRole"
-												id="editRole"
-												required
-												onchange="updateAdvisoryOptions()"
-											>
-												<% if (currentUserRole === 'System Admin') { %>
-												<option value="System Admin">System Admin</option>
-												<option value="Admin">Admin</option>
-												<option value="Class Advisor">Class Advisor</option>
-												<% } else if (currentUserRole === 'Admin') { %>
-												<option value="" selected disabled>Select role</option>
-												<option value="Class Advisor">Class Advisor</option>
-												<% } else { %>
-												<option disabled>Select role</option>
-												<% } %>
-											</select>
-											<label for="editRole">Role</label>
-										</div>
-										<div class="form-floating mb-3">
-											<select
-												class="form-select"
-												name="editClassAdvisory"
-												id="editClassAdvisory"
-												required
-											>
-												<option value="" disabled></option>
-												<option value="None">None</option>
-												<option value="Kinder">Kinder</option>
-												<option value="Grade 1">Grade 1</option>
-												<option value="Grade 2">Grade 2</option>
-												<option value="Grade 3">Grade 3</option>
-												<option value="Grade 4">Grade 4</option>
-												<option value="Grade 5">Grade 5</option>
-												<option value="Grade 6">Grade 6</option>
-											</select>
-											<label for="editClassAdvisory">Class Advisory</label>
-										</div>
-
-										<div class="d-flex justify-content-end">
-											<button
-												type="submit"
-												id="submitButton"
-												class="btn btn-success"
-											>
-												<span
-													class="spinner-border spinner-border-sm d-none"
-													role="status"
-													aria-hidden="true"
-												></span>
-												Update
-											</button>
-										</div>
-									</form>
-								</div>
-							</div>
-						</div>
-					</div>
-					<!-- ========== modal for deactivate confirmation ========== -->
 				</div>
 			</div>
 		</div>

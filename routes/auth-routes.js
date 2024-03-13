@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const User = require('../models/user.model');
+const InactiveUser = require('../models/inactive.model')
 const { body, validationResult } = require('express-validator');
 const passport = require('passport');
 const ResetToken = require('../models/reset.model');
@@ -39,6 +40,14 @@ router.post(
             .normalizeEmail()
             .toLowerCase()
             .custom(async (value, {req}) => {
+
+                // Check if the email is deactivated
+                const deactivatedUser = await InactiveUser.findOne({ email: value });
+
+                if (deactivatedUser) {
+                    throw new Error('This email is deactivated. Choose a different one.');
+                }
+
                 const apiKey = process.env.HUNTER_IO_API_KEY; // Retrieve API key from environment variable
                 const hunterApiUrl = `https://api.hunter.io/v2/email-verifier?email=${value}&api_key=${apiKey}`;
 

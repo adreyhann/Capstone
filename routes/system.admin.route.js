@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { PDFDocument } = require('pdf-lib');
 const User = require('../models/user.model');
+const InactiveUser = require('../models/inactive.model')
 const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
 const Event = require('../models/events.model');
@@ -78,6 +79,21 @@ router.get('/accounts', async (req, res, next) => {
 	res.render('system_admn/accounts', {
 		person,
 		users,
+		currentUserRole,
+		currentUser,
+	});
+});
+
+router.get('/inactive', async (req, res, next) => {
+	const person = req.user;
+	const currentUserRole = req.user.role;
+	const users = await User.find();
+	const inactiveUsers = await InactiveUser.find();
+	const currentUser = req.user;
+	res.render('system_admn/inactive_users', {
+		person,
+		users,
+		inactiveUsers,
 		currentUserRole,
 		currentUser,
 	});
@@ -728,6 +744,14 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			return res.redirect('/systemAdmin/accounts');
 		}
 
+		// Check if the new email belongs to a deactivated user
+        const inactiveUserWithEmail = await InactiveUser.findOne({ email: req.body.editEmail });
+
+        if (inactiveUserWithEmail) {
+            req.flash('error', 'Cannot use a deactivated email. Please choose another one.');
+            return res.redirect('/systemAdmin/accounts');
+        }
+
 		// Validate the new email using Hunter.io API
 		try {
 			const isEmailValid = await validateEmail(req.body.editEmail);
@@ -990,19 +1014,68 @@ router.get('/get-gradeLevel-counts', async (req, res, next) => {
 	}
 });
 
-router.post('/deactivate/:userid', async (req, res) => {
-	try {
-		const userId = req.params.userid;
+router.post('/deactivate/:userId', async (req, res, next) => {
+    try {
+        const userId = req.params.userId;
 
-		await User.findByIdAndUpdate(userId, { $set: { status: 'deactivated' } });
+        // find the user by id
+        const userToDeactivate = await User.findById(userId);
 
-		req.flash('success', 'Account deactivated successfully');
-		res.redirect('/systemAdmin/accounts');
-	} catch (error) {
-		console.error(error);
-		req.flash('error', 'Error deactivating the account');
-		res.status(500).send('Internal Server Error');
-	}
+        if (!userToDeactivate) {
+            res.status(404).send('User not found');
+            return;
+        }
+
+        // create a new inactive user
+        const inactiveUser = new InactiveUser(userToDeactivate.toObject());
+
+		// set the status to 'Inactive'
+        inactiveUser.status = 'Inactive';
+        // save the inactive user
+        await inactiveUser.save();
+
+        // delete the user from the active users collection
+        await User.findByIdAndDelete(userId);
+
+        req.flash('success', 'User moved to inactive successfully');
+        res.redirect('/systemAdmin/accounts');
+    } catch (error) {
+        console.error('Error:', error);
+        req.flash('error', 'Failed to move user to inactive');
+        res.redirect('/systemAdmin/accounts');
+    }
+});
+
+// Route to activate a user
+router.post('/activate/:userId', async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        // Find the inactive user by ID
+        const inactiveUser = await InactiveUser.findById(userId);
+
+        if (!inactiveUser) {
+            return res.status(404).send('Inactive user not found');
+        }
+
+        // Create a new User based on the inactiveUser
+        const activatedUser = new User(inactiveUser.toObject());
+
+		// Set the status to 'active'
+        activatedUser.status = 'active';
+        // Save the activated user
+        await activatedUser.save();
+
+        // Delete the inactive user from the InactiveUser collection
+        await InactiveUser.findByIdAndDelete(userId);
+
+        req.flash('success', 'User activated successfully');
+        res.redirect('/systemAdmin/accounts');
+    } catch (error) {
+        console.error('Error:', error);
+        req.flash('error', 'Failed to activate user');
+        res.redirect('/systemAdmin/accounts');
+    }
 });
 
 

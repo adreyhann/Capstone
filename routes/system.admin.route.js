@@ -1064,82 +1064,92 @@ router.post('/deactivate/:userId', async (req, res, next) => {
 
 // Route to activate a user
 router.post('/activate/:userId', async (req, res) => {
-    try {
-        const userId = req.params.userId;
+	try {
+		const userId = req.params.userId;
 
-        // Find the inactive user by ID
-        const inactiveUser = await InactiveUser.findById(userId);
+		// Find the inactive user by ID
+		const inactiveUser = await InactiveUser.findById(userId);
 
-        if (!inactiveUser) {
-            return res.status(404).send({ error: 'Inactive user not found' });
-        }
+		if (!inactiveUser) {
+			return res.status(404).send({ error: 'Inactive user not found' });
+		}
 
-        // Check if the inactive user's class advisory and role already exist in active users
-        const existingActiveUser = await User.findOne({
-            classAdvisory: inactiveUser.classAdvisory,
-            role: inactiveUser.role,
-            status: 'active', // Ensure the user is active
-        });
+		// Check if the inactive user's class advisory and role already exist in active users
+		const existingActiveUser = await User.findOne({
+			classAdvisory: inactiveUser.classAdvisory,
+			role: inactiveUser.role,
+			status: 'active', // Ensure the user is active
+		});
 
-        if (existingActiveUser) {
-            return res.status(400).send({
-                error: 'Activation failed: Another active user with the same class advisory and role already exists.'
-            });
-        }
+		if (existingActiveUser) {
+			return res.status(400).send({
+				error:
+					'Activation failed: Another active user with the same class advisory and role already exists.',
+			});
+		}
 
-        // If the role of the inactive user is System Admin, check the number of active System Admin users
-        if (inactiveUser.role === 'System Admin') {
-            const systemAdminCount = await User.countDocuments({
-                role: 'System Admin',
-                status: 'active', // Ensure the user is active
-            });
+		// If the role of the inactive user is System Admin, check the number of active System Admin users
+		if (inactiveUser.role === 'System Admin') {
+			const systemAdminCount = await User.countDocuments({
+				role: 'System Admin',
+				status: 'active', // Ensure the user is active
+			});
 
-            if (systemAdminCount >= 2) {
-                return res.status(400).send({ error: 'Activation failed: Only two active System Admin users are allowed.' });
-            }
-        }
+			if (systemAdminCount >= 2) {
+				return res
+					.status(400)
+					.send({
+						error:
+							'Activation failed: Only two active System Admin users are allowed.',
+					});
+			}
+		}
 
 		// Check if there's already an active user with the 'admin' role
-        const existingAdminUser = await User.findOne({
-            role: 'Admin',
-            status: 'active', // Ensure the user is active
-        });
+		const existingAdminUser = await User.findOne({
+			role: 'Admin',
+			status: 'active', // Ensure the user is active
+		});
 
-        if (existingAdminUser && inactiveUser.role === 'Admin') {
-            return res.status(400).send({ error: 'Activation failed: Only one active Admin user is allowed.' });
-        }
+		if (existingAdminUser && inactiveUser.role === 'Admin') {
+			return res
+				.status(400)
+				.send({
+					error: 'Activation failed: Only one active Admin user is allowed.',
+				});
+		}
 
-        // Create a new User based on the inactiveUser
-        const activatedUser = new User({
-            _id: inactiveUser._id,
-            email: inactiveUser.email,
-            lname: inactiveUser.lname,
-            fname: inactiveUser.fname,
-            role: inactiveUser.role,
-            classAdvisory: inactiveUser.classAdvisory,
-            status: 'active', // Set the status to 'active'
-            password: inactiveUser.password, // Preserve the original password
-        });
+		// Create a new User based on the inactiveUser
+		const activatedUser = new User({
+			_id: inactiveUser._id,
+			email: inactiveUser.email,
+			lname: inactiveUser.lname,
+			fname: inactiveUser.fname,
+			role: inactiveUser.role,
+			classAdvisory: inactiveUser.classAdvisory,
+			status: 'active', // Set the status to 'active'
+			password: inactiveUser.password, // Preserve the original password
+		});
 
-        // Save the activated user
-        await activatedUser.save();
+		// Save the activated user
+		await activatedUser.save();
 
-        // Delete the inactive user from the InactiveUser collection
-        await InactiveUser.findByIdAndDelete(userId);
+		// Delete the inactive user from the InactiveUser collection
+		await InactiveUser.findByIdAndDelete(userId);
 
 		// Send email notification to the user
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: 'meliboadrian@gmail.com',
-                pass: 'igtw pyqi aggb bbyb',
-            },
-            tls: {
-                rejectUnauthorized: false,
-            },
-        });
+		const transporter = nodemailer.createTransport({
+			service: 'gmail',
+			auth: {
+				user: 'meliboadrian@gmail.com',
+				pass: 'igtw pyqi aggb bbyb',
+			},
+			tls: {
+				rejectUnauthorized: false,
+			},
+		});
 
-        const mailOptions = {
+		const mailOptions = {
 			from: 'bethanychristianacademy@gmail.com',
 			to: inactiveUser.email,
 			subject: 'Account Activation Notification',
@@ -1147,26 +1157,23 @@ router.post('/activate/:userId', async (req, res) => {
 			<h3>Your account has been successfully activated. You can now log in with this email.</h3><br>
 			<p>Note: Your account has been successfully activated. For security purposes, please reset your password before logging in.</p>
 			`,
-			
 		};
-		
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.error('Error sending activation email:', error);
-            } else {
-                console.log('Activation email sent:', info.response);
-            }
-        });
+		transporter.sendMail(mailOptions, (error, info) => {
+			if (error) {
+				console.error('Error sending activation email:', error);
+			} else {
+				console.log('Activation email sent:', info.response);
+			}
+		});
 
-        req.flash('success', 'User activated successfully');
-        res.redirect('/systemAdmin/inactive');
-    } catch (error) {
-        console.error('Error:', error);
-        req.flash('error', 'Failed to activate user');
-        res.status(500).send({ error: 'Failed to activate user' });
-    }
+		req.flash('success', 'User activated successfully');
+		res.redirect('/systemAdmin/inactive');
+	} catch (error) {
+		console.error('Error:', error);
+		req.flash('error', 'Failed to activate user');
+		res.status(500).send({ error: 'Failed to activate user' });
+	}
 });
-
 
 module.exports = router;

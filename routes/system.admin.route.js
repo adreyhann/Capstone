@@ -1083,7 +1083,7 @@ router.post('/activate/:userId', async (req, res) => {
 
         if (existingActiveUser) {
             return res.status(400).send({
-                error: 'Error: Another active user with the same class advisory and role already exists.'
+                error: 'Activation failed: Another active user with the same class advisory and role already exists.'
             });
         }
 
@@ -1095,7 +1095,7 @@ router.post('/activate/:userId', async (req, res) => {
             });
 
             if (systemAdminCount >= 2) {
-                return res.status(400).send({ error: 'Error: Only two active System Admin users are allowed.' });
+                return res.status(400).send({ error: 'Activation failed: Only two active System Admin users are allowed.' });
             }
         }
 
@@ -1106,7 +1106,7 @@ router.post('/activate/:userId', async (req, res) => {
         });
 
         if (existingAdminUser && inactiveUser.role === 'Admin') {
-            return res.status(400).send({ error: 'Error: Only one active Admin user is allowed.' });
+            return res.status(400).send({ error: 'Activation failed: Only one active Admin user is allowed.' });
         }
 
         // Create a new User based on the inactiveUser
@@ -1126,6 +1126,38 @@ router.post('/activate/:userId', async (req, res) => {
 
         // Delete the inactive user from the InactiveUser collection
         await InactiveUser.findByIdAndDelete(userId);
+
+		// Send email notification to the user
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'meliboadrian@gmail.com',
+                pass: 'igtw pyqi aggb bbyb',
+            },
+            tls: {
+                rejectUnauthorized: false,
+            },
+        });
+
+        const mailOptions = {
+			from: 'bethanychristianacademy@gmail.com',
+			to: inactiveUser.email,
+			subject: 'Account Activation Notification',
+			html: `<p>Dear ${inactiveUser.fname},</p>
+			<h3>Your account has been successfully activated. You can now log in with this email.</h3><br>
+			<p>Note: Your account has been successfully activated. For security purposes, please reset your password before logging in.</p>
+			`,
+			
+		};
+		
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error('Error sending activation email:', error);
+            } else {
+                console.log('Activation email sent:', info.response);
+            }
+        });
 
         req.flash('success', 'User activated successfully');
         res.redirect('/systemAdmin/inactive');

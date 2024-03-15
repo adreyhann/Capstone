@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { PDFDocument } = require('pdf-lib');
 const User = require('../models/user.model');
-const InactiveUser = require('../models/inactive.model')
+const InactiveUser = require('../models/inactive.model');
 const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
 const Event = require('../models/events.model');
@@ -127,32 +127,36 @@ router.get('/records', async (req, res, next) => {
 });
 
 router.get('/records-menu', async (req, res, next) => {
-    try {
-        const person = req.user;
-        const records = await Records.find();
-        const archives = await Archives.find();
+	try {
+		const person = req.user;
+		const records = await Records.find();
+		const archives = await Archives.find();
 
-        // Assuming 'gradeLevel' is the property name in your data structure
-        const gradeLevelCounts = {};
+		// Assuming 'gradeLevel' is the property name in your data structure
+		const gradeLevelCounts = {};
 
-        // Count the number of records for each grade level
-        records.forEach(record => {
-            const gradeLevel = record.gradeLevel;
+		// Count the number of records for each grade level
+		records.forEach((record) => {
+			const gradeLevel = record.gradeLevel;
 
-            if (!gradeLevelCounts[gradeLevel]) {
-                gradeLevelCounts[gradeLevel] = 1;
-            } else {
-                gradeLevelCounts[gradeLevel]++;
-            }
-        });
+			if (!gradeLevelCounts[gradeLevel]) {
+				gradeLevelCounts[gradeLevel] = 1;
+			} else {
+				gradeLevelCounts[gradeLevel]++;
+			}
+		});
 
-        res.render('system_admn/records-menu', { person, records, archives, gradeLevelCounts });
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		res.render('system_admn/records-menu', {
+			person,
+			records,
+			archives,
+			gradeLevelCounts,
+		});
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
-
 
 router.get('/archives', async (req, res, next) => {
 	const person = req.user;
@@ -745,26 +749,31 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 		}
 
 		// Check if the new email belongs to a deactivated user
-        const inactiveUserWithEmail = await InactiveUser.findOne({ email: req.body.editEmail });
+		const inactiveUserWithEmail = await InactiveUser.findOne({
+			email: req.body.editEmail,
+		});
 
-        if (inactiveUserWithEmail) {
-            req.flash('error', 'Cannot use a deactivated email. Please choose another one.');
-            return res.redirect('/systemAdmin/accounts');
-        }
+		if (inactiveUserWithEmail) {
+			req.flash(
+				'error',
+				'Cannot use a deactivated email. Please choose another one.'
+			);
+			return res.redirect('/systemAdmin/accounts');
+		}
 
 		// Validate the new email using Hunter.io API
 		try {
 			const isEmailValid = await validateEmail(req.body.editEmail);
-	  
+
 			if (!isEmailValid) {
-			  req.flash('error', 'Invalid email! Please enter a valid email.');
-			  return res.redirect('/systemAdmin/accounts');
+				req.flash('error', 'Invalid email! Please enter a valid email.');
+				return res.redirect('/systemAdmin/accounts');
 			}
-		  } catch (validationError) {
+		} catch (validationError) {
 			console.error(validationError);
 			req.flash('error', 'Error validating email. Please try again later.');
 			return res.redirect('/systemAdmin/accounts');
-		  }
+		}
 
 		// Check if the user is changing the role to "System Admin"
 		if (req.body.editRole === 'System Admin') {
@@ -795,10 +804,13 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 		}
 
 		// If the new role is 'Class Advisor', make sure 'None' is not selected
-        if (req.body.editRole === 'Class Advisor' && req.body.editClassAdvisory === 'None') {
-            req.flash('error', 'Invalid selection! Please choose a class advisory.');
-            return res.redirect('/systemAdmin/accounts');
-        }
+		if (
+			req.body.editRole === 'Class Advisor' &&
+			req.body.editClassAdvisory === 'None'
+		) {
+			req.flash('error', 'Invalid selection! Please choose a class advisory.');
+			return res.redirect('/systemAdmin/accounts');
+		}
 
 		// If the new classAdvisory is not 'None', check for uniqueness
 		if (req.body.editClassAdvisory !== 'None') {
@@ -817,13 +829,12 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 		}
 
 		if (req.body.editRole === 'System Admin' || req.body.editRole === 'Admin') {
-            // If the new role is "System Admin" or "Admin", make sure class advisory is set to 'None'
-            if (req.body.editClassAdvisory !== 'None') {
-                req.flash('error', 'Invalid Selection');
-                return res.redirect('/systemAdmin/accounts');
-            }
-        }
-		
+			// If the new role is "System Admin" or "Admin", make sure class advisory is set to 'None'
+			if (req.body.editClassAdvisory !== 'None') {
+				req.flash('error', 'Invalid Selection');
+				return res.redirect('/systemAdmin/accounts');
+			}
+		}
 
 		// Update the record with new values
 		user.lname = req.body.editLName;
@@ -843,7 +854,6 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 		next(error);
 	}
 });
-
 
 router.post('/edit-profile/:id', async (req, res) => {
 	try {
@@ -948,7 +958,7 @@ router.post('/edit-profile/:id', async (req, res) => {
 		});
 
 		req.flash('success', 'Profile updated successfully');
-		
+
 		// Check if the user's new role is either "Admin" or "Class Advisor"
 		if (editRole === 'Admin' || editRole === 'Class Advisor') {
 			// Log out the user and destroy the session
@@ -1015,41 +1025,41 @@ router.get('/get-gradeLevel-counts', async (req, res, next) => {
 });
 
 router.post('/deactivate/:userId', async (req, res, next) => {
-    try {
-        const userId = req.params.userId;
+	try {
+		const userId = req.params.userId;
 
-        // find the user by id
-        const userToDeactivate = await User.findById(userId);
+		// find the user by id
+		const userToDeactivate = await User.findById(userId);
 
-        if (!userToDeactivate) {
-            res.status(404).send('User not found');
-            return;
-        }
+		if (!userToDeactivate) {
+			res.status(404).send('User not found');
+			return;
+		}
 
-        /// Create a new InactiveUser based on the userToDeactivate
-        const inactiveUser = new InactiveUser({
-            _id: userToDeactivate._id,
-            email: userToDeactivate.email,
-            lname: userToDeactivate.lname,
-            fname: userToDeactivate.fname,
-            role: userToDeactivate.role,
-            classAdvisory: userToDeactivate.classAdvisory,
-            status: 'Inactive', // Set the status to 'deactivated'
-            password: userToDeactivate.password, // Preserve the original password
-        });
-        // save the inactive user
-        await inactiveUser.save();
+		/// Create a new InactiveUser based on the userToDeactivate
+		const inactiveUser = new InactiveUser({
+			_id: userToDeactivate._id,
+			email: userToDeactivate.email,
+			lname: userToDeactivate.lname,
+			fname: userToDeactivate.fname,
+			role: userToDeactivate.role,
+			classAdvisory: userToDeactivate.classAdvisory,
+			status: 'Inactive', // Set the status to 'deactivated'
+			password: userToDeactivate.password, // Preserve the original password
+		});
+		// save the inactive user
+		await inactiveUser.save();
 
-        // delete the user from the active users collection
-        await User.findByIdAndDelete(userId);
+		// delete the user from the active users collection
+		await User.findByIdAndDelete(userId);
 
-        req.flash('success', 'User moved to inactive successfully');
-        res.redirect('/systemAdmin/accounts');
-    } catch (error) {
-        console.error('Error:', error);
-        req.flash('error', 'Failed to move user to inactive');
-        res.redirect('/systemAdmin/accounts');
-    }
+		req.flash('success', 'User moved to inactive successfully');
+		res.redirect('/systemAdmin/accounts');
+	} catch (error) {
+		console.error('Error:', error);
+		req.flash('error', 'Failed to move user to inactive');
+		res.redirect('/systemAdmin/accounts');
+	}
 });
 
 // Route to activate a user
@@ -1061,7 +1071,42 @@ router.post('/activate/:userId', async (req, res) => {
         const inactiveUser = await InactiveUser.findById(userId);
 
         if (!inactiveUser) {
-            return res.status(404).send('Inactive user not found');
+            return res.status(404).send({ error: 'Inactive user not found' });
+        }
+
+        // Check if the inactive user's class advisory and role already exist in active users
+        const existingActiveUser = await User.findOne({
+            classAdvisory: inactiveUser.classAdvisory,
+            role: inactiveUser.role,
+            status: 'active', // Ensure the user is active
+        });
+
+        if (existingActiveUser) {
+            return res.status(400).send({
+                error: 'Error: Another active user with the same class advisory and role already exists.'
+            });
+        }
+
+        // If the role of the inactive user is System Admin, check the number of active System Admin users
+        if (inactiveUser.role === 'System Admin') {
+            const systemAdminCount = await User.countDocuments({
+                role: 'System Admin',
+                status: 'active', // Ensure the user is active
+            });
+
+            if (systemAdminCount >= 2) {
+                return res.status(400).send({ error: 'Error: Only two active System Admin users are allowed.' });
+            }
+        }
+
+		// Check if there's already an active user with the 'admin' role
+        const existingAdminUser = await User.findOne({
+            role: 'Admin',
+            status: 'active', // Ensure the user is active
+        });
+
+        if (existingAdminUser && inactiveUser.role === 'Admin') {
+            return res.status(400).send({ error: 'Error: Only one active Admin user is allowed.' });
         }
 
         // Create a new User based on the inactiveUser
@@ -1083,15 +1128,13 @@ router.post('/activate/:userId', async (req, res) => {
         await InactiveUser.findByIdAndDelete(userId);
 
         req.flash('success', 'User activated successfully');
-        res.redirect('/systemAdmin/accounts');
+        res.redirect('/systemAdmin/inactive');
     } catch (error) {
         console.error('Error:', error);
         req.flash('error', 'Failed to activate user');
-        res.redirect('/systemAdmin/accounts');
+        res.status(500).send({ error: 'Failed to activate user' });
     }
 });
-
-
 
 
 module.exports = router;

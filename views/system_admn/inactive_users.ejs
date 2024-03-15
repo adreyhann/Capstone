@@ -45,6 +45,7 @@
 		<script defer src="/js/activation.script.js"></script>
 		<script defer src="/js/escape.js"></script>
 		<script defer src="/js/spinner3.js"></script>
+		<script defer src="/js/confirm.button.js"></script>
 
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 
@@ -237,21 +238,20 @@
                                     <td class="status-cell"><%= user.status %></td>
                                     <td>
                                         <button
-                                            type="button"
-                                            class="btn btn-sm"
-                                            data-bs-toggle="modal"
-                                            data-user-id="<%= user._id %>"
-                                            onclick="moveUserToActive('<%= user._id %>')"
-                                        >
-                                            <span
-                                                class="material-symbols-outlined"
-                                                data-bs-toggle="tooltip"
-                                                data-bs-placement="top"
-                                                data-bs-title="Activate user"
-                                            >
-                                                person_add
-                                            </span>
-                                        </button>
+										type="button"
+										class="btn btn-sm activate-user-btn"
+										data-bs-toggle="modal"
+										data-user-id="<%= user._id %>"
+									>
+										<span
+											class="material-symbols-outlined"
+											data-bs-toggle="tooltip"
+											data-bs-placement="top"
+											data-bs-title="Activate user"
+										>
+											person_add
+										</span>
+									</button>
                                     </td>
                                 </tr>
                                 <% }); %>

@@ -27,6 +27,7 @@
         <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script defer src="/js/charts.js"></script>
         <script defer src="/js/toggler.js"></script>
+		<script defer src="/js/tooltip.js"></script>
         <link rel="stylesheet" type="text/css" href="/css/styles.css">
     <title>View Files</title>
 </head>
@@ -194,6 +195,17 @@
 						<div>Error: <%= error.message %></div>
 					  <% } %>
 
+					  <a class="btn btn-sm mb-2" href="/systemAdmin/goBackToRecords?gradeLevel=<%= student.gradeLevel %>">
+						<span 
+						class="material-symbols-outlined"
+						data-bs-toggle="tooltip"
+						data-bs-placement="top"
+						data-bs-title="Go back"
+						
+						>
+						arrow_back
+						</span>	
+					</a>
 					  <div class="row">
 						<div class="col-3">
 							<p style="font-weight: bold;">LRN: <span style="font-weight: lighter;"><%= student.lrn %></span> </p>

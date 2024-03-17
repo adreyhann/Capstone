@@ -126,6 +126,13 @@ router.get('/records', async (req, res, next) => {
 	res.render('system_admn/records', { person, records, gradeLevel });
 });
 
+router.get('/goBackToRecords', (req, res) => {
+    const gradeLevel = req.query.gradeLevel || ''; // Get the grade level from the query parameter
+
+    // Redirect back to the page displaying records based on the grade level
+    res.redirect(`/systemAdmin/records?gradeLevel=${gradeLevel}`);
+});
+
 router.get('/records-menu', async (req, res, next) => {
 	try {
 		const person = req.user;
@@ -1053,6 +1060,36 @@ router.post('/deactivate/:userId', async (req, res, next) => {
 		// delete the user from the active users collection
 		await User.findByIdAndDelete(userId);
 
+		// Send email notification to the user
+		const transporter = nodemailer.createTransport({
+			service: 'gmail',
+			auth: {
+				user: 'meliboadrian@gmail.com',
+				pass: 'igtw pyqi aggb bbyb',
+			},
+			tls: {
+				rejectUnauthorized: false,
+			},
+		});
+
+		const greeting = `Dear ${userToDeactivate.lname} ${userToDeactivate.fname},`;
+		// Send email notification
+        const mailOptions = {
+            from: 'bethanychristianacademy@gmail.com',
+            to: userToDeactivate.email,
+            subject: 'Account Deactivation Notification',
+            text: `${greeting}\n\nWe regret to inform you that your account with Bethany Christian Academy has been deactivated. If you believe this is an error or require further assistance, please do not hesitate to contact our support team.\n\nBest regards,\nThe Bethany Christian Academy Team`,
+        };
+
+        // Send the email
+        transporter.sendMail(mailOptions, (error, info) => {
+			if (error) {
+				console.error('Error sending activation email:', error);
+			} else {
+				console.log('Activation email sent:', info.response);
+			}
+		});
+
 		req.flash('success', 'User moved to inactive successfully');
 		res.redirect('/systemAdmin/accounts');
 	} catch (error) {
@@ -1073,37 +1110,37 @@ router.post('/activate/:userId', async (req, res) => {
 		if (!inactiveUser) {
 			return res.status(404).send({ error: 'Inactive user not found' });
 		}
+		
 
-		// Check if the inactive user's class advisory and role already exist in active users
-		const existingActiveUser = await User.findOne({
-			classAdvisory: inactiveUser.classAdvisory,
-			role: inactiveUser.role,
-			status: 'active', // Ensure the user is active
-		});
+		
+		
+		// Check if there's an active user with the same class advisory
+        if (inactiveUser.classAdvisory !== 'None') {
+            const existingActiveUser = await User.findOne({
+                classAdvisory: inactiveUser.classAdvisory,
+                status: 'active', // Ensure the user is active
+            });
 
-		if (existingActiveUser) {
-			return res.status(400).send({
-				error:
-					'Activation failed: Another active user with the same class advisory and role already exists.',
-			});
-		}
+            if (existingActiveUser) {
+                return res.status(400).send({
+                    error: 'Activation failed: Another active user with the same class advisory already exists.',
+                });
+            }
+        }
 
-		// If the role of the inactive user is System Admin, check the number of active System Admin users
-		if (inactiveUser.role === 'System Admin') {
-			const systemAdminCount = await User.countDocuments({
-				role: 'System Admin',
-				status: 'active', // Ensure the user is active
-			});
+        // If the role of the inactive user is System Admin, check the number of active System Admin users
+        if (inactiveUser.role === 'System Admin') {
+            const systemAdminCount = await User.countDocuments({
+                role: 'System Admin',
+                status: 'active', // Ensure the user is active
+            });
 
-			if (systemAdminCount >= 2) {
-				return res
-					.status(400)
-					.send({
-						error:
-							'Activation failed: Only two active System Admin users are allowed.',
-					});
-			}
-		}
+            if (systemAdminCount >= 2) {
+                return res.status(400).send({
+                    error: 'Activation failed: Only two active System Admin users are allowed.',
+                });
+            }
+        }
 
 		// Check if there's already an active user with the 'admin' role
 		const existingAdminUser = await User.findOne({
@@ -1155,7 +1192,7 @@ router.post('/activate/:userId', async (req, res) => {
 			subject: 'Account Activation Notification',
 			html: `<p>Dear ${inactiveUser.fname},</p>
 			<h3>Your account has been successfully activated. You can now log in with this email.</h3><br>
-			<p>Note: Your account has been successfully activated. For security purposes, please reset your password before logging in.</p>
+			<p>Note: For security purposes, please reset your password before logging in.</p>
 			`,
 		};
 
@@ -1175,5 +1212,93 @@ router.post('/activate/:userId', async (req, res) => {
 		res.status(500).send({ error: 'Failed to activate user' });
 	}
 });
+
+// deactivating own account
+router.post('/deactivateProfile', async (req, res, next) => {
+    try {
+        const userId = req.user.id; // user ID is stored in req.user.id
+
+        // Find the user by ID
+        const userToDeactivate = await User.findById(userId);
+
+        if (!userToDeactivate) {
+            return res.status(404).send({
+                error: 'User not found'
+            });
+        }
+
+        // Check if the user is the only System Admin
+        if (userToDeactivate.role === 'System Admin') {
+            const systemAdminCount = await User.countDocuments({
+                role: 'System Admin',
+                status: 'active', // Ensure the user is active
+            });
+
+            if (systemAdminCount <= 1) {
+                return res.status(400).send({
+                    error: 'You cannot deactivate your account. You are the only active System Admin.'
+                });
+            }
+        }
+
+        // Create a new InactiveUser based on the userToDeactivate
+        const inactiveUser = new InactiveUser({
+            _id: userToDeactivate._id,
+            email: userToDeactivate.email,
+            lname: userToDeactivate.lname,
+            fname: userToDeactivate.fname,
+            role: userToDeactivate.role,
+            classAdvisory: userToDeactivate.classAdvisory,
+            status: 'Inactive', // Set the status to 'deactivated'
+            password: userToDeactivate.password, // Preserve the original password
+        });
+        // Save the inactive user
+        await inactiveUser.save();
+
+        // Delete the user from the active users collection
+        await User.findByIdAndDelete(userId);
+
+        // Send email notification to the user
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'meliboadrian@gmail.com',
+                pass: 'igtw pyqi aggb bbyb',
+            },
+            tls: {
+                rejectUnauthorized: false,
+            },
+        });
+
+        const greeting = `Dear ${userToDeactivate.lname} ${userToDeactivate.fname},`;
+        // Send email notification
+        const mailOptions = {
+            from: 'bethanychristianacademy@gmail.com',
+            to: userToDeactivate.email,
+            subject: 'Account Deactivation Notification',
+            text: `${greeting}\n\nWe regret to inform you that your account with Bethany Christian Academy has been deactivated. If you believe this is an error or require further assistance, please do not hesitate to contact our support team.\n\nBest regards,\nThe Bethany Christian Academy Team`,
+        };
+
+        // Send the email
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error('Error sending deactivation email:', error);
+            } else {
+                console.log('Deactivation email sent:', info.response);
+            }
+        });
+
+        return res.status(200).send({
+            message: 'Your account has been deactivated successfully'
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        return res.status(500).send({
+            error: 'Failed to deactivate your account'
+        });
+    }
+    
+});
+
 
 module.exports = router;

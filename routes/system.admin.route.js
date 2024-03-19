@@ -188,7 +188,7 @@ router.get('/reports', async (req, res, next) => {
 		const person = req.user;
 
 		// Fetch history logs from the database
-		const historyLogs = await History.find().populate('userId', 'name'); // Assuming 'User' model has 'name' field
+		const historyLogs = await History.find().populate(); // Assuming 'User' model has 'name' field
 
 		res.render('system_admn/reports', { person, historyLogs });
 	} catch (error) {
@@ -215,7 +215,7 @@ router.get('/historyLogs', async (req, res, next) => {
 		const person = req.user;
 
 		// Fetch history logs from the database
-		const historyLogs = await History.find().populate('userId', 'name'); // Assuming 'User' model has 'name' field
+		const historyLogs = await History.find().populate(); // Assuming 'User' model has 'name' field
 
 		res.render('system_admn/history-logs', { person, historyLogs });
 	} catch (error) {
@@ -518,6 +518,24 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
 
 		// Delete the record from the original collection
 		await Records.findByIdAndDelete(recordId);
+
+		// Format timestamp
+        const formattedTimestamp = new Date().toLocaleString('en-US', { 
+            hour: 'numeric', 
+            minute: 'numeric', 
+            second: 'numeric', 
+            hour12: true 
+        });
+
+		// Log the action in the history
+        const historyLog = new History({
+            userEmail: req.user.email,
+            userFirstName: req.user.fname,
+            userLastName: req.user.lname,
+            action: `${req.user.fname} ${req.user.lname} moved record to archive`,
+            details: `Moved record with LRN ${record.lrn} to archive at ${formattedTimestamp}`,
+        });
+        await historyLog.save();
 
 		req.flash('success', 'Record moved to archive successfully');
 		res.redirect('/systemAdmin/records');

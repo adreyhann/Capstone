@@ -30,7 +30,7 @@
 		<script defer src="/js/toggler.js"></script>
 		<script defer src="/js/tooltip.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
-		<link rel="icon" type="image/x-icon" href="/img/logo.png">
+		<link rel="icon" type="image/x-icon" href="/img/logo.png" />
 		<title>View Files</title>
 	</head>
 	<body>
@@ -208,25 +208,18 @@
 								arrow_back
 							</span>
 						</a>
-						<div class="row">
-							<div class="col-3">
-								<p style="font-weight: bold">
-									LRN:
-									<span style="font-weight: lighter"><%= student.lrn %></span>
-								</p>
-							</div>
-						</div>
-
-						<!-- Form to upload additional files -->
-						<!-- <form action="/systemAdmin/addFile/<%= student._id %>" method="post" enctype="multipart/form-data" class="mb-3">
-						<div class="row">
-							<input class="form-control mb-3" type="file" name="pdfFile" accept=".pdf" required>
-							<button type="submit" class="btn btn-success btn-sm">Upload new File</button>
-						</div>
-					</form> -->
 
 						<!-- Loop to display up to 2 PDF files -->
-						<% for (let i = 0; i < Math.min(2, filename.length); i++) { %>
+						<% if (filename.length === 0) { %>
+						<div class="d-flex justify-content-center align-items-start" style="height: 100vh;">
+							<img
+								src="/img/Empty-bro.png"
+								style="width: 60%; max-height: 40rem;"
+								alt="No files available"
+							/>
+						</div>
+						<% } else { %> <% for (let i = 0; i < Math.min(2, filename.length);
+						i++) { %>
 						<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">
 							<div class="card-header text-center bg-info position-relative">
 								<%= filename[i] %>
@@ -251,7 +244,7 @@
 								/>
 							</div>
 						</div>
-						<% } %>
+						<% } %> <% } %>
 					</div>
 				</div>
 			</div>

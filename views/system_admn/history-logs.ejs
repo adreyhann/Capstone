@@ -136,13 +136,11 @@
 			<!-- Main Component -->
 			<div class="main">
 				<nav class="navbar navbar-expand-lg px-1 border-bottom">
-					<!-- Button for sidebar toggle -->
 					<div class="container-fluid">
 						<button class="btn" type="button" data-bs-theme="light">
 							<span class="navbar-toggler-icon"></span>
 						</button>
 						<ul class="navbar-nav">
-							<!-- Added this ul element for right-aligned items -->
 							<li class="nav-item dropdown">
 								<a
 									class="nav-link dropdown-toggle"
@@ -171,7 +169,7 @@
 					<hr />
 					
 					 <!-- History logs -->
-					 <% historyLogs.forEach(log => { %>
+					 <% historyLogs.slice().reverse().forEach(log => { %>
 						<div class="card my-2 custom-card-2 border-0">
 							<div class="card-body position-relative">
 								<p class="m-0 fs-5 fw-medium"><%= log.action %></p>
@@ -183,12 +181,16 @@
 								</p>
 								<div class="collapse" id="collapseExample<%= log._id %>">
 									<div class="card card-body">
-										<%= log.details %>
+										<p class="m-0"><span style="font-weight: bold;">Details:</span> <%= log.details %></p>
+										<p class="m-0"><span style="font-weight: bold;">Email:</span> <%= log.userEmail %></p>
+										<p class="m-0"><span style="font-weight: bold;">First Name:</span> <%= log.userFirstName %></p>
+										<p class="m-0"><span style="font-weight: bold;">Last Name:</span> <%= log.userLastName %></p>
 									</div>
 								</div>
 							</div>
 						</div>
 					<% }); %>
+					
 				</div>
 			</div>
 		</div>

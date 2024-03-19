@@ -40,6 +40,7 @@
 		<script defer src="/js/tooltip.js"></script>
 		<script defer src="/js/limit.number2.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
+		<link rel="icon" type="image/x-icon" href="/img/logo.png">
 		<title>Records</title>
 	</head>
 	<body>
@@ -197,6 +198,19 @@
 						catch (error) { %>
 						<div>Error: <%= error.message %></div>
 						<% } %>
+
+						<a class="btn btn-sm mb-2" href="/admin/records-menu">
+							<span 
+							class="material-symbols-outlined"
+							data-bs-toggle="tooltip"
+							data-bs-placement="top"
+							data-bs-title="Go back"
+							
+							>
+							arrow_back
+							</span>	
+						</a>
+
 						<table
 							id="example"
 							class="table table-striped hover"

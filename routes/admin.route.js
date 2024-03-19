@@ -99,6 +99,13 @@ router.get('/records', async (req, res, next) => {
 	res.render('admin/records', { person, records, currentUserRole, gradeLevel });
 });
 
+router.get('/goBackToRecords', (req, res) => {
+    const gradeLevel = req.query.gradeLevel || ''; // Get the grade level from the query parameter
+
+    // Redirect back to the page displaying records based on the grade level
+    res.redirect(`/admin/records?gradeLevel=${gradeLevel}`);
+});
+
 router.get('/records-menu', async (req, res, next) => {
     try {
         const person = req.user;

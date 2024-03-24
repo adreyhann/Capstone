@@ -38,7 +38,7 @@
 		<script defer src="/js/sa.report.chart.js"></script>
 		<script defer src="/js/toggler.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/chart.js@latest"></script>
-		<link rel="icon" type="image/x-icon" href="/img/logo.png">
+		<link rel="icon" type="image/x-icon" href="/img/logo.png" />
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<title>Reports</title>
 	</head>
@@ -132,7 +132,10 @@
 								Calendar
 							</a>
 						</li>
-						<li class="sidebar-item" style="border-right: 2px solid #007bff; background: #e3edf0;">
+						<li
+							class="sidebar-item"
+							style="border-right: 2px solid #007bff; background: #e3edf0"
+						>
 							<a
 								href="/systemAdmin/reports"
 								class="sidebar-link"
@@ -200,33 +203,57 @@
 								<div class="col-3">
 									<canvas id="reportsChart"></canvas>
 								</div>
-								<div class="col" style="border-left: 1px solid gray; height: 400px; overflow-y: auto;">
+								<div
+									class="col"
+									style="
+										border-left: 1px solid gray;
+										height: 400px;
+										overflow-y: auto;
+									"
+								>
 									<p>Activity logs</p>
-									<% historyLogs.forEach(log => { %>
-										<div class="card my-2 custom-card-2 border-0">
-											<div class="card-body position-relative">
-												<p class="m-0 fs-5 fw-medium"><%= log.action %></p>
-												<p class="m-0" style="color: #72726e"><%= log.timestamp %></p>
-												
-												<p class="d-inline-flex gap-1 mb-0 position-absolute top-0 end-0 translate-middle" style="padding-top: 80px;">
-													<a class="btn btn-primary btn-sm" data-bs-toggle="collapse" href="#collapseExample<%= log._id %>" role="button" aria-expanded="false" aria-controls="collapseExample<%= log._id %>">
-														View details
-													</a>
-												</p>
-												<div class="collapse" id="collapseExample<%= log._id %>">
-													<div class="card card-body">
-														<p class="m-0">Details: <%= log.details %></p>
-														<p class="m-0">Email: <%= log.userEmail %></p>
-														<p class="m-0">First Name: <%= log.userFirstName %></p>
-														<p class="m-0">Last Name: <%= log.userLastName %></p>
-													</div>
+									<% if (historyLogs.length === 0) { %>
+									<div class="alert alert-info d-flex align-items-center justify-content-center" role="alert">
+										No history available.
+									</div>
+									<% } else { %> <% historyLogs.slice().reverse().forEach(log =>
+									{ %>
+									<div class="card my-2 custom-card-2 border-0">
+										<div class="card-body position-relative">
+											<p class="m-0 fs-5 fw-medium"><%= log.action %></p>
+											<p class="m-0" style="color: #72726e">
+												<%= log.timestamp %>
+											</p>
+
+											<p
+												class="d-inline-flex gap-1 mb-0 position-absolute top-0 end-0 translate-middle"
+												style="padding-top: 80px"
+											>
+												<a
+													class="btn btn-primary btn-sm"
+													data-bs-toggle="collapse"
+													href="#collapseExample<%= log._id %>"
+													role="button"
+													aria-expanded="false"
+													aria-controls="collapseExample<%= log._id %>"
+												>
+													View details
+												</a>
+											</p>
+											<div class="collapse" id="collapseExample<%= log._id %>">
+												<div class="card card-body">
+													<p class="m-0"><span style="font-weight: bold;">Details</span> <%= log.details %></p>
+													<p class="m-0"><span style="font-weight: bold;">Email:</span> <%= log.userEmail %></p>
+													<p class="m-0">
+														<span style="font-weight: bold;">First Name:</span> <%= log.userFirstName %>
+													</p>
+													<p class="m-0"><span style="font-weight: bold;">Last Name:</span> <%= log.userLastName %></p>
 												</div>
 											</div>
 										</div>
-									<% }); %>
+									</div>
+									<% }); %> <% } %>
 								</div>
-								
-								
 							</div>
 						</div>
 					</div>

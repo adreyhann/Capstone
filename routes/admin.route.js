@@ -100,37 +100,42 @@ router.get('/records', async (req, res, next) => {
 });
 
 router.get('/goBackToRecords', (req, res) => {
-    const gradeLevel = req.query.gradeLevel || ''; // Get the grade level from the query parameter
+	const gradeLevel = req.query.gradeLevel || ''; // Get the grade level from the query parameter
 
-    // Redirect back to the page displaying records based on the grade level
-    res.redirect(`/admin/records?gradeLevel=${gradeLevel}`);
+	// Redirect back to the page displaying records based on the grade level
+	res.redirect(`/admin/records?gradeLevel=${gradeLevel}`);
 });
 
 router.get('/records-menu', async (req, res, next) => {
-    try {
-        const person = req.user;
-        const records = await Records.find();
-        const archives = await Archives.find();
+	try {
+		const person = req.user;
+		const records = await Records.find();
+		const archives = await Archives.find();
 
-        // Assuming 'gradeLevel' is the property name in your data structure
-        const gradeLevelCounts = {};
+		// Assuming 'gradeLevel' is the property name in your data structure
+		const gradeLevelCounts = {};
 
-        // Count the number of records for each grade level
-        records.forEach(record => {
-            const gradeLevel = record.gradeLevel;
+		// Count the number of records for each grade level
+		records.forEach((record) => {
+			const gradeLevel = record.gradeLevel;
 
-            if (!gradeLevelCounts[gradeLevel]) {
-                gradeLevelCounts[gradeLevel] = 1;
-            } else {
-                gradeLevelCounts[gradeLevel]++;
-            }
-        });
+			if (!gradeLevelCounts[gradeLevel]) {
+				gradeLevelCounts[gradeLevel] = 1;
+			} else {
+				gradeLevelCounts[gradeLevel]++;
+			}
+		});
 
-        res.render('admin/records-menu', { person, records, archives, gradeLevelCounts });
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		res.render('admin/records-menu', {
+			person,
+			records,
+			archives,
+			gradeLevelCounts,
+		});
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 router.get('/archives', async (req, res, next) => {
@@ -155,8 +160,7 @@ router.get('/reports', async (req, res, next) => {
 	try {
 		const person = req.user;
 
-		// Fetch history logs from the database
-		const historyLogs = await History.find().populate('userId', 'name'); // Assuming 'User' model has 'name' field
+		const historyLogs = await History.find().populate(); 
 
 		res.render('admin/reports', { person, historyLogs });
 	} catch (error) {
@@ -175,7 +179,7 @@ router.get('/historyLogs', async (req, res, next) => {
 		const person = req.user;
 
 		// Fetch history logs from the database
-		const historyLogs = await History.find().populate('userId', 'name'); 
+		const historyLogs = await History.find().populate();
 
 		res.render('admin/history-logs', { person, historyLogs });
 	} catch (error) {
@@ -376,11 +380,24 @@ router.post('/deleteFile/:recordId/:index', async (req, res, next) => {
 			return;
 		}
 
+		let deletedFileName = '';
+
 		// Check if the index is valid
 		if (index >= 0 && index < record.pdfFilePath.length) {
 			// Remove the file path at the specified index
 			record.pdfFilePath.splice(index, 1);
 			await record.save();
+
+			// Log the file deletion action
+			const historyLog = new History({
+				userEmail: req.user.email,
+				userFirstName: req.user.fname,
+				userLastName: req.user.lname,
+				action: `File deleted by ${req.user.fname} ${req.user.lname}`,
+				details: `Deleted file: ${deletedFileName} for LRN: ${record.lrn}`,
+			});
+
+			await historyLog.save();
 
 			// Set success flash message
 			req.flash('success', 'File successfully deleted');
@@ -542,16 +559,16 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 		// Validate the new email using Hunter.io API
 		try {
 			const isEmailValid = await validateEmail(req.body.editEmail);
-	  
+
 			if (!isEmailValid) {
-			  req.flash('error', 'Invalid email! Please enter a valid email.');
-			  return res.redirect('/admin/accounts');
+				req.flash('error', 'Invalid email! Please enter a valid email.');
+				return res.redirect('/admin/accounts');
 			}
-		  } catch (validationError) {
+		} catch (validationError) {
 			console.error(validationError);
 			req.flash('error', 'Error validating email. Please try again later.');
 			return res.redirect('/admin/accounts');
-		  }
+		}
 
 		// If the new classAdvisory is not 'None', check for uniqueness
 		if (req.body.editClassAdvisory !== 'None') {
@@ -569,6 +586,29 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			}
 		}
 
+		const changes = [];
+		if (user.lname !== req.body.editLName) {
+			changes.push(
+				`Last name changed from ${user.lname} to ${req.body.editLName}`
+			);
+		}
+		if (user.fname !== req.body.editFName) {
+			changes.push(
+				`First name changed from ${user.fname} to ${req.body.editFName}`
+			);
+		}
+		if (user.email !== req.body.editEmail) {
+			changes.push(`Email changed from ${user.email} to ${req.body.editEmail}`);
+		}
+		if (user.role !== req.body.editRole) {
+			changes.push(`Role changed from ${user.role} to ${req.body.editRole}`);
+		}
+		if (user.classAdvisory !== req.body.editClassAdvisory) {
+			changes.push(
+				`Class advisory changed from ${user.classAdvisory} to ${req.body.editClassAdvisory}`
+			);
+		}
+
 		// Update the record with new values
 		user.lname = req.body.editLName;
 		user.fname = req.body.editFName;
@@ -578,6 +618,16 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 
 		// Save the updated record
 		await user.save();
+
+		const historyLog = new History({
+			userEmail: req.user.email,
+			userFirstName: req.user.fname,
+			userLastName: req.user.lname,
+			action: `${req.user.fname} ${req.user.lname} edited user details for ${user.email}`,
+			details: changes.join(', '),
+		});
+
+		await historyLog.save();
 
 		// Redirect back to the records page
 		req.flash('success', 'Record updated successfully');

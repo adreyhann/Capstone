@@ -195,30 +195,26 @@
 					  <% } catch (error) { %>
 						<div>Error: <%= error.message %></div>
 					  <% } %>
-					<div class="row">
-						<div class="col-3">
-							<p>LRN: <span style="font-weight: bold;"><%= student.lrn %></span> </p>
-						</div>
-						<div class="col-3">
-							<p>Student Name: <span style="font-weight: bold;"><%= student.studentName %></span> </p>
-						</div>
-						
-					</div>
 					
 				
-					<!-- Loop to display up to 2 PDF files -->
-					<% for (let i = 0; i < Math.min(2, filename.length); i++) { %>
-						<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">
-						<div class="card-header text-center bg-info position-relative">
-							<%= filename[i] %>
-							
+					  <% if (filename.length === 0) { %>
+						<div class="alert alert-warning text-center" role="alert">
+							No PDF files available.
 						</div>
-						<div class="card-body">
-							<!-- Display the PDF for each file -->
-							<embed src="data:application/pdf;base64, <%= base64PDF[i] %>" width="100%" height="100%" />
-						</div>
-						</div>
+					<% } else { %>
+						<% for (let i = 0; i < Math.min(2, filename.length); i++) { %>
+							<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">
+								<div class="card-header text-center bg-info position-relative">
+									<%= filename[i] %>
+								</div>
+								<div class="card-body">
+									<!-- Display the PDF for each file -->
+									<embed src="data:application/pdf;base64, <%= base64PDF[i] %>" width="100%" height="100%" />
+								</div>
+							</div>
+						<% } %>
 					<% } %>
+					
 				</div>
 				
 				

@@ -193,54 +193,34 @@
 						catch (error) { %>
 						<div>Error: <%= error.message %></div>
 						<% } %>
-						
-						<a class="btn btn-sm mb-2" href="/admin/goBackToRecords?gradeLevel=<%= student.gradeLevel %>">
-						<span 
-						class="material-symbols-outlined"
-						data-bs-toggle="tooltip"
-						data-bs-placement="top"
-						data-bs-title="Go back"
-						
+
+						<a
+							class="btn btn-sm mb-2"
+							href="/admin/goBackToRecords?gradeLevel=<%= student.gradeLevel %>"
 						>
-						arrow_back
-						</span>	
-					</a>
-
-						<div class="row">
-							<div class="col-3">
-								<p>
-									LRN: <span style="font-weight: bold"><%= student.lrn %></span>
-								</p>
-							</div>
-						</div>
-
+							<span
+								class="material-symbols-outlined"
+								data-bs-toggle="tooltip"
+								data-bs-placement="top"
+								data-bs-title="Go back"
+							>
+								arrow_back
+							</span>
+						</a>
 
 						<!-- Loop to display up to 2 PDF files -->
 						<% if (filename.length === 0) { %>
-						<div class="d-flex justify-content-center align-items-start" style="height: 100vh;">
-							<img
-								src="/img/Empty-bro.png"
-								style="width: 60%; max-height: 40rem;"
-								alt="No files available"
-							/>
+						<div
+							class="alert alert-warning d-flex align-items-center justify-content-center"
+							role="alert"
+						>
+							No PDF files available.
 						</div>
 						<% } else { %> <% for (let i = 0; i < Math.min(2, filename.length);
 						i++) { %>
 						<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">
 							<div class="card-header text-center bg-info position-relative">
 								<%= filename[i] %>
-								<form
-									action="/classAdvisor/deleteFile/<%= student._id %>/<%= i %>"
-									method="post"
-								>
-									<button
-										type="submit"
-										class="btn btn-danger btn-sm position-absolute top-0 end-0"
-										style="padding: 6px; margin: 3px"
-									>
-										Delete
-									</button>
-								</form>
 							</div>
 							<div class="card-body">
 								<embed

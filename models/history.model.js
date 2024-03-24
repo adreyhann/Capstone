@@ -17,7 +17,11 @@ const historySchema = new mongoose.Schema({
   },
   action: String,
   details: String,
-  timestamp: { type: Date, default: Date.now },
+  timestamp: { 
+    type: Date, 
+    default: Date.now, 
+    get: timestamp => new Date(timestamp).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }) 
+},
 });
 
 const History = mongoose.model('History', historySchema);

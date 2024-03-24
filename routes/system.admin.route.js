@@ -127,10 +127,10 @@ router.get('/records', async (req, res, next) => {
 });
 
 router.get('/goBackToRecords', (req, res) => {
-    const gradeLevel = req.query.gradeLevel || ''; // Get the grade level from the query parameter
+	const gradeLevel = req.query.gradeLevel || ''; // Get the grade level from the query parameter
 
-    // Redirect back to the page displaying records based on the grade level
-    res.redirect(`/systemAdmin/records?gradeLevel=${gradeLevel}`);
+	// Redirect back to the page displaying records based on the grade level
+	res.redirect(`/systemAdmin/records?gradeLevel=${gradeLevel}`);
 });
 
 router.get('/records-menu', async (req, res, next) => {
@@ -214,8 +214,7 @@ router.get('/historyLogs', async (req, res, next) => {
 	try {
 		const person = req.user;
 
-		// Fetch history logs from the database
-		const historyLogs = await History.find().populate(); // Assuming 'User' model has 'name' field
+		const historyLogs = await History.find().populate();
 
 		res.render('system_admn/history-logs', { person, historyLogs });
 	} catch (error) {
@@ -417,6 +416,12 @@ router.post('/deleteFile/:recordId/:index', async (req, res, next) => {
 			return;
 		}
 
+		const lrn = record.lrn;
+        const gradeLevel = record.gradeLevel;
+        const filePath = record.pdfFilePath[index];
+        const fileName = path.basename(filePath);
+
+
 		// Check if the index is valid
 		if (index >= 0 && index < record.pdfFilePath.length) {
 			// Remove the file path at the specified index
@@ -425,6 +430,17 @@ router.post('/deleteFile/:recordId/:index', async (req, res, next) => {
 
 			// Set success flash message
 			req.flash('success', 'File successfully deleted');
+
+			const historyLog = new History({
+                userEmail: req.user.email,
+                userFirstName: req.user.fname,
+                userLastName: req.user.lname,
+                action: `${req.user.fname} ${req.user.lname} deleted a file from record`,
+                details: `Deleted file '${fileName}' from record with LRN ${lrn} in ${gradeLevel}`,
+            });
+
+            await historyLog.save();
+
 		} else {
 			// Set error flash message for an invalid file index
 			req.flash('error', 'Invalid file index');
@@ -451,15 +467,6 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 			return;
 		}
 
-		// Capture the existing values for history logging
-		const oldValues = {
-			lrn: record.lrn,
-			studentName: record.studentName,
-			gender: record.gender,
-			transferee: record.transferee,
-			gradeLevel: record.gradeLevel,
-		};
-
 		// Update the record with new values
 		record.lrn = req.body.editLrn;
 		record.studentName = req.body.editName;
@@ -469,14 +476,6 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 
 		// Save the updated record
 		await record.save();
-
-		// Log the history of the record update
-		await addHistoryLog(
-			req.user._id,
-			'Record Updated',
-			`Record ID: ${record._id}`,
-			{ oldValues, newValues: { ...record.toObject() } }
-		);
 
 		// Redirect back to the records page
 		req.flash('success', 'Record updated successfully');
@@ -519,23 +518,15 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
 		// Delete the record from the original collection
 		await Records.findByIdAndDelete(recordId);
 
-		// Format timestamp
-        const formattedTimestamp = new Date().toLocaleString('en-US', { 
-            hour: 'numeric', 
-            minute: 'numeric', 
-            second: 'numeric', 
-            hour12: true 
-        });
-
 		// Log the action in the history
-        const historyLog = new History({
-            userEmail: req.user.email,
-            userFirstName: req.user.fname,
-            userLastName: req.user.lname,
-            action: `${req.user.fname} ${req.user.lname} moved record to archive`,
-            details: `Moved record with LRN ${record.lrn} to archive at ${formattedTimestamp}`,
-        });
-        await historyLog.save();
+		const historyLog = new History({
+			userEmail: req.user.email,
+			userFirstName: req.user.fname,
+			userLastName: req.user.lname,
+			action: `${req.user.fname} ${req.user.lname} moved record to archive`,
+			details: `Moved record with LRN ${record.lrn} to archive`,
+		});
+		await historyLog.save();
 
 		req.flash('success', 'Record moved to archive successfully');
 		res.redirect('/systemAdmin/records');
@@ -560,34 +551,38 @@ router.post('/unarchive/:archivedRecordId', async (req, res, next) => {
 			return;
 		}
 
-		// Move the record back to the Records collection
 		const record = new Records({
 			lrn: archivedRecord.lrn,
 			lName: archivedRecord.lName,
 			fName: archivedRecord.fName,
 			gender: archivedRecord.gender,
-			transferee: archivedRecord.transferee, // Add missing fields
-			gradeLevel: archivedRecord.gradeLevel, // Add missing fields
+			transferee: archivedRecord.transferee,
+			gradeLevel: archivedRecord.gradeLevel,
 			pdfFilePath: archivedRecord.pdfFilePath,
 		});
 
-		// Save the unarchived record
 		await record.save();
 
-		// Delete the record from the ArchivedRecords collection
 		await Archives.findByIdAndDelete(archivedRecordId);
+
+		const historyLog = new History({
+			userEmail: req.user.email,
+			userFirstName: req.user.fname,
+			userLastName: req.user.lname,
+			action: `${req.user.fname} ${req.user.lname} unarchived record`,
+			details: `Unarchived record with LRN ${archivedRecord.lrn}`,
+		});
+		await historyLog.save();
 
 		req.flash('success', 'Record unarchived successfully');
 		res.redirect('/systemAdmin/archives');
 	} catch (error) {
 		console.error('Error:', error);
-		// Handle errors appropriately, e.g., flash an error message
 		req.flash('error', 'Failed to unarchive record');
 		res.redirect('/systemAdmin/archives');
 	}
 });
 
-// Add this route for viewing files of an archived record
 router.get('/archived-files/:recordId', async (req, res, next) => {
 	try {
 		const recordId = req.params.recordId;
@@ -608,12 +603,11 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
 					const pdfBytes = await pdfDoc.save();
 					return Buffer.from(pdfBytes).toString('base64');
 				} else {
-					return null; // or handle the case where filePath is null
+					return null;
 				}
 			})
 		);
 
-		// Assuming pdfFilePath is an array of file paths
 		const filename = base64PDF.map((_, index) => {
 			return student.pdfFilePath[index]
 				? path.basename(student.pdfFilePath[index])
@@ -628,30 +622,26 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
 			person,
 			base64PDF,
 			filename,
-		}); // Adjust the view name as needed
+		});
 	} catch (error) {
 		console.error('Error:', error);
 		next(error);
 	}
 });
 
-// Add this route for handling the archive selected logic
 router.post('/archive-selected', async (req, res, next) => {
 	try {
 		const selectedRecordIds = req.body.selectedRecords;
 
-		// Check if any records are selected
 		if (!selectedRecordIds || selectedRecordIds.length === 0) {
 			req.flash('error', 'No records selected for archiving');
 			return res.redirect('/systemAdmin/records');
 		}
 
-		// Find the selected records by IDs
 		const selectedRecords = await Records.find({
 			_id: { $in: selectedRecordIds },
 		});
 
-		// Move the selected records to the Archives collection
 		const archivedRecords = selectedRecords.map((record) => {
 			return {
 				lrn: record.lrn,
@@ -661,7 +651,7 @@ router.post('/archive-selected', async (req, res, next) => {
 				transferee: record.transferee,
 				gradeLevel: record.gradeLevel,
 				dateAddedToArchive: new Date(),
-				pdfFilePath: record.pdfFilePath, // Check if you need to handle PDF files
+				pdfFilePath: record.pdfFilePath,
 			};
 		});
 
@@ -670,6 +660,22 @@ router.post('/archive-selected', async (req, res, next) => {
 
 		// Delete the selected records from the original collection
 		await Records.deleteMany({ _id: { $in: selectedRecordIds } });
+
+		const gradeLevels = [
+			...new Set(selectedRecords.map((record) => record.gradeLevel)),
+		];
+		const gradeLevelsMessage = gradeLevels.join(', ');
+
+		const lrns = selectedRecords.map((record) => record.lrn).join('\n');
+
+		const historyLog = new History({
+			userEmail: req.user.email,
+			userFirstName: req.user.fname,
+			userLastName: req.user.lname,
+			action: `${req.user.fname} ${req.user.lname} archived multiple records`,
+			details: `Archived ${selectedRecordIds.length} records from ${gradeLevelsMessage}:\n LRN: ${lrns}`,
+		});
+		await historyLog.save();
 
 		req.flash('success', 'Selected records archived successfully');
 		res.redirect('/systemAdmin/records');
@@ -690,25 +696,32 @@ router.get('/backup', async (req, res, next) => {
 			zlib: { level: 9 }, // Sets the compression level
 		});
 
-		// Pipe the zip stream to the response
 		archive.pipe(res);
 
-		// Iterate over records and add each PDF file to the zip stream
 		records.forEach((record) => {
 			record.pdfFilePath.forEach((filePath) => {
 				archive.file(filePath, { name: path.basename(filePath) });
 			});
 		});
 
-		// Set Content-Disposition header
 		res.setHeader(
 			'Content-Disposition',
 			'attachment; filename=student_records.zip'
 		);
 		res.setHeader('Content-Type', 'application/zip');
 
-		// Finalize the zip stream and send the response
 		archive.finalize();
+
+		const historyLog = new History({
+            userEmail: req.user.email,
+            userFirstName: req.user.fname,
+            userLastName: req.user.lname,
+            action: `${req.user.fname} ${req.user.lname} generated a backup of student records`,
+            details: `Number of records backed up: ${records.length}`,
+        });
+
+        await historyLog.save();
+
 	} catch (error) {
 		console.error('Error:', error);
 		next(error);
@@ -717,33 +730,37 @@ router.get('/backup', async (req, res, next) => {
 
 router.get('/backup-archive', async (req, res, next) => {
 	try {
-		// Fetch records from the database
 		const records = await Archives.find();
 
-		// Create a zip stream
 		const archive = archiver('zip', {
-			zlib: { level: 9 }, // Sets the compression level
+			zlib: { level: 9 },
 		});
 
-		// Pipe the zip stream to the response
 		archive.pipe(res);
 
-		// Iterate over records and add each PDF file to the zip stream
 		records.forEach((record) => {
 			record.pdfFilePath.forEach((filePath) => {
 				archive.file(filePath, { name: path.basename(filePath) });
 			});
 		});
 
-		// Set Content-Disposition header
 		res.setHeader(
 			'Content-Disposition',
 			'attachment; filename=student_archives_records.zip'
 		);
 		res.setHeader('Content-Type', 'application/zip');
 
-		// Finalize the zip stream and send the response
 		archive.finalize();
+		
+		const historyLog = new History({
+            userEmail: req.user.email,
+            userFirstName: req.user.fname,
+            userLastName: req.user.lname,
+            action: `${req.user.fname} ${req.user.lname} generated a backup of archived records`,
+            details: `Number of archived records backed up: ${records.length}`,
+        });
+
+        await historyLog.save();
 	} catch (error) {
 		console.error('Error:', error);
 		next(error);
@@ -762,10 +779,9 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			return;
 		}
 
-		// Check for duplicate email
 		const existingUserWithSameEmail = await User.findOne({
 			email: req.body.editEmail,
-			_id: { $ne: userId }, // Exclude the current user
+			_id: { $ne: userId },
 		});
 
 		if (existingUserWithSameEmail) {
@@ -773,7 +789,6 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			return res.redirect('/systemAdmin/accounts');
 		}
 
-		// Check if the new email belongs to a deactivated user
 		const inactiveUserWithEmail = await InactiveUser.findOne({
 			email: req.body.editEmail,
 		});
@@ -786,7 +801,6 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			return res.redirect('/systemAdmin/accounts');
 		}
 
-		// Validate the new email using Hunter.io API
 		try {
 			const isEmailValid = await validateEmail(req.body.editEmail);
 
@@ -800,26 +814,22 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			return res.redirect('/systemAdmin/accounts');
 		}
 
-		// Check if the user is changing the role to "System Admin"
 		if (req.body.editRole === 'System Admin') {
-			// Count the number of users with the role "System Admin"
 			const systemAdminCount = await User.countDocuments({
 				role: 'System Admin',
-				_id: { $ne: userId }, // Exclude the current user
+				_id: { $ne: userId },
 			});
 
-			// Allow only two users with the role "System Admin"
 			if (systemAdminCount >= 2) {
 				req.flash('error', 'Only two users can have the role "System Admin".');
 				return res.redirect('/systemAdmin/accounts');
 			}
 		}
 
-		// Check if there's already a user with the 'Admin' role
 		if (req.body.editRole === 'Admin') {
 			const existingAdmin = await User.findOne({
 				role: 'Admin',
-				_id: { $ne: userId }, // Exclude the current user
+				_id: { $ne: userId },
 			});
 
 			if (existingAdmin) {
@@ -828,7 +838,6 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			}
 		}
 
-		// If the new role is 'Class Advisor', make sure 'None' is not selected
 		if (
 			req.body.editRole === 'Class Advisor' &&
 			req.body.editClassAdvisory === 'None'
@@ -837,11 +846,10 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			return res.redirect('/systemAdmin/accounts');
 		}
 
-		// If the new classAdvisory is not 'None', check for uniqueness
 		if (req.body.editClassAdvisory !== 'None') {
 			const existingUserWithSameClassAdvisory = await User.findOne({
 				classAdvisory: req.body.editClassAdvisory,
-				_id: { $ne: userId }, // Exclude the current user
+				_id: { $ne: userId },
 			});
 
 			if (existingUserWithSameClassAdvisory) {
@@ -854,11 +862,33 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 		}
 
 		if (req.body.editRole === 'System Admin' || req.body.editRole === 'Admin') {
-			// If the new role is "System Admin" or "Admin", make sure class advisory is set to 'None'
 			if (req.body.editClassAdvisory !== 'None') {
 				req.flash('error', 'Invalid Selection');
 				return res.redirect('/systemAdmin/accounts');
 			}
+		}
+
+		const changes = [];
+		if (user.lname !== req.body.editLName) {
+			changes.push(
+				`Last name changed from ${user.lname} to ${req.body.editLName}`
+			);
+		}
+		if (user.fname !== req.body.editFName) {
+			changes.push(
+				`First name changed from ${user.fname} to ${req.body.editFName}`
+			);
+		}
+		if (user.email !== req.body.editEmail) {
+			changes.push(`Email changed from ${user.email} to ${req.body.editEmail}`);
+		}
+		if (user.role !== req.body.editRole) {
+			changes.push(`Role changed from ${user.role} to ${req.body.editRole}`);
+		}
+		if (user.classAdvisory !== req.body.editClassAdvisory) {
+			changes.push(
+				`Class advisory changed from ${user.classAdvisory} to ${req.body.editClassAdvisory}`
+			);
 		}
 
 		// Update the record with new values
@@ -870,6 +900,16 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 
 		// Save the updated record
 		await user.save();
+
+		// Log the action in the history
+		const historyLog = new History({
+			userEmail: req.user.email,
+			userFirstName: req.user.fname,
+			userLastName: req.user.lname,
+			action: `${req.user.fname} ${req.user.lname} edited user details for ${user.email}`,
+			details: changes.join(', '),
+		});
+		await historyLog.save();
 
 		// Redirect back to the records page
 		req.flash('success', 'Record updated successfully');
@@ -1078,6 +1118,16 @@ router.post('/deactivate/:userId', async (req, res, next) => {
 		// delete the user from the active users collection
 		await User.findByIdAndDelete(userId);
 
+		const historyEntry = new History({
+			userEmail: userToDeactivate.email,
+			userFirstName: userToDeactivate.fname,
+			userLastName: userToDeactivate.lname,
+			action: `User account deactivated for ${userToDeactivate.email}`,
+			details: `User account for ${userToDeactivate.email} has been deactivated by ${req.user.email}.`,
+		});
+
+		await historyEntry.save();
+
 		// Send email notification to the user
 		const transporter = nodemailer.createTransport({
 			service: 'gmail',
@@ -1092,15 +1142,15 @@ router.post('/deactivate/:userId', async (req, res, next) => {
 
 		const greeting = `Dear ${userToDeactivate.lname} ${userToDeactivate.fname},`;
 		// Send email notification
-        const mailOptions = {
-            from: 'bethanychristianacademy@gmail.com',
-            to: userToDeactivate.email,
-            subject: 'Account Deactivation Notification',
-            text: `${greeting}\n\nWe regret to inform you that your account with Bethany Christian Academy has been deactivated. If you believe this is an error or require further assistance, please do not hesitate to contact our support team.\n\nBest regards,\nThe Bethany Christian Academy Team`,
-        };
+		const mailOptions = {
+			from: 'bethanychristianacademy@gmail.com',
+			to: userToDeactivate.email,
+			subject: 'Account Deactivation Notification',
+			text: `${greeting}\n\nWe regret to inform you that your account with Bethany Christian Academy has been deactivated. If you believe this is an error, please do not hesitate to contact the System Admin.\n\nBest regards,\nThe Bethany Christian Academy Team`,
+		};
 
-        // Send the email
-        transporter.sendMail(mailOptions, (error, info) => {
+		// Send the email
+		transporter.sendMail(mailOptions, (error, info) => {
 			if (error) {
 				console.error('Error sending activation email:', error);
 			} else {
@@ -1128,37 +1178,36 @@ router.post('/activate/:userId', async (req, res) => {
 		if (!inactiveUser) {
 			return res.status(404).send({ error: 'Inactive user not found' });
 		}
-		
 
-		
-		
 		// Check if there's an active user with the same class advisory
-        if (inactiveUser.classAdvisory !== 'None') {
-            const existingActiveUser = await User.findOne({
-                classAdvisory: inactiveUser.classAdvisory,
-                status: 'active', // Ensure the user is active
-            });
+		if (inactiveUser.classAdvisory !== 'None') {
+			const existingActiveUser = await User.findOne({
+				classAdvisory: inactiveUser.classAdvisory,
+				status: 'active', // Ensure the user is active
+			});
 
-            if (existingActiveUser) {
-                return res.status(400).send({
-                    error: 'Activation failed: Another active user with the same class advisory already exists.',
-                });
-            }
-        }
+			if (existingActiveUser) {
+				return res.status(400).send({
+					error:
+						'Activation failed: Another active user with the same class advisory already exists.',
+				});
+			}
+		}
 
-        // If the role of the inactive user is System Admin, check the number of active System Admin users
-        if (inactiveUser.role === 'System Admin') {
-            const systemAdminCount = await User.countDocuments({
-                role: 'System Admin',
-                status: 'active', // Ensure the user is active
-            });
+		// If the role of the inactive user is System Admin, check the number of active System Admin users
+		if (inactiveUser.role === 'System Admin') {
+			const systemAdminCount = await User.countDocuments({
+				role: 'System Admin',
+				status: 'active', // Ensure the user is active
+			});
 
-            if (systemAdminCount >= 2) {
-                return res.status(400).send({
-                    error: 'Activation failed: Only two active System Admin users are allowed.',
-                });
-            }
-        }
+			if (systemAdminCount >= 2) {
+				return res.status(400).send({
+					error:
+						'Activation failed: Only two active System Admin users are allowed.',
+				});
+			}
+		}
 
 		// Check if there's already an active user with the 'admin' role
 		const existingAdminUser = await User.findOne({
@@ -1167,11 +1216,9 @@ router.post('/activate/:userId', async (req, res) => {
 		});
 
 		if (existingAdminUser && inactiveUser.role === 'Admin') {
-			return res
-				.status(400)
-				.send({
-					error: 'Activation failed: Only one active Admin user is allowed.',
-				});
+			return res.status(400).send({
+				error: 'Activation failed: Only one active Admin user is allowed.',
+			});
 		}
 
 		// Create a new User based on the inactiveUser
@@ -1191,6 +1238,16 @@ router.post('/activate/:userId', async (req, res) => {
 
 		// Delete the inactive user from the InactiveUser collection
 		await InactiveUser.findByIdAndDelete(userId);
+
+		const historyEntry = new History({
+			userEmail: inactiveUser.email,
+			userFirstName: inactiveUser.fname,
+			userLastName: inactiveUser.lname,
+			action: `User account activated for ${inactiveUser.email}`,
+			details: `User account for ${inactiveUser.email} has been activated by ${req.user.email}.`,
+		});
+
+		await historyEntry.save();
 
 		// Send email notification to the user
 		const transporter = nodemailer.createTransport({
@@ -1233,90 +1290,89 @@ router.post('/activate/:userId', async (req, res) => {
 
 // deactivating own account
 router.post('/deactivateProfile', async (req, res, next) => {
-    try {
-        const userId = req.user.id; // user ID is stored in req.user.id
+	try {
+		const userId = req.user.id; // user ID is stored in req.user.id
 
-        // Find the user by ID
-        const userToDeactivate = await User.findById(userId);
+		// Find the user by ID
+		const userToDeactivate = await User.findById(userId);
 
-        if (!userToDeactivate) {
-            return res.status(404).send({
-                error: 'User not found'
-            });
-        }
+		if (!userToDeactivate) {
+			return res.status(404).send({
+				error: 'User not found',
+			});
+		}
 
-        // Check if the user is the only System Admin
-        if (userToDeactivate.role === 'System Admin') {
-            const systemAdminCount = await User.countDocuments({
-                role: 'System Admin',
-                status: 'active', // Ensure the user is active
-            });
+		// Check if the user is the only System Admin
+		if (userToDeactivate.role === 'System Admin') {
+			const systemAdminCount = await User.countDocuments({
+				role: 'System Admin',
+				status: 'active', // Ensure the user is active
+			});
 
-            if (systemAdminCount <= 1) {
-                return res.status(400).send({
-                    error: 'You cannot deactivate your account. You are the only active System Admin.'
-                });
-            }
-        }
+			if (systemAdminCount <= 1) {
+				return res.status(400).send({
+					error:
+						'You cannot deactivate your account. You are the only active System Admin.',
+				});
+			}
+		}
 
-        // Create a new InactiveUser based on the userToDeactivate
-        const inactiveUser = new InactiveUser({
-            _id: userToDeactivate._id,
-            email: userToDeactivate.email,
-            lname: userToDeactivate.lname,
-            fname: userToDeactivate.fname,
-            role: userToDeactivate.role,
-            classAdvisory: userToDeactivate.classAdvisory,
-            status: 'Inactive', // Set the status to 'deactivated'
-            password: userToDeactivate.password, // Preserve the original password
-        });
-        // Save the inactive user
-        await inactiveUser.save();
+		// Create a new InactiveUser based on the userToDeactivate
+		const inactiveUser = new InactiveUser({
+			_id: userToDeactivate._id,
+			email: userToDeactivate.email,
+			lname: userToDeactivate.lname,
+			fname: userToDeactivate.fname,
+			role: userToDeactivate.role,
+			classAdvisory: userToDeactivate.classAdvisory,
+			status: 'Inactive', // Set the status to 'deactivated'
+			password: userToDeactivate.password, // Preserve the original password
+		});
+		// Save the inactive user
+		await inactiveUser.save();
 
-        // Delete the user from the active users collection
-        await User.findByIdAndDelete(userId);
+		// Delete the user from the active users collection
+		await User.findByIdAndDelete(userId);
 
-        // Send email notification to the user
-        const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-                user: 'meliboadrian@gmail.com',
-                pass: 'igtw pyqi aggb bbyb',
-            },
-            tls: {
-                rejectUnauthorized: false,
-            },
-        });
+		// Send email notification to the user
+		const transporter = nodemailer.createTransport({
+			service: 'gmail',
+			auth: {
+				user: 'meliboadrian@gmail.com',
+				pass: 'igtw pyqi aggb bbyb',
+			},
+			tls: {
+				rejectUnauthorized: false,
+			},
+		});
 
-        const greeting = `Dear ${userToDeactivate.lname} ${userToDeactivate.fname},`;
-        // Send email notification
-        const mailOptions = {
-            from: 'bethanychristianacademy@gmail.com',
-            to: userToDeactivate.email,
-            subject: 'Account Deactivation Notification',
-            text: `${greeting}\n\nWe regret to inform you that your account with Bethany Christian Academy has been deactivated. If you believe this is an error or require further assistance, please do not hesitate to contact our support team.\n\nBest regards,\nThe Bethany Christian Academy Team`,
-        };
+		const greeting = `Dear ${userToDeactivate.lname} ${userToDeactivate.fname},`;
+		// Send email notification
+		const mailOptions = {
+			from: 'bethanychristianacademy@gmail.com',
+			to: userToDeactivate.email,
+			subject: 'Account Deactivation Notification',
+			text: `${greeting}\n\nWe regret to inform you that your account with Bethany Christian Academy has been deactivated. If you believe this is an error or require further assistance, please do not hesitate to contact our support team.\n\nBest regards,\nThe Bethany Christian Academy Team`,
+		};
 
-        // Send the email
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.error('Error sending deactivation email:', error);
-            } else {
-                console.log('Deactivation email sent:', info.response);
-            }
-        });
+		// Send the email
+		transporter.sendMail(mailOptions, (error, info) => {
+			if (error) {
+				console.error('Error sending deactivation email:', error);
+			} else {
+				console.log('Deactivation email sent:', info.response);
+			}
+		});
 
-        return res.status(200).send({
-            message: 'Your account has been deactivated successfully'
-        });
-    } catch (error) {
-        console.error('Error:', error);
-        return res.status(500).send({
-            error: 'Failed to deactivate your account'
-        });
-    }
-    
+		return res.status(200).send({
+			message: 'Your account has been deactivated successfully',
+		});
+	} catch (error) {
+		console.error('Error:', error);
+		return res.status(500).send({
+			error: 'Failed to deactivate your account',
+		});
+	}
 });
-
 
 module.exports = router;

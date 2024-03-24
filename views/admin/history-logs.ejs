@@ -169,24 +169,35 @@
 					<h2 class="mt-2">History logs</h2>
 					
 					<hr />
-					<% historyLogs.forEach(log => { %>
-						<div class="card my-2 custom-card-2 border-0">
-							<div class="card-body position-relative">
-								<p class="m-0 fs-5 fw-medium"><%= log.action %></p>
-								<p class="m-0" style="color: #72726e"><%= log.timestamp %></p>
-								<p class="d-inline-flex gap-1 mb-0 position-absolute top-0 end-0 translate-middle" style="padding-top: 80px;">
-									<a class="btn btn-primary btn-sm" data-bs-toggle="collapse" href="#collapseExample<%= log._id %>" role="button" aria-expanded="false" aria-controls="collapseExample<%= log._id %>">
-										View details
-									</a>
-								</p>
-								<div class="collapse" id="collapseExample<%= log._id %>">
-									<div class="card card-body">
-										<%= log.details %>
+					<% if (historyLogs.length === 0) { %>
+						<div class="alert alert-info d-flex align-items-center justify-content-center" role="alert">
+							No history available.
+						</div>
+					<% } else { %>
+						<div style="max-height: 490px; overflow-y: auto;">
+							<% historyLogs.slice().reverse().forEach(log => { %>
+								<div class="card my-2 custom-card-2 border-0">
+									<div class="card-body position-relative">
+										<p class="m-0 fs-5 fw-medium"><%= log.action %></p>
+										<p class="m-0" style="color: #72726e"><%= log.timestamp %></p>
+										<p class="d-inline-flex gap-1 mb-0 position-absolute top-0 end-0 translate-middle" style="padding-top: 80px;">
+											<a class="btn btn-primary btn-sm" data-bs-toggle="collapse" href="#collapseExample<%= log._id %>" role="button" aria-expanded="false" aria-controls="collapseExample<%= log._id %>">
+												View details
+											</a>
+										</p>
+										<div class="collapse" id="collapseExample<%= log._id %>">
+											<div class="card card-body">
+												<p class="m-0"><span style="font-weight: bold;">Details:</span> <%= log.details %></p>
+												<p class="m-0"><span style="font-weight: bold;">Email:</span> <%= log.userEmail %></p>
+												<p class="m-0"><span style="font-weight: bold;">First Name:</span> <%= log.userFirstName %></p>
+												<p class="m-0"><span style="font-weight: bold;">Last Name:</span> <%= log.userLastName %></p>
+											</div>
+										</div>
 									</div>
 								</div>
-							</div>
+							<% }); %>
 						</div>
-					<% }); %>
+					<% } %>
 				</div>
 			</div>
 		</div>

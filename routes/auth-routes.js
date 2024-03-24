@@ -5,6 +5,7 @@ const { body, validationResult } = require('express-validator');
 const passport = require('passport');
 const ResetToken = require('../models/reset.model');
 const bcrypt = require('bcrypt');
+const History = require('../models/history.model');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 const crypto = require('crypto');
@@ -177,6 +178,16 @@ router.post(
 
             const user = new User(req.body);
             await user.save();
+
+            const historyLog = new History({
+                userEmail: req.user.email,
+                userFirstName: req.user.fname,
+                userLastName: req.user.lname,
+                action: `New registered user added by ${req.user.fname} ${req.user.lname}`,
+                details: `User email: ${user.email}, Role: ${user.role}, Class Advisory: ${user.classAdvisory || 'Not assigned'}`,
+            });
+
+            await historyLog.save();
 
             const systemName = 'Record Management System with Archiving for Bethany Christian Academy of Tagaytay';
             const schoolName = 'Bethany Christian Academy of Tagaytay'

@@ -211,12 +211,8 @@
 
 						<!-- Loop to display up to 2 PDF files -->
 						<% if (filename.length === 0) { %>
-						<div class="d-flex justify-content-center align-items-start" style="height: 100vh;">
-							<img
-								src="/img/Empty-bro.png"
-								style="width: 60%; max-height: 40rem;"
-								alt="No files available"
-							/>
+						<div class="alert alert-warning d-flex align-items-center justify-content-center" role="alert">
+							No PDF files available.
 						</div>
 						<% } else { %> <% for (let i = 0; i < Math.min(2, filename.length);
 						i++) { %>

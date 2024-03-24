@@ -891,7 +891,6 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 			);
 		}
 
-		// Update the record with new values
 		user.lname = req.body.editLName;
 		user.fname = req.body.editFName;
 		user.email = req.body.editEmail;
@@ -901,7 +900,6 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 		// Save the updated record
 		await user.save();
 
-		// Log the action in the history
 		const historyLog = new History({
 			userEmail: req.user.email,
 			userFirstName: req.user.fname,

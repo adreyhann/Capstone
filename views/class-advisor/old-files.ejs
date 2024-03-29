@@ -9,25 +9,24 @@
 			integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
 			crossorigin="anonymous"
 		/>
+
 		<script
 			defer
 			src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
 			integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
 			crossorigin="anonymous"
 		></script>
-        <script defer
+		<script
+			defer
 			src="https://kit.fontawesome.com/ae360af17e.js"
 			crossorigin="anonymous"
 		></script>
-		<script defer src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script defer src="/js/charts.js"></script>
-		<script defer src="/js/ca-calendar.js"></script>
-        <script defer src="/js/toggler.js"></script>
-        <link rel="stylesheet" type="text/css" href="/css/styles.css">
-		<link rel="icon" type="image/x-icon" href="/img/logo.png">
-		<title>Dashboard</title>
-		
+		<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+		<script defer src="/js/charts.js"></script>
+		<script defer src="/js/toggler.js"></script>
+		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
+		<link rel="icon" type="image/x-icon" href="/img/logo.png" />
+		<title>View Files</title>
 	</head>
 	<body>
 		<div class="wrapper">
@@ -54,7 +53,9 @@
 								/>
 							</div>
 							<div class="col-md-6">
-								<p class="my-0 pt-2" style="font-size: 15px"><%= person.fname %> <%= person.lname %></p>
+								<p class="my-0 pt-2" style="font-size: 15px">
+									<%= person.fname %> <%= person.lname %>
+								</p>
 								<span class="badge rounded-pill text-bg-info my-0 fw-normal"
 									><%= person.role %></span
 								>
@@ -63,7 +64,7 @@
 					</div>
 					<!-- Sidebar Navigation -->
 					<ul class="sidebar-nav">
-						<li class="sidebar-item" style="border-right: 2px solid #007bff; background: #e3edf0;">
+						<li class="sidebar-item">
 							<a
 								href="/classAdvisor/dashboard"
 								class="sidebar-link collapsed"
@@ -76,7 +77,10 @@
 								Dashboard
 							</a>
 						</li>
-						<li class="sidebar-item">
+						<li
+							class="sidebar-item"
+							style="border-right: 2px solid #007bff; background: #e3edf0"
+						>
 							<a
 								href="/classAdvisor/records"
 								class="sidebar-link"
@@ -89,28 +93,28 @@
 							</a>
 						</li>
 						<!-- <li class="sidebar-item">
-							<a
-								href="/classAdvisor/archives"
-								class="sidebar-link"
-								aria-expanded="false"
-								data-menuitem="archives"
-							>
-								<i class="fa-regular fa-user pe-2"></i>
-								Archives
-							</a>
-						</li> -->
+						<a
+							href="/classAdvisor/archives"
+							class="sidebar-link"
+							aria-expanded="false"
+							data-menuitem="archives"
+						>
+							<i class="fa-regular fa-user pe-2"></i>
+							Archives
+						</a>
+					</li> -->
 						<!-- <li class="sidebar-item">
-							<a
-								href="/classAdvisor/calendar"
-								class="sidebar-link collapsed"
-								data-bs-target="#dashboard"
-								aria-expanded="false"
-								data-menuitem="calendar"
-							>
-								<i class="fa-regular fa-calendar pe-2"></i>
-								Calendar
-							</a>
-						</li> -->
+						<a
+							href="/classAdvisor/calendar"
+							class="sidebar-link collapsed"
+							data-bs-target="#dashboard"
+							aria-expanded="false"
+							data-menuitem="calendar"
+						>
+							<i class="fa-regular fa-calendar pe-2"></i>
+							Calendar
+						</a>
+					</li> -->
 					</ul>
 				</div>
 			</aside>
@@ -136,18 +140,13 @@
 								</a>
 								<ul class="dropdown-menu dropdown-menu-lg-end">
 									<li>
-										<a
-											class="dropdown-item"
-											href="/classAdvisor/profile"
+										<a class="dropdown-item" href="/classAdvisor/profile"
 											>View Profile</a
 										>
 									</li>
-									
 									<li><hr class="dropdown-divider" /></li>
 									<li>
-										<a class="dropdown-item" href="/auth/logout"
-											>Logout</a
-										>
+										<a class="dropdown-item" href="/auth/logout">Logout</a>
 									</li>
 								</ul>
 							</li>
@@ -155,65 +154,68 @@
 					</div>
 				</nav>
 				<div class="container-lg position-relative">
-					<h2 class="mt-2">Dashboard</h2>
-					<p
-						id="time"
-						class="text-end position-absolute top-0 end-0 pe-3 pt-4"
-						style="font-size: 24px; font-weight: medium; padding-top: 0"
-					></p>
+					<h2 class="mt-2">Old Documents</h2>
 					<hr />
-					<div class="row d-flex justify-content-center my-4 grid gap-4">
-						
+					<div class="container-lg">
+						<% try { %> <%- include('../credentials/flash-message.ejs') %> <% }
+						catch (error) { %>
+						<div>Error: <%= error.message %></div>
+						<% } %>
 
-						<div class="card custom-card" style="width: 40rem; height: 130px">
-							<div class="card-body">
-								<h5 class="card-title position-relative">
-									Records
-									<% if (person.classAdvisory) { %>
-										<% const classAdvisory = person.classAdvisory; %>
-										<% const recordsForClassAdvisory = records.filter(record => record.gradeLevel === classAdvisory); %>
-										<span class="badge text-bg-secondary position-absolute top-0 end-0">
-											<%= recordsForClassAdvisory.length %>
-										</span>
-									<% } %>
-									
-								</h5>
-								<p class="card-text">List of active records</p>
-								<a
-									href="/classAdvisor/records"
-									class="card-link"
-									>View Records</a
+						<!-- Form to upload additional files -->
+						<form
+							action="/classAdvisor/addOldFile/<%= student._id %>"
+							method="post"
+							enctype="multipart/form-data"
+							class="mb-3"
+						>
+							<div class="row">
+								<input
+									class="form-control mb-3"
+									type="file"
+									name="pdfFile"
+									accept=".pdf"
+									required
+								/>
+								<button type="submit" class="btn btn-sm btn-success">
+									Submit
+								</button>
+							</div>
+						</form>
+
+						<!-- Loop to display up to 2 PDF files -->
+						<% if (filename.length === 0) { %>
+							<div class="alert alert-warning d-flex align-items-center justify-content-center" role="alert">
+							No PDF files available.
+							</div>
+						<% } else { %> <% for (let i = 0; i < Math.min(2, filename.length);
+						i++) { %>
+						<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">
+							<div class="card-header text-center bg-info position-relative">
+								<%= filename[i] %>
+								<form
+									action="/classAdvisor/deleteFile/<%= student._id %>/<%= i %>"
+									method="post"
 								>
+									<button
+										type="submit"
+										class="btn btn-danger btn-sm position-absolute top-0 end-0"
+										style="padding: 6px; margin: 3px"
+									>
+										Delete
+									</button>
+								</form>
+							</div>
+							<div class="card-body">
+								<embed
+									src="data:application/pdf;base64, <%= base64PDF[i] %>"
+									width="100%"
+									height="100%"
+								/>
 							</div>
 						</div>
-
-						
-						<div class="card custom-card-2 border-0 m-0 p-0 " style="width: 61.5rem; height: 20rem;">
-							<div class="card-header border-0 bg-info text-center" style="font-size: 20px;">Events / Announcement</div>
-							<div class="card-body" style="height: 15rem; overflow-y: auto;" >
-								<div class="container">
-									<div>
-										<ul id="eventList" class="list-group">
-											<% for (const date in events) { %>
-												<li class="list-group-item">
-													<span><%= date %>:</span>
-													<ul>
-														<% for (const eventName of events[date]) { %>
-															<li class="d-flex justify-content-between align-items-center">
-																<%= eventName %>
-															</li>
-														<% } %>
-													</ul>
-												</li>
-											<% } %>
-										</ul>
-									</div>
-								</div>
-							</div>
-						</div>
+						<% } %> <% } %>
 					</div>
-					
-					
 				</div>
 			</div>
 		</div>

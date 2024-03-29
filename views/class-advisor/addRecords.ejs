@@ -37,6 +37,7 @@
 		></script>
 		<script defer src="/js/toggler.js"></script>
 		<script defer src="/js/limit.number.js"></script>
+		<script defer src="/js/toggleFileInput.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<link rel="icon" type="image/x-icon" href="/img/logo.png">
 
@@ -98,29 +99,6 @@
 								Records Management
 							</a>
 						</li>
-						<!-- <li class="sidebar-item">
-							<a
-								href="/classAdvisor/archives"
-								class="sidebar-link"
-								aria-expanded="false"
-								aria-controls="auth"
-							>
-								<i class="fa-solid fa-archive pe-2"></i>
-								Archives
-							</a>
-						</li> -->
-						<!-- <li class="sidebar-item">
-							<a
-								href="/classAdvisor/calendar"
-								class="sidebar-link collapsed"
-								data-bs-target="#dashboard"
-								aria-expanded="false"
-								aria-controls="dashboard"
-							>
-								<i class="fa-regular fa-calendar pe-2"></i>
-								Calendar
-							</a>
-						</li> -->
 					</ul>
 				</div>
 			</aside>
@@ -167,7 +145,7 @@
 				<div class="container-lg">
 					<h2 class="my-1">Add new record</h2>
 					<hr />
-					<div class="container w-100">
+					<div class="container w-100" style="max-height: 490px; overflow-y: auto;">
 						<div class="card custom-card-2 border-0">
 							<div class="card-body">
                                 
@@ -220,15 +198,23 @@
                                         </select>
                                         <label for="gender">Gender</label>
                                     </div>
-									<div class="form-floating mb-3">
-                                        <select class="form-select" name="transferee" id="transferee" required>
+									<div class="form-floating mb-1">
+                                        <select class="form-select" name="transferee" id="transferee" required onchange="toggleFileInput()">
                                             <option selected disabled value=""></option>
                                             <option value="Yes">Yes</option>
                                             <option value="No">No</option>
                                         </select>
-                                        <label for="gender">Is student transferee?</label>
+                                        <label for="transferee">Is student transferee?</label>
                                     </div>
-									<div class="form-floating mb-3">
+									
+									<div class="input-group mb-3" id="oldFileInputSection" style="display: none;">
+										<div id="inputFileMessage" class="input-group my-1 form-text">
+											Please upload student old files.
+										</div>
+										<input type="file" class="form-control" name="oldPdf" id="oldPdf" accept=".pdf" multiple>
+										
+									</div>
+									<div class="form-floating mb-3 mt-3">
 										<select class="form-select" name="gradeLevel" id="gradeLevel" required>
 											<option disabled>Select Grade level</option>
 											<option value="Kinder" <%= person.classAdvisory === 'Kinder' ? 'selected' : 'disabled' %>>Kinder</option>
@@ -242,9 +228,8 @@
 										<label for="gradeLevel">Grade level</label>
 									</div>
 									
-									
 									<div class="input-group mb-3">
-										<input type="file" class="form-control" name="pdfFile" id="pdfFile" accept=".pdf" multiple>
+										<input type="file" class="form-control" name="newPdf" id="newPdf" accept=".pdf" multiple>
 									  </div>
                                     <div class="card-footer">
                                         <input class="btn btn-success" style="width: 100%;" type="submit" value="Submit" />

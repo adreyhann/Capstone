@@ -153,7 +153,7 @@
 						</ul>
 					</div>
 				</nav>
-				<div class="container-lg position-relative">
+				<div class="container-lg position-relative" style="overflow-y: auto; max-height: 90vh;">
 					<h2 class="mt-2">Documents</h2>
 					<hr />
 					<div class="container-lg">
@@ -162,7 +162,7 @@
 						<div>Error: <%= error.message %></div>
 						<% } %>
 
-						<!-- Form to upload additional files -->
+						<!-- Form to upload additional files in new-files directory -->
 						<form
 							action="/classAdvisor/addFile/<%= student._id %>"
 							method="post"
@@ -183,13 +183,9 @@
 
 						<!-- Loop to display up to 2 PDF files -->
 						<% if (filename.length === 0) { %>
-						<div class="d-flex justify-content-center align-items-start" style="height: 100vh;">
-							<img
-								src="/img/Empty-bro.png"
-								style="width: 60%; max-height: 40rem;"
-								alt="No files available"
-							/>
-						</div>
+							<div class="alert alert-warning d-flex align-items-center justify-content-center" role="alert">
+							No PDF files available.
+							</div>
 						<% } else { %> <% for (let i = 0; i < Math.min(2, filename.length);
 						i++) { %>
 						<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">

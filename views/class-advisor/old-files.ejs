@@ -173,7 +173,8 @@
 								<input
 									class="form-control mb-3"
 									type="file"
-									name="pdfFile"
+									name="oldPdf"
+									id="oldPdf"
 									accept=".pdf"
 									required
 								/>
@@ -194,7 +195,7 @@
 							<div class="card-header text-center bg-info position-relative">
 								<%= filename[i] %>
 								<form
-									action="/classAdvisor/deleteFile/<%= student._id %>/<%= i %>"
+									action="/classAdvisor/deleteOldFile/<%= student._id %>/<%= i %>"
 									method="post"
 								>
 									<button

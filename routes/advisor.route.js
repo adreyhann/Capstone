@@ -253,7 +253,7 @@ router.post('/submit-form', upload.fields([{ name: 'oldPdf', maxCount: 2 }, { na
 
 router.post(
     '/addFile/:recordId',
-    upload.single('pdfFile'),
+    upload.single('newPdf'),
     async (req, res, next) => {
         try {
             const recordId = req.params.recordId;
@@ -268,8 +268,11 @@ router.post(
 
             // Check if a file was uploaded
             if (req.file) {
+                // Get the number of files already uploaded in the 'new-files' directory
+                const newFilesCount = record.pdfFilePath.filter(filePath => filePath.includes('new-files')).length;
+
                 // Check if the number of files is less than 2
-                if (record.pdfFilePath.length < 2) {
+                if (newFilesCount < 2) {
                     const newPdfPath = req.file.path;
 
                     // Update the existing record with the new file path
@@ -305,9 +308,10 @@ router.post(
     }
 );
 
+
 router.post(
     '/addOldFile/:recordId',
-    upload.single('pdfFile'),
+    upload.single('oldPdf'),
     async (req, res, next) => {
         try {
             const recordId = req.params.recordId;
@@ -318,6 +322,12 @@ router.post(
             if (!record) {
                 res.status(404).send('Record not found');
                 return;
+            }
+
+            // Check if the number of files exceeds 2
+            if (record.pdfFilePath.filter(filePath => filePath.includes('old-files')).length >= 2) {
+                req.flash('error', 'You can only upload up to 2 files.');
+                return res.redirect(`/classAdvisor/oldFiles/${recordId}`);
             }
 
             // Check if a file was uploaded
@@ -343,6 +353,7 @@ router.post(
                 req.flash('success', 'Successfully uploaded');
                 res.redirect(`/classAdvisor/oldFiles/${recordId}`);
             } else {
+                req.flash('error', 'Please select a file to upload');
                 res.redirect(`/classAdvisor/oldFiles/${recordId}`);
             }
         } catch (error) {
@@ -352,58 +363,143 @@ router.post(
     }
 );
 
+router.post('/deleteOldFile/:recordId/:index', async (req, res, next) => {
+    try {
+        const recordId = req.params.recordId;
+        const index = req.params.index;
 
-router.post('/deleteFile/:recordId/:index', async (req, res, next) => {
-	try {
-		const recordId = req.params.recordId;
-		const index = req.params.index;
+        // Find the record by ID
+        const record = await Records.findById(recordId);
 
-		// Find the record by ID
-		const record = await Records.findById(recordId);
+        if (!record) {
+            req.flash('error', 'Record not found');
+            res.redirect(`/classAdvisor/oldFiles/${recordId}`);
+            return;
+        }
 
-		if (!record) {
-			req.flash('error', 'Record not found');
-			res.redirect(`/classAdvisor/view-files/${recordId}`); // Redirect to an error route
-			return;
-		}
+        // Check if the index is valid
+        if (index >= 0 && index < record.pdfFilePath.length) {
+            // Retrieve the path of the deleted file
+            const deletedFilePath = record.pdfFilePath[index];
+            // Extract the file name from the file path
+            const deletedFileName = path.basename(deletedFilePath);
 
-		// Check if the index is valid
-		if (index >= 0 && index < record.pdfFilePath.length) {
-			// Retrieve the path of the deleted file
-			const deletedFilePath = record.pdfFilePath[index];
-			// Extract the file name from the file path
-			const deletedFileName = path.basename(deletedFilePath);
+            // Log the file path for debugging
+            console.log('Deleted file path:', deletedFilePath);
 
-			// Remove the file path at the specified index
-			record.pdfFilePath.splice(index, 1);
-			await record.save();
+            // Check if the file path includes "old-files"
+            if (deletedFilePath.includes('old-files')) {
+                // Remove the file path at the specified index
+                record.pdfFilePath.splice(index, 1);
+                await record.save();
 
-			const lrn = record.lrn;
+                const lrn = record.lrn;
 
-			const historyLog = new History({
-				userEmail: req.user.email,
-				userFirstName: req.user.fname,
-				userLastName: req.user.lname,
-				action: `${req.user.fname} ${req.user.lname} deleted a file from the record`,
-				details: `Deleted File: ${deletedFileName}, LRN: ${lrn}`,
-			});
+                const historyLog = new History({
+                    userEmail: req.user.email,
+                    userFirstName: req.user.fname,
+                    userLastName: req.user.lname,
+                    action: `${req.user.fname} ${req.user.lname} deleted a file from the record`,
+                    details: `Deleted File: ${deletedFileName}, LRN: ${lrn}`,
+                });
 
-			await historyLog.save();
+                await historyLog.save();
 
-			// Set success flash message
-			req.flash('success', 'File successfully deleted');
-		} else {
-			// Set error flash message for an invalid file index
-			req.flash('error', 'Invalid file index');
-		}
-
-		// Redirect back to the view-files page
-		res.redirect(`/classAdvisor/view-files/${recordId}`);
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
+                // Delete the file from the file system
+                fs.unlink(deletedFilePath, (err) => {
+                    if (err) {
+                        console.error('Error deleting file:', err);
+                        req.flash('error', 'Failed to delete the file');
+                    } else {
+                        console.log('File successfully deleted:', deletedFilePath);
+                        req.flash('success', 'File successfully deleted');
+                    }
+                    // Redirect back to the view-files page
+                    res.redirect(`/classAdvisor/oldFiles/${recordId}`);
+                });
+            } else {
+                // Set error flash message if the file is not in "old-files" folder
+                req.flash('error', 'Cannot delete files outside "old-files" folder');
+                res.redirect(`/classAdvisor/oldFiles/${recordId}`);
+            }
+        } else {
+            // Set error flash message for an invalid file index
+            req.flash('error', 'Invalid file index');
+            res.redirect(`/classAdvisor/oldFiles/${recordId}`);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
+
+router.post('/deleteNewFile/:recordId/:index', async (req, res, next) => {
+    try {
+        const recordId = req.params.recordId;
+        const index = req.params.index;
+
+        // Find the record by ID
+        const record = await Records.findById(recordId);
+
+        if (!record) {
+            req.flash('error', 'Record not found');
+            return res.redirect(`/classAdvisor/view-files/${recordId}`);
+        }
+
+        // Check if the index is valid
+        if (index >= 0 && index < record.pdfFilePath.length) {
+            // Retrieve the path of the file to be deleted
+            const filePathToDelete = record.pdfFilePath[index];
+
+            // Check if the file path belongs to the new-files directory
+            if (filePathToDelete.includes('new-files')) {
+                // Remove the file path from the record
+                record.pdfFilePath.splice(index, 1);
+                await record.save();
+
+                const lrn = record.lrn;
+
+                // Log the deletion action in the history
+                const historyLog = new History({
+                    userEmail: req.user.email,
+                    userFirstName: req.user.fname,
+                    userLastName: req.user.lname,
+                    action: `${req.user.fname} ${req.user.lname} deleted a file from the new files`,
+                    details: `Deleted File: ${filePathToDelete}, LRN: ${lrn}`,
+                });
+                await historyLog.save();
+
+                // Delete the file from the file system
+                fs.unlink(filePathToDelete, (err) => {
+                    if (err) {
+                        console.error('Error deleting file:', err);
+                        req.flash('error', 'Failed to delete the file');
+                    } else {
+                        console.log('File successfully deleted:', filePathToDelete);
+                        req.flash('success', 'File successfully deleted');
+                    }
+                    // Redirect back to the new-files page
+                    res.redirect(`/classAdvisor/view-files/${recordId}`);
+                });
+            } else {
+                // If the file is not in the new-files directory, show an error message
+                req.flash('error', 'File does not exist in new files');
+                res.redirect(`/classAdvisor/view-files/${recordId}`);
+            }
+        } else {
+            // Set error flash message for an invalid file index
+            req.flash('error', 'Invalid file index');
+            res.redirect(`/classAdvisor/view-files/${recordId}`);
+        }
+    } catch (error) {
+        console.error('Error deleting file:', error);
+        req.flash('error', 'An error occurred while deleting the file');
+        res.redirect(`/classAdvisor/view-files/${recordId}`);
+    }
+});
+
+  
+  
 
 // Add this route for handling record updates
 router.post('/edit-record/:recordId', async (req, res, next) => {

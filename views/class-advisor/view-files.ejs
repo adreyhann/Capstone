@@ -154,7 +154,7 @@
 					</div>
 				</nav>
 				<div class="container-lg position-relative" style="overflow-y: auto; max-height: 90vh;">
-					<h2 class="mt-2">Documents</h2>
+					<h2 class="mt-2">New Documents</h2>
 					<hr />
 					<div class="container-lg">
 						<% try { %> <%- include('../credentials/flash-message.ejs') %> <% }
@@ -173,7 +173,8 @@
 								<input
 									class="form-control mb-3"
 									type="file"
-									name="pdfFile"
+									name="newPdf"
+									id="newPdf"
 									accept=".pdf"
 									required
 								/>
@@ -192,7 +193,7 @@
 							<div class="card-header text-center bg-info position-relative">
 								<%= filename[i] %>
 								<form
-									action="/classAdvisor/deleteFile/<%= student._id %>/<%= i %>"
+									action="/classAdvisor/deleteNewFile/<%= student._id %>/<%= i %>"
 									method="post"
 								>
 									<button

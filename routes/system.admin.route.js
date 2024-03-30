@@ -126,6 +126,99 @@ router.get('/records', async (req, res, next) => {
 	res.render('system_admn/records', { person, records, gradeLevel });
 });
 
+router.get('/studentFolders/:id', async (req, res, next) => {
+    try {
+        const person = req.user;
+        const studentId = req.params.id;
+        const student = await Records.findById(studentId);
+        const records = await Records.find();
+        const archives = await Archives.find();
+        
+        res.render('system_admn/studentFolders', { person, student, records, archives });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
+router.get('/oldFiles/:id', async (req, res, next) => {
+    try {
+        const studentId = req.params.id;
+        const student = await Records.findById(studentId);
+
+        if (!student) {
+            res.status(404).send('Record not found');
+            return;
+        }
+
+        const oldFiles = student.oldFiles || []; // Retrieve old files from the separate field
+
+        const base64PDF = await Promise.all(
+            oldFiles.map(async (fileData) => {
+                const pdfData = await fs.promises.readFile(fileData.filePath);
+                const pdfDoc = await PDFDocument.load(pdfData);
+                const pdfBytes = await pdfDoc.save();
+                return Buffer.from(pdfBytes).toString('base64');
+            })
+        );
+
+        const filenames = oldFiles.map(fileData => fileData.fileName);
+
+        const person = req.user;
+        res.render('system_admn/oldFiles', {
+            student,
+            person,
+            base64PDF,
+            filenames,
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
+router.get('/view-files/:id', async (req, res, next) => {
+    try {
+        const studentId = req.params.id;
+        const student = await Records.findById(studentId);
+
+        console.log('Student:', student);
+
+        if (!student) {
+            res.status(404).send('Record not found');
+            return;
+        }
+
+        const newFiles = student.newFiles || []; // Retrieve new files from the separate field
+
+        const base64PDF = await Promise.all(
+            newFiles.map(async (fileData) => {
+                if (fileData && fileData.filePath) {
+                    const pdfData = await fs.promises.readFile(fileData.filePath);
+                    const pdfDoc = await PDFDocument.load(pdfData);
+                    const pdfBytes = await pdfDoc.save();
+                    return Buffer.from(pdfBytes).toString('base64');
+                } else {
+                    return null; 
+                }
+            })
+        );
+
+        const filenames = newFiles.map(fileData => fileData.fileName);
+
+        const person = req.user;
+        res.render('system_admn/view-files', {
+            student,
+            person,
+            base64PDF,
+            filenames,
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
 router.get('/goBackToRecords', (req, res) => {
 	const gradeLevel = req.query.gradeLevel || ''; // Get the grade level from the query parameter
 
@@ -260,103 +353,6 @@ const upload = multer({
 	},
 });
 
-router.get('/view-files/:id', async (req, res, next) => {
-	try {
-		const studentId = req.params.id;
-		const student = await Records.findById(studentId);
-
-		console.log('Student:', student);
-
-		if (!student) {
-			res.status(404).send('Record not found');
-			return;
-		}
-
-		const base64PDF = await Promise.all(
-			student.pdfFilePath.map(async (filePath) => {
-				if (filePath) {
-					const pdfData = await fs.promises.readFile(filePath);
-					const pdfDoc = await PDFDocument.load(pdfData);
-					const pdfBytes = await pdfDoc.save();
-					return Buffer.from(pdfBytes).toString('base64');
-				} else {
-					return null; // or handle the case where filePath is null
-				}
-			})
-		);
-
-		// Assuming pdfFilePath is an array of file paths
-		const filename = base64PDF.map((_, index) => {
-			return student.pdfFilePath[index]
-				? path.basename(student.pdfFilePath[index])
-				: null;
-		});
-
-		const person = req.user;
-		res.render('system_admn/view-files', {
-			student,
-			person,
-			base64PDF,
-			filename,
-		});
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
-});
-
-router.post('/submit-form', upload.array('pdfFile'), async (req, res, next) => {
-	try {
-		const { lrn, name, gender, transferee, gradeLevel } = req.body;
-
-		const files = req.files;
-
-		if (files.length > 2) {
-			// Display a flash message for exceeding the maximum allowed files
-			req.flash('error', 'You can only upload up to 2 files.');
-			return res.redirect('/systemAdmin/addRecords'); // Redirect to the upload page or handle it as needed
-		}
-
-		const filePaths = files.map((file) => file.path);
-
-		if (!filePaths || filePaths.length === 0) {
-			req.flash(
-				'error',
-				'Uploading at least one file is required. Please select PDF files to upload.'
-			);
-			res.redirect('/systemAdmin/addRecords');
-			return;
-		}
-
-		console.log('Attempting to serve file:', filePaths);
-
-		const newRecord = new Records({
-			lrn: parseInt(lrn),
-			studentName: name,
-			gender: gender,
-			transferee: transferee,
-			gradeLevel: gradeLevel,
-			pdfFilePath: filePaths,
-		});
-
-		const savedRecord = await newRecord.save();
-
-		req.flash('success', `${savedRecord.studentName} is succesfully saved`);
-		res.redirect('/systemAdmin/addRecords');
-		res.redirect(`/systemAdmin/view-files/${savedRecord._id}`);
-	} catch (error) {
-		if (
-			error.code === 11000 &&
-			error.keyPattern &&
-			error.keyPattern.lrn === 1
-		) {
-			req.flash('error', 'LRN already exists. Please enter a different LRN.');
-			res.redirect('/systemAdmin/addRecords');
-		} else {
-			next(error);
-		}
-	}
-});
 
 router.post(
 	'/addFile/:recordId',
@@ -486,273 +482,307 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 	}
 });
 
-// this  aint belong to CA
-// Add this route for moving records to the archive
 router.post('/move-to-archive/:recordId', async (req, res, next) => {
-	try {
-		const recordId = req.params.recordId;
+    try {
+        const recordId = req.params.recordId;
 
-		// Find the record by ID
-		const record = await Records.findById(recordId);
+        // Find the record by ID
+        const record = await Records.findById(recordId);
 
-		if (!record) {
-			res.status(404).send('Record not found');
-			return;
-		}
+        if (!record) {
+            req.flash('error', 'Record not found');
+            return res.redirect('/systemAdmin/records');
+        }
 
-		// Move the record to the ArchivedRecords collection
-		const archivedRecord = new Archives({
-			lrn: record.lrn,
-			lName: record.lName,
-			fName: record.fName,
-			gender: record.gender,
-			transferee: record.transferee,
-			gradeLevel: record.gradeLevel,
-			dateAddedToArchive: new Date(),
-			pdfFilePath: record.pdfFilePath, // Check if you need to handle PDF files
-		});
+        // Move the record to the ArchivedRecords collection
+        const archivedRecord = new Archives({
+            lrn: record.lrn,
+            lName: record.lName,
+            fName: record.fName,
+            gender: record.gender,
+            transferee: record.transferee,
+            gradeLevel: record.gradeLevel,
+            oldFiles: record.oldFiles,
+            newFiles: record.newFiles,
+            dateAddedToArchive: new Date(),
+        });
 
-		// Save the archived record
-		await archivedRecord.save();
+        // Save the archived record
+        await archivedRecord.save();
 
-		// Delete the record from the original collection
-		await Records.findByIdAndDelete(recordId);
+        // Delete the record from the original collection
+        await Records.findByIdAndDelete(recordId);
 
-		// Log the action in the history
-		const historyLog = new History({
-			userEmail: req.user.email,
-			userFirstName: req.user.fname,
-			userLastName: req.user.lname,
-			action: `${req.user.fname} ${req.user.lname} moved record to archive`,
-			details: `Moved record with LRN ${record.lrn} to archive`,
-		});
-		await historyLog.save();
+        // Log the action in the history
+        const historyLog = new History({
+            userEmail: req.user.email,
+            userFirstName: req.user.fname,
+            userLastName: req.user.lname,
+            action: `${req.user.fname} ${req.user.lname} moved record to archive`,
+            details: `Moved record with LRN ${record.lrn} to archive`,
+        });
+        await historyLog.save();
 
-		req.flash('success', 'Record moved to archive successfully');
-		res.redirect('/systemAdmin/records');
-	} catch (error) {
-		console.error('Error:', error);
-		// Handle errors appropriately, e.g., flash an error message
-		req.flash('error', 'Failed to move record to archive');
-		res.redirect('/systemAdmin/records');
-	}
+        req.flash('success', 'Record moved to archive successfully');
+        res.redirect('/systemAdmin/records');
+    } catch (error) {
+        console.error('Error:', error);
+        // Handle errors appropriately, e.g., flash an error message
+        req.flash('error', 'Failed to move record to archive');
+        res.redirect('/systemAdmin/records');
+    }
 });
+
 
 // Route to unarchive a record
 router.post('/unarchive/:archivedRecordId', async (req, res, next) => {
-	try {
-		const archivedRecordId = req.params.archivedRecordId;
+    try {
+        const archivedRecordId = req.params.archivedRecordId;
 
-		// Find the archived record by ID
-		const archivedRecord = await Archives.findById(archivedRecordId);
+        // Find the archived record by ID
+        const archivedRecord = await Archives.findById(archivedRecordId);
 
-		if (!archivedRecord) {
-			res.status(404).send('Archived Record not found');
-			return;
-		}
+        if (!archivedRecord) {
+            req.flash('error', 'Archived Record not found');
+            return res.redirect('/systemAdmin/archives');
+        }
 
-		const record = new Records({
-			lrn: archivedRecord.lrn,
-			lName: archivedRecord.lName,
-			fName: archivedRecord.fName,
-			gender: archivedRecord.gender,
-			transferee: archivedRecord.transferee,
-			gradeLevel: archivedRecord.gradeLevel,
-			pdfFilePath: archivedRecord.pdfFilePath,
-		});
+        const record = new Records({
+            lrn: archivedRecord.lrn,
+            lName: archivedRecord.lName,
+            fName: archivedRecord.fName,
+            gender: archivedRecord.gender,
+            transferee: archivedRecord.transferee,
+            gradeLevel: archivedRecord.gradeLevel,
+            oldFiles: archivedRecord.oldFiles,
+            newFiles: archivedRecord.newFiles,
+        });
 
-		await record.save();
+        await record.save();
 
-		await Archives.findByIdAndDelete(archivedRecordId);
+        await Archives.findByIdAndDelete(archivedRecordId);
 
-		const historyLog = new History({
-			userEmail: req.user.email,
-			userFirstName: req.user.fname,
-			userLastName: req.user.lname,
-			action: `${req.user.fname} ${req.user.lname} unarchived record`,
-			details: `Unarchived record with LRN ${archivedRecord.lrn}`,
-		});
-		await historyLog.save();
+        const historyLog = new History({
+            userEmail: req.user.email,
+            userFirstName: req.user.fname,
+            userLastName: req.user.lname,
+            action: `${req.user.fname} ${req.user.lname} unarchived record`,
+            details: `Unarchived record with LRN ${archivedRecord.lrn}`,
+        });
+        await historyLog.save();
 
-		req.flash('success', 'Record unarchived successfully');
-		res.redirect('/systemAdmin/archives');
-	} catch (error) {
-		console.error('Error:', error);
-		req.flash('error', 'Failed to unarchive record');
-		res.redirect('/systemAdmin/archives');
-	}
+        req.flash('success', 'Record unarchived successfully');
+        res.redirect('/systemAdmin/archives');
+    } catch (error) {
+        console.error('Error:', error);
+        req.flash('error', 'Failed to unarchive record');
+        res.redirect('/systemAdmin/archives');
+    }
 });
+
 
 router.get('/archived-files/:recordId', async (req, res, next) => {
-	try {
-		const recordId = req.params.recordId;
-		const student = await Archives.findById(recordId);
-		// Find the archived record by ID
-		const archivedRecord = await Archives.findById(recordId);
+    try {
+        const recordId = req.params.recordId;
 
-		if (!archivedRecord) {
-			res.status(404).send('Archived Record not found');
-			return;
-		}
+        // Find the archived record by ID
+        const archivedRecord = await Archives.findById(recordId);
 
-		const base64PDF = await Promise.all(
-			student.pdfFilePath.map(async (filePath) => {
-				if (filePath) {
-					const pdfData = await fs.promises.readFile(filePath);
-					const pdfDoc = await PDFDocument.load(pdfData);
-					const pdfBytes = await pdfDoc.save();
-					return Buffer.from(pdfBytes).toString('base64');
-				} else {
-					return null;
-				}
-			})
-		);
+        if (!archivedRecord) {
+            res.status(404).send('Archived Record not found');
+            return;
+        }
 
-		const filename = base64PDF.map((_, index) => {
-			return student.pdfFilePath[index]
-				? path.basename(student.pdfFilePath[index])
-				: null;
-		});
+        const base64OldPDF = await Promise.all(
+            archivedRecord.oldFiles.map(async (file) => {
+                const pdfData = await fs.promises.readFile(file.filePath);
+                return Buffer.from(pdfData).toString('base64');
+            })
+        );
 
-		const person = req.user;
+        const filenameOld = archivedRecord.oldFiles.map((file) => path.basename(file.filePath));
 
-		res.render('system_admn/archived-files', {
-			archivedRecord,
-			student,
-			person,
-			base64PDF,
-			filename,
-		});
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
+        const base64NewPDF = await Promise.all(
+            archivedRecord.newFiles.map(async (file) => {
+                const pdfData = await fs.promises.readFile(file.filePath);
+                return Buffer.from(pdfData).toString('base64');
+            })
+        );
+
+        const filenameNew = archivedRecord.newFiles.map((file) => path.basename(file.filePath));
+
+        const person = req.user;
+
+        res.render('system_admn/archived-files', {
+            archivedRecord,
+            person,
+            base64OldPDF,
+            filenameOld,
+            base64NewPDF,
+            filenameNew,
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
+
+
+
+
 
 router.post('/archive-selected', async (req, res, next) => {
-	try {
-		const selectedRecordIds = req.body.selectedRecords;
+    try {
+        const selectedRecordIds = req.body.selectedRecords;
 
-		if (!selectedRecordIds || selectedRecordIds.length === 0) {
-			req.flash('error', 'No records selected for archiving');
-			return res.redirect('/systemAdmin/records');
-		}
+        if (!selectedRecordIds || selectedRecordIds.length === 0) {
+            req.flash('error', 'No records selected for archiving');
+            return res.redirect('/systemAdmin/records');
+        }
 
-		const selectedRecords = await Records.find({
-			_id: { $in: selectedRecordIds },
-		});
+        const selectedRecords = await Records.find({
+            _id: { $in: selectedRecordIds },
+        });
 
-		const archivedRecords = selectedRecords.map((record) => {
-			return {
-				lrn: record.lrn,
-				lName: record.lName,
-				fName: record.fName,
-				gender: record.gender,
-				transferee: record.transferee,
-				gradeLevel: record.gradeLevel,
-				dateAddedToArchive: new Date(),
-				pdfFilePath: record.pdfFilePath,
-			};
-		});
+        const archivedRecords = selectedRecords.map((record) => {
+            return {
+                lrn: record.lrn,
+                lName: record.lName,
+                fName: record.fName,
+                gender: record.gender,
+                transferee: record.transferee,
+                gradeLevel: record.gradeLevel,
+                oldFiles: record.oldFiles,
+                newFiles: record.newFiles,
+                dateAddedToArchive: new Date(),
+            };
+        });
 
-		// Save the archived records
-		await Archives.insertMany(archivedRecords);
+        // Save the archived records
+        await Archives.insertMany(archivedRecords);
 
-		// Delete the selected records from the original collection
-		await Records.deleteMany({ _id: { $in: selectedRecordIds } });
+        // Delete the selected records from the original collection
+        await Records.deleteMany({ _id: { $in: selectedRecordIds } });
 
-		const gradeLevels = [
-			...new Set(selectedRecords.map((record) => record.gradeLevel)),
-		];
-		const gradeLevelsMessage = gradeLevels.join(', ');
+        const gradeLevels = [...new Set(selectedRecords.map((record) => record.gradeLevel))];
+        const gradeLevelsMessage = gradeLevels.join(', ');
 
-		const lrns = selectedRecords.map((record) => record.lrn).join('\n');
+        const lrns = selectedRecords.map((record) => record.lrn).join('\n');
 
-		const historyLog = new History({
-			userEmail: req.user.email,
-			userFirstName: req.user.fname,
-			userLastName: req.user.lname,
-			action: `${req.user.fname} ${req.user.lname} archived multiple records`,
-			details: `Archived ${selectedRecordIds.length} records from ${gradeLevelsMessage}:\n LRN: ${lrns}`,
-		});
-		await historyLog.save();
+        const historyLog = new History({
+            userEmail: req.user.email,
+            userFirstName: req.user.fname,
+            userLastName: req.user.lname,
+            action: `${req.user.fname} ${req.user.lname} archived multiple records`,
+            details: `Archived ${selectedRecordIds.length} records from ${gradeLevelsMessage}:\n LRN: ${lrns}`,
+        });
+        await historyLog.save();
 
-		req.flash('success', 'Selected records archived successfully');
-		res.redirect('/systemAdmin/records');
-	} catch (error) {
-		console.error('Error:', error);
-		req.flash('error', 'Failed to archive selected records');
-		res.redirect('/systemAdmin/records');
-	}
+        req.flash('success', 'Selected records archived successfully');
+        res.redirect('/systemAdmin/records');
+    } catch (error) {
+        console.error('Error:', error);
+        req.flash('error', 'Failed to archive selected records');
+        res.redirect('/systemAdmin/records');
+    }
 });
 
+
 router.get('/backup', async (req, res, next) => {
-	try {
-		// Fetch records from the database
-		const records = await Records.find();
+    try {
+        // Fetch records from the database
+        const records = await Records.find();
 
-		// Create a zip stream
-		const archive = archiver('zip', {
-			zlib: { level: 9 }, // Sets the compression level
-		});
+        // Create a zip stream
+        const archive = archiver('zip', {
+            zlib: { level: 9 }, // Sets the compression level
+        });
 
-		archive.pipe(res);
+        // Pipe the archive to the response stream
+        archive.pipe(res);
 
-		records.forEach((record) => {
-			record.pdfFilePath.forEach((filePath) => {
-				archive.file(filePath, { name: path.basename(filePath) });
-			});
-		});
+        // Organize files by grade level and student
+        const gradeLevels = new Set(records.map((record) => record.gradeLevel));
+        for (const gradeLevel of gradeLevels) {
+            const gradeLevelFolderName = `${gradeLevel}`;
+            const gradeLevelRecords = records.filter((record) => record.gradeLevel === gradeLevel);
+            for (const record of gradeLevelRecords) {
+                const studentFolderName = `${record.lName}_${record.fName}`;
+                const transfereeStudentFilesFolderName = 'transferee-student-files';
+                for (const file of record.oldFiles) {
+                    const filePath = file.filePath;
+                    const fileName = path.basename(filePath);
+                    const folderPath = path.join(gradeLevelFolderName, studentFolderName, transfereeStudentFilesFolderName);
+                    archive.file(filePath, { name: path.join(folderPath, fileName) });
+                }
+                const newFilesFolderName = 'new-files';
+                for (const file of record.newFiles) {
+                    const filePath = file.filePath;
+                    const fileName = path.basename(filePath);
+                    const folderPath = path.join(gradeLevelFolderName, studentFolderName, newFilesFolderName);
+                    archive.file(filePath, { name: path.join(folderPath, fileName) });
+                }
+            }
+        }
 
-		res.setHeader(
-			'Content-Disposition',
-			'attachment; filename=student_records.zip'
-		);
-		res.setHeader('Content-Type', 'application/zip');
+        // Set response headers for downloading the zip file
+        res.setHeader('Content-Disposition', 'attachment; filename=student_records.zip');
+        res.setHeader('Content-Type', 'application/zip');
 
-		archive.finalize();
+        // Finalize the archive
+        archive.finalize();
 
-		const historyLog = new History({
+        // Log the backup generation action
+        const historyLog = new History({
             userEmail: req.user.email,
             userFirstName: req.user.fname,
             userLastName: req.user.lname,
             action: `${req.user.fname} ${req.user.lname} generated a backup of student records`,
             details: `Number of records backed up: ${records.length}`,
         });
-
         await historyLog.save();
-
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
 
+
+
 router.get('/backup-archive', async (req, res, next) => {
-	try {
-		const records = await Archives.find();
+    try {
+        const records = await Archives.find();
 
-		const archive = archiver('zip', {
-			zlib: { level: 9 },
-		});
+        const archive = archiver('zip', {
+            zlib: { level: 9 },
+        });
 
-		archive.pipe(res);
+        archive.pipe(res);
 
-		records.forEach((record) => {
-			record.pdfFilePath.forEach((filePath) => {
-				archive.file(filePath, { name: path.basename(filePath) });
-			});
-		});
+        for (const record of records) {
+            const date = new Date(record.dateAddedToArchive);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const studentName = `${record.lName}_${record.fName}`;
+            
+            const folderPath = `${year}_${month}_${day}/${studentName}`;
+            
+            for (const file of record.oldFiles) {
+                archive.file(file.filePath, { name: `${folderPath}/transferee_student_files/${file.fileName}` });
+            }
+            for (const file of record.newFiles) {
+                archive.file(file.filePath, { name: `${folderPath}/new_files/${file.fileName}` });
+            }
+        }
 
-		res.setHeader(
-			'Content-Disposition',
-			'attachment; filename=student_archives_records.zip'
-		);
-		res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', 'attachment; filename=student_archives_records.zip');
+        res.setHeader('Content-Type', 'application/zip');
 
-		archive.finalize();
-		
-		const historyLog = new History({
+        // Finalize the archive
+        archive.finalize();
+        
+        const historyLog = new History({
             userEmail: req.user.email,
             userFirstName: req.user.fname,
             userLastName: req.user.lname,
@@ -761,11 +791,12 @@ router.get('/backup-archive', async (req, res, next) => {
         });
 
         await historyLog.save();
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
+
 
 router.post('/edit-users/:_id', async (req, res, next) => {
 	try {

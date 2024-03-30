@@ -186,37 +186,46 @@
 					</div>
 				</nav>
 				<div class="container-lg position-relative">
-					<h2 class="mt-2">Documents</h2>
+					<h2 class="mt-2">All Documents</h2>
 					<hr />
 					<div class="container-lg">
-						<% try { %> <%- include('../credentials/flash-message.ejs') %> <% }
-						catch (error) { %>
-						<div>Error: <%= error.message %></div>
-						<% } %> <% if (filename.length === 0) { %>
-						<div
-							class="alert alert-warning d-flex align-items-center justify-content-center"
-							role="alert"
-						>
-							No PDF files available.
-						</div>
+						<% try { %>
+							<%- include('../credentials/flash-message.ejs') %>
+						<% } catch (error) { %>
+							<div>Error: <%= error.message %></div>
+						<% } %>
+						<% if (filenameOld.length === 0 && filenameNew.length === 0) { %>
+							<div class="alert alert-warning d-flex align-items-center justify-content-center" role="alert">
+								No PDF files available.
+							</div>
 						<% } else { %>
-						<!-- Loop to display up to 2 PDF files -->
-						<% for (let i = 0; i < Math.min(2, filename.length); i++) { %>
-						<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">
-							<div class="card-header text-center bg-info position-relative">
-								<%= filename[i] %>
-							</div>
-							<div class="card-body">
-								<!-- Display the PDF for each file -->
-								<embed
-									src="data:application/pdf;base64, <%= base64PDF[i] %>"
-									width="100%"
-									height="100%"
-								/>
-							</div>
-						</div>
-						<% } %> <% } %>
+							<!-- Display old files -->
+							<% for (let i = 0; i < filenameOld.length; i++) { %>
+								<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">
+									<div class="card-header text-center bg-info position-relative">
+										<%= filenameOld[i] %>
+									</div>
+									<div class="card-body">
+										<!-- Display the PDF for each old file -->
+										<embed src="data:application/pdf;base64, <%= base64OldPDF[i] %>" width="100%" height="100%"/>
+									</div>
+								</div>
+							<% } %>
+							<!-- Display new files -->
+							<% for (let i = 0; i < filenameNew.length; i++) { %>
+								<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">
+									<div class="card-header text-center bg-info position-relative">
+										<%= filenameNew[i] %>
+									</div>
+									<div class="card-body">
+										<!-- Display the PDF for each new file -->
+										<embed src="data:application/pdf;base64, <%= base64NewPDF[i] %>" width="100%" height="100%"/>
+									</div>
+								</div>
+							<% } %>
+						<% } %>
 					</div>
+					
 				</div>
 			</div>
 		</div>

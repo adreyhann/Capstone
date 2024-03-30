@@ -9,6 +9,10 @@
 			integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
 			crossorigin="anonymous"
 		/>
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+		/>
 
 		<script
 			defer
@@ -24,6 +28,7 @@
 		<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 		<script defer src="/js/charts.js"></script>
 		<script defer src="/js/toggler.js"></script>
+		<script defer src="/js/tooltip.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<link rel="icon" type="image/x-icon" href="/img/logo.png" />
 		<title>View Files</title>
@@ -46,11 +51,9 @@
 					<div class="container my-2">
 						<div class="row">
 							<div class="col-md-4 mx-2">
-								<img
-									src="/img/pain.jpg"
-									class="img-fluid img-thumbnail"
-									alt="..."
-								/>
+								<span class="material-symbols-outlined" style="font-size: 5rem">
+									account_circle
+								</span>
 							</div>
 							<div class="col-md-6">
 								<p class="my-0 pt-2" style="font-size: 15px">
@@ -66,7 +69,7 @@
 					<ul class="sidebar-nav">
 						<li class="sidebar-item">
 							<a
-								href="/classAdvisor/dashboard"
+								href="/systemAdmin/dashboard"
 								class="sidebar-link collapsed"
 								data-bs-target="#dashboard"
 								aria-expanded="false"
@@ -77,12 +80,24 @@
 								Dashboard
 							</a>
 						</li>
+						<li class="sidebar-item">
+							<a
+								href="/systemAdmin/accounts"
+								class="sidebar-link"
+								aria-expanded="false"
+								aria-controls="users"
+								data-menuitem="accounts"
+							>
+								<i class="fa-solid fa-user pe-2"></i>
+								Account Management
+							</a>
+						</li>
 						<li
 							class="sidebar-item"
 							style="border-right: 2px solid #007bff; background: #e3edf0"
 						>
 							<a
-								href="/classAdvisor/records"
+								href="/systemAdmin/records-menu"
 								class="sidebar-link"
 								aria-expanded="false"
 								aria-controls="pages"
@@ -92,29 +107,42 @@
 								Records Management
 							</a>
 						</li>
-						<!-- <li class="sidebar-item">
-						<a
-							href="/classAdvisor/archives"
-							class="sidebar-link"
-							aria-expanded="false"
-							data-menuitem="archives"
-						>
-							<i class="fa-regular fa-user pe-2"></i>
-							Archives
-						</a>
-					</li> -->
-						<!-- <li class="sidebar-item">
-						<a
-							href="/classAdvisor/calendar"
-							class="sidebar-link collapsed"
-							data-bs-target="#dashboard"
-							aria-expanded="false"
-							data-menuitem="calendar"
-						>
-							<i class="fa-regular fa-calendar pe-2"></i>
-							Calendar
-						</a>
-					</li> -->
+						<li class="sidebar-item">
+							<a
+								href="/systemAdmin/archives"
+								class="sidebar-link"
+								aria-expanded="false"
+								data-menuitem="archives"
+							>
+								<i class="fa-regular fa-user pe-2"></i>
+								Archives
+							</a>
+						</li>
+						<li class="sidebar-item">
+							<a
+								href="/systemAdmin/calendar"
+								class="sidebar-link collapsed"
+								data-bs-target="#dashboard"
+								aria-expanded="false"
+								data-menuitem="calendar"
+							>
+								<i class="fa-regular fa-calendar pe-2"></i>
+								Calendar
+							</a>
+						</li>
+						<li class="sidebar-item">
+							<a
+								href="/systemAdmin/reports"
+								class="sidebar-link collapsed"
+								data-bs-target="#dashboard"
+								aria-expanded="false"
+								aria-controls="dashboard"
+								data-menuitem="reports"
+							>
+								<i class="fa-regular fa-flag pe-2"></i>
+								Reports
+							</a>
+						</li>
 					</ul>
 				</div>
 			</aside>
@@ -140,8 +168,13 @@
 								</a>
 								<ul class="dropdown-menu dropdown-menu-lg-end">
 									<li>
-										<a class="dropdown-item" href="/classAdvisor/profile"
+										<a class="dropdown-item" href="/systemAdmin/profile"
 											>View Profile</a
+										>
+									</li>
+									<li>
+										<a class="dropdown-item" href="/systemAdmin/historyLogs"
+											>History Logs</a
 										>
 									</li>
 									<li><hr class="dropdown-divider" /></li>
@@ -153,67 +186,34 @@
 						</ul>
 					</div>
 				</nav>
-				<div class="container-lg position-relative" style="overflow-y: auto; max-height: 90vh;">
-					<h2 class="mt-2">New Documents</h2>
+				<div class="container-lg position-relative">
+					<h2 class="mt-2">Student Folders</h2>
 					<hr />
-					<div class="container-lg">
-						<% try { %> <%- include('../credentials/flash-message.ejs') %> <% }
-						catch (error) { %>
-						<div>Error: <%= error.message %></div>
-						<% } %>
-
-						<!-- Form to upload additional files in new-files directory -->
-						<form
-							action="/classAdvisor/addFile/<%= student._id %>"
-							method="post"
-							enctype="multipart/form-data"
-							class="mb-3"
-						>
-							<div class="row">
-								<input
-									class="form-control mb-3"
-									type="file"
-									name="newPdf"
-									id="newPdf"
-									accept=".pdf"
-									required
-								/>
-								<button type="submit" class="btn btn-sm btn-success">Submit</button>
-							</div>
-						</form>
-
-						<!-- Loop to display up to 2 PDF files -->
-						<% if (filenames.length === 0) { %>
-							<div class="alert alert-warning d-flex align-items-center justify-content-center" role="alert">
-							No PDF files available.
-							</div>
-						<% } else { %> <% for (let i = 0; i < Math.min(2, filenames.length);
-						i++) { %>
-						<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">
-							<div class="card-header text-center bg-info position-relative">
-								<%= filenames[i] %>
-								<form
-									action="/classAdvisor/deleteNewFile/<%= student._id %>/<%= i %>"
-									method="post"
-								>
-									<button
-										type="submit"
-										class="btn btn-danger btn-sm position-absolute top-0 end-0"
-										style="padding: 6px; margin: 3px"
+                    <div class="row d-flex justify-content-start mx-4 grid gap-4">
+						<% if (student.transferee === 'Yes') { %>
+							<div class="card custom-card" style="width: 18rem; height: 130px">
+								<div class="card-body">
+									<h4 class="card-title position-relative">Old files</h4>
+									<p class="card-text">View student old files</p>
+									<a
+										href="/systemAdmin/oldFiles/<%= student._id %>"
+										class="card-link"
+										>View Old files</a
 									>
-										Delete
-									</button>
-								</form>
+								</div>
 							</div>
+						<% } %>
+						<div class="card custom-card" style="width: 18rem; height: 130px">
 							<div class="card-body">
-								<embed
-									src="data:application/pdf;base64, <%= base64PDF[i] %>"
-									width="100%"
-									height="100%"
-								/>
+								<h4 class="card-title position-relative">Current files</h4>
+								<p class="card-text">View student current files</p>
+								<a
+									href="/systemAdmin/view-files/<%= student._id %>"
+									class="card-link"
+									>View current files</a
+								>
 							</div>
 						</div>
-						<% } %> <% } %>
 					</div>
 				</div>
 			</div>

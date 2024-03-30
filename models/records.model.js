@@ -27,8 +27,18 @@ const RecordsSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    pdfFilePath: {
-        type: [String],
+    oldFiles: {
+        type: [{
+            fileName: { type: String, required: true },
+            filePath: { type: String, required: true },
+        }],
+        default: [],
+    },
+    newFiles: {
+        type: [{
+            fileName: { type: String, required: true },
+            filePath: { type: String, required: true },
+        }],
         default: [],
     },
 })
@@ -63,8 +73,18 @@ const ArchivedRecords = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    pdfFilePath: {
-        type: [String],
+    oldFiles: {
+        type: [{
+            fileName: { type: String, required: true },
+            filePath: { type: String, required: true },
+        }],
+        default: [],
+    },
+    newFiles: {
+        type: [{
+            fileName: { type: String, required: true },
+            filePath: { type: String, required: true },
+        }],
         default: [],
     },
 })

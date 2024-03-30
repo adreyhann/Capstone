@@ -106,25 +106,25 @@ router.get('/oldFiles/:id', async (req, res, next) => {
             return;
         }
 
-        const oldFiles = student.pdfFilePath.filter(filePath => filePath.includes('old-files'));
+        const oldFiles = student.oldFiles || []; // Retrieve old files from the separate field
 
         const base64PDF = await Promise.all(
-            oldFiles.map(async (filePath) => {
-                const pdfData = await fs.promises.readFile(filePath);
+            oldFiles.map(async (fileData) => {
+                const pdfData = await fs.promises.readFile(fileData.filePath);
                 const pdfDoc = await PDFDocument.load(pdfData);
                 const pdfBytes = await pdfDoc.save();
                 return Buffer.from(pdfBytes).toString('base64');
             })
         );
 
-        const filename = oldFiles.map(filePath => path.basename(filePath));
+        const filenames = oldFiles.map(fileData => fileData.fileName);
 
         const person = req.user;
         res.render('class-advisor/old-files', {
             student,
             person,
             base64PDF,
-            filename,
+            filenames,
         });
     } catch (error) {
         console.error('Error:', error);
@@ -132,8 +132,9 @@ router.get('/oldFiles/:id', async (req, res, next) => {
     }
 });
 
+
 router.get('/view-files/:id', async (req, res, next) => {
-	try {
+    try {
         const studentId = req.params.id;
         const student = await Records.findById(studentId);
 
@@ -144,12 +145,12 @@ router.get('/view-files/:id', async (req, res, next) => {
             return;
         }
 
-        const newFiles = student.pdfFilePath.filter(filePath => filePath.includes('new-files'));
+        const newFiles = student.newFiles || []; // Retrieve new files from the separate field
 
         const base64PDF = await Promise.all(
-            newFiles.map(async (filePath) => {
-                if (filePath) {
-                    const pdfData = await fs.promises.readFile(filePath);
+            newFiles.map(async (fileData) => {
+                if (fileData && fileData.filePath) {
+                    const pdfData = await fs.promises.readFile(fileData.filePath);
                     const pdfDoc = await PDFDocument.load(pdfData);
                     const pdfBytes = await pdfDoc.save();
                     return Buffer.from(pdfBytes).toString('base64');
@@ -159,14 +160,14 @@ router.get('/view-files/:id', async (req, res, next) => {
             })
         );
 
-        const filename = newFiles.map(filePath => path.basename(filePath));
+        const filenames = newFiles.map(fileData => fileData.fileName);
 
         const person = req.user;
         res.render('class-advisor/view-files', {
             student,
             person,
             base64PDF,
-            filename,
+            filenames,
         });
     } catch (error) {
         console.error('Error:', error);
@@ -174,168 +175,122 @@ router.get('/view-files/:id', async (req, res, next) => {
     }
 });
 
-router.post('/submit-form', upload.fields([{ name: 'oldPdf', maxCount: 2 }, { name: 'newPdf', maxCount: 2 }]), async (req, res, next) => {
+
+router.post('/submit-form', async (req, res, next) => {
     try {
-        const { lrn, lName, fName, gender, transferee, gradeLevel } = req.body;
+        // Check if files are uploaded with multer
+        upload.fields([{ name: 'oldPdf', maxCount: 2 }, { name: 'newPdf', maxCount: 2 }])(req, res, async (err) => {
+            if (err) {
+                // Handle multer errors
+                if (err instanceof multer.MulterError) {
+                    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+                        req.flash('error', 'You can only upload up to 2 files for each category.');
+                        return res.redirect('/classAdvisor/addRecords');
+                    }
+                }
+                return next(err);
+            }
 
-        // Validate LRN: should be a 12-digit number
-        if (!/^\d{12}$/.test(lrn)) {
-            req.flash('error', 'LRN should be a 12-digit number.');
-            return res.redirect('/classAdvisor/addRecords');
-        }
+            const { lrn, lName, fName, gender, transferee, gradeLevel } = req.body;
 
-        const oldPdfFiles = req.files['oldPdf'] || [];
-        const newPdfFiles = req.files['newPdf'] || [];
-
-        if (transferee === 'No' && oldPdfFiles.length === 0) {
-            
-        } else {
-            if (oldPdfFiles.length === 0) {
-                req.flash('error', 'Please upload the transferee student files.');
+            // Validate LRN: should be a 12-digit number
+            if (!/^\d{12}$/.test(lrn)) {
+                req.flash('error', 'LRN should be a 12-digit number.');
                 return res.redirect('/classAdvisor/addRecords');
             }
-        }
 
-        if (oldPdfFiles.length > 2 || newPdfFiles.length > 2) {
-            req.flash('error', 'You can only upload up to 2 files for each category.');
-            return res.redirect('/classAdvisor/addRecords');
-        }
+            // Check if oldPdfFiles are required when transferee is not 'No'
+            if (transferee !== 'No') {
+                const oldPdfFiles = req.files['oldPdf'] || [];
+                if (oldPdfFiles.length === 0) {
+                    req.flash('error', 'Please upload the transferee student files.');
+                    return res.redirect('/classAdvisor/addRecords');
+                }
+            }
 
-        const processFiles = async (files) => {
-            return Promise.all(files.map(async (file) => {
-                return file.path; 
-            }));
-        };
+            const oldPdfFiles = req.files['oldPdf'] || [];
+            const newPdfFiles = req.files['newPdf'] || [];
 
-        const oldPdfFilePaths = await processFiles(oldPdfFiles);
-        const newPdfFilePaths = await processFiles(newPdfFiles);
+            if (oldPdfFiles.length > 2 || newPdfFiles.length > 2) {
+                req.flash('error', 'You can only upload up to 2 files for each category.');
+                return res.redirect('/classAdvisor/addRecords');
+            }
 
-        const newRecord = new Records({
-            lrn: parseInt(lrn),
-            lName: lName,
-            fName: fName,
-            gender: gender,
-            transferee: transferee,
-            gradeLevel: gradeLevel,
-            pdfFilePath: [...oldPdfFilePaths, ...newPdfFilePaths],
-        });
+            const processFiles = async (files) => {
+                return Promise.all(files.map(async (file) => {
+                    return {
+                        fileName: file.originalname,
+                        filePath: file.path,
+                    }; 
+                }));
+            };
 
-        const studentName = `${lName}, ${fName}`;
-        newRecord.studentName = studentName;
+            const oldPdfFilesData = await processFiles(oldPdfFiles);
+            const newPdfFilesData = await processFiles(newPdfFiles);
 
-        const savedRecord = await newRecord.save();
+            const newRecord = new Records({
+                lrn: parseInt(lrn),
+                lName: lName,
+                fName: fName,
+                gender: gender,
+                transferee: transferee,
+                gradeLevel: gradeLevel,
+                oldFiles: oldPdfFilesData, 
+                newFiles: newPdfFilesData, 
+            });
 
-        const historyEntry = new History({
-            userEmail: req.user.email,
-            userFirstName: req.user.fname,
-            userLastName: req.user.lname,
-            action: `Record added in ${gradeLevel}`,
-            details: `New record added in ${gradeLevel} with LRN: ${lrn}`,
-        });
+            const studentName = `${lName}, ${fName}`;
+            newRecord.studentName = studentName;
 
-        await historyEntry.save();
+            const savedRecord = await newRecord.save();
 
-        req.flash('success', `${savedRecord.studentName} is successfully saved`);
-        res.redirect('/classAdvisor/addRecords');
-    } catch (error) {
-        if (
-            error.code === 11000 &&
-            error.keyPattern &&
-            error.keyPattern.lrn === 1
-        ) {
-            req.flash('error', 'LRN already exists. Please enter a different LRN.');
+            const historyEntry = new History({
+                userEmail: req.user.email,
+                userFirstName: req.user.fname,
+                userLastName: req.user.lname,
+                action: `Record added in ${gradeLevel}`,
+                details: `New record added in ${gradeLevel} with LRN: ${lrn}`,
+            });
+
+            await historyEntry.save();
+
+            req.flash('success', `${savedRecord.studentName} is successfully saved`);
             res.redirect('/classAdvisor/addRecords');
+        });
+    } catch (error) {
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.lrn === 1) {
+            req.flash('error', 'LRN already exists. Please enter a different LRN.');
+            return res.redirect('/classAdvisor/addRecords');
         } else {
             next(error);
         }
     }
 });
 
-router.post(
-    '/addFile/:recordId',
-    upload.single('newPdf'),
-    async (req, res, next) => {
-        try {
-            const recordId = req.params.recordId;
 
-            // Find the record by ID
-            const record = await Records.findById(recordId);
+router.post('/addFile/:recordId', upload.single('newPdf'), async (req, res, next) => {
+    try {
+        const recordId = req.params.recordId;
 
-            if (!record) {
-                res.status(404).send('Record not found');
-                return;
-            }
+        // Find the record by ID
+        const record = await Records.findById(recordId);
 
-            // Check if a file was uploaded
-            if (req.file) {
-                // Get the number of files already uploaded in the 'new-files' directory
-                const newFilesCount = record.pdfFilePath.filter(filePath => filePath.includes('new-files')).length;
-
-                // Check if the number of files is less than 2
-                if (newFilesCount < 2) {
-                    const newPdfPath = req.file.path;
-
-                    // Update the existing record with the new file path
-                    record.pdfFilePath.push(newPdfPath);
-                    await record.save();
-
-                    const lrn = record.lrn;
-
-                    const historyLog = new History({
-                        userEmail: req.user.email,
-                        userFirstName: req.user.fname,
-                        userLastName: req.user.lname,
-                        action: `${req.user.fname} ${req.user.lname} added a new file to the record`,
-                        details: `File: ${req.file.originalname}, LRN: ${lrn}`,
-                    });
-                    await historyLog.save();
-
-                    // Redirect back to the view-files page
-                    req.flash('success', 'Successfully uploaded');
-                    res.redirect(`/classAdvisor/view-files/${recordId}`);
-                } else {
-                    // Display a flash message for exceeding the maximum allowed files
-                    req.flash('error', 'You can only upload up to 2 files.');
-                    res.redirect(`/classAdvisor/view-files/${recordId}`);
-                }
-            } else {
-                res.redirect(`/classAdvisor/view-files/${recordId}`);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            next(error);
+        if (!record) {
+            res.status(404).send('Record not found');
+            return;
         }
-    }
-);
 
+        // Check if a file was uploaded
+        if (req.file) {
+            // Get the number of files already uploaded in the 'new-files' directory
+            const newFilesCount = record.newFiles.length;
 
-router.post(
-    '/addOldFile/:recordId',
-    upload.single('oldPdf'),
-    async (req, res, next) => {
-        try {
-            const recordId = req.params.recordId;
-
-            // Find the record by ID
-            const record = await Records.findById(recordId);
-
-            if (!record) {
-                res.status(404).send('Record not found');
-                return;
-            }
-
-            // Check if the number of files exceeds 2
-            if (record.pdfFilePath.filter(filePath => filePath.includes('old-files')).length >= 2) {
-                req.flash('error', 'You can only upload up to 2 files.');
-                return res.redirect(`/classAdvisor/oldFiles/${recordId}`);
-            }
-
-            // Check if a file was uploaded
-            if (req.file) {
+            // Check if the number of files is less than 2
+            if (newFilesCount < 2) {
                 const newPdfPath = req.file.path;
 
-                // Update the existing record with the new file path
-                record.pdfFilePath.push(newPdfPath);
+                // Update the existing record with the new file data
+                record.newFiles.push({ fileName: req.file.originalname, filePath: newPdfPath });
                 await record.save();
 
                 const lrn = record.lrn;
@@ -350,18 +305,75 @@ router.post(
                 await historyLog.save();
 
                 // Redirect back to the view-files page
-                req.flash('success', 'Successfully uploaded');
-                res.redirect(`/classAdvisor/oldFiles/${recordId}`);
+                req.flash('success', 'File successfully uploaded');
+                res.redirect(`/classAdvisor/view-files/${recordId}`);
             } else {
-                req.flash('error', 'Please select a file to upload');
-                res.redirect(`/classAdvisor/oldFiles/${recordId}`);
+                // Display a flash message for exceeding the maximum allowed files
+                req.flash('error', 'You can only upload up to 2 files.');
+                res.redirect(`/classAdvisor/view-files/${recordId}`);
             }
-        } catch (error) {
-            console.error('Error:', error);
-            next(error);
+        } else {
+            // No file uploaded, redirect back to the view-files page
+            res.redirect(`/classAdvisor/view-files/${recordId}`);
         }
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
     }
-);
+});
+
+
+
+router.post('/addOldFile/:recordId', upload.single('oldPdf'), async (req, res, next) => {
+    try {
+        const recordId = req.params.recordId;
+
+        // Find the record by ID
+        const record = await Records.findById(recordId);
+
+        if (!record) {
+            res.status(404).send('Record not found');
+            return;
+        }
+
+        // Check if the number of old files exceeds 2
+        if (record.oldFiles.length >= 2) {
+            req.flash('error', 'You can only upload up to 2 files.');
+            return res.redirect(`/classAdvisor/oldFiles/${recordId}`);
+        }
+
+        // Check if a file was uploaded
+        if (req.file) {
+            const newPdfPath = req.file.path;
+
+            // Update the existing record with the new file data
+            record.oldFiles.push({ fileName: req.file.originalname, filePath: newPdfPath });
+            await record.save();
+
+            const lrn = record.lrn;
+
+            const historyLog = new History({
+                userEmail: req.user.email,
+                userFirstName: req.user.fname,
+                userLastName: req.user.lname,
+                action: `${req.user.fname} ${req.user.lname} added a new file to the record`,
+                details: `File: ${req.file.originalname}, LRN: ${lrn}`,
+            });
+            await historyLog.save();
+
+            // Redirect back to the view-files page
+            req.flash('success', 'File successfully uploaded');
+            res.redirect(`/classAdvisor/oldFiles/${recordId}`);
+        } else {
+            req.flash('error', 'Please select a file to upload');
+            res.redirect(`/classAdvisor/oldFiles/${recordId}`);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
 
 router.post('/deleteOldFile/:recordId/:index', async (req, res, next) => {
     try {
@@ -378,50 +390,38 @@ router.post('/deleteOldFile/:recordId/:index', async (req, res, next) => {
         }
 
         // Check if the index is valid
-        if (index >= 0 && index < record.pdfFilePath.length) {
+        if (index >= 0 && index < record.oldFiles.length) {
             // Retrieve the path of the deleted file
-            const deletedFilePath = record.pdfFilePath[index];
-            // Extract the file name from the file path
-            const deletedFileName = path.basename(deletedFilePath);
+            const deletedFile = record.oldFiles[index];
+            
+            // Remove the file at the specified index
+            record.oldFiles.splice(index, 1);
+            await record.save();
 
-            // Log the file path for debugging
-            console.log('Deleted file path:', deletedFilePath);
+            const lrn = record.lrn;
 
-            // Check if the file path includes "old-files"
-            if (deletedFilePath.includes('old-files')) {
-                // Remove the file path at the specified index
-                record.pdfFilePath.splice(index, 1);
-                await record.save();
+            const historyLog = new History({
+                userEmail: req.user.email,
+                userFirstName: req.user.fname,
+                userLastName: req.user.lname,
+                action: `${req.user.fname} ${req.user.lname} deleted a file from the record`,
+                details: `Deleted File: ${deletedFile.fileName}, LRN: ${lrn}`,
+            });
 
-                const lrn = record.lrn;
+            await historyLog.save();
 
-                const historyLog = new History({
-                    userEmail: req.user.email,
-                    userFirstName: req.user.fname,
-                    userLastName: req.user.lname,
-                    action: `${req.user.fname} ${req.user.lname} deleted a file from the record`,
-                    details: `Deleted File: ${deletedFileName}, LRN: ${lrn}`,
-                });
-
-                await historyLog.save();
-
-                // Delete the file from the file system
-                fs.unlink(deletedFilePath, (err) => {
-                    if (err) {
-                        console.error('Error deleting file:', err);
-                        req.flash('error', 'Failed to delete the file');
-                    } else {
-                        console.log('File successfully deleted:', deletedFilePath);
-                        req.flash('success', 'File successfully deleted');
-                    }
-                    // Redirect back to the view-files page
-                    res.redirect(`/classAdvisor/oldFiles/${recordId}`);
-                });
-            } else {
-                // Set error flash message if the file is not in "old-files" folder
-                req.flash('error', 'Cannot delete files outside "old-files" folder');
+            // Delete the file from the file system
+            fs.unlink(deletedFile.filePath, (err) => {
+                if (err) {
+                    console.error('Error deleting file:', err);
+                    req.flash('error', 'Failed to delete the file');
+                } else {
+                    console.log('File successfully deleted:', deletedFile.filePath);
+                    req.flash('success', 'File successfully deleted');
+                }
+                // Redirect back to the oldFiles page
                 res.redirect(`/classAdvisor/oldFiles/${recordId}`);
-            }
+            });
         } else {
             // Set error flash message for an invalid file index
             req.flash('error', 'Invalid file index');
@@ -432,6 +432,7 @@ router.post('/deleteOldFile/:recordId/:index', async (req, res, next) => {
         next(error);
     }
 });
+
 
 router.post('/deleteNewFile/:recordId/:index', async (req, res, next) => {
     try {
@@ -447,45 +448,38 @@ router.post('/deleteNewFile/:recordId/:index', async (req, res, next) => {
         }
 
         // Check if the index is valid
-        if (index >= 0 && index < record.pdfFilePath.length) {
+        if (index >= 0 && index < record.newFiles.length) {
             // Retrieve the path of the file to be deleted
-            const filePathToDelete = record.pdfFilePath[index];
+            const fileToDelete = record.newFiles[index];
 
-            // Check if the file path belongs to the new-files directory
-            if (filePathToDelete.includes('new-files')) {
-                // Remove the file path from the record
-                record.pdfFilePath.splice(index, 1);
-                await record.save();
+            // Remove the file from the newFiles array
+            record.newFiles.splice(index, 1);
+            await record.save();
 
-                const lrn = record.lrn;
+            const lrn = record.lrn;
 
-                // Log the deletion action in the history
-                const historyLog = new History({
-                    userEmail: req.user.email,
-                    userFirstName: req.user.fname,
-                    userLastName: req.user.lname,
-                    action: `${req.user.fname} ${req.user.lname} deleted a file from the new files`,
-                    details: `Deleted File: ${filePathToDelete}, LRN: ${lrn}`,
-                });
-                await historyLog.save();
+            // Log the deletion action in the history
+            const historyLog = new History({
+                userEmail: req.user.email,
+                userFirstName: req.user.fname,
+                userLastName: req.user.lname,
+                action: `${req.user.fname} ${req.user.lname} deleted a file from the new files`,
+                details: `Deleted File: ${fileToDelete.fileName}, LRN: ${lrn}`,
+            });
+            await historyLog.save();
 
-                // Delete the file from the file system
-                fs.unlink(filePathToDelete, (err) => {
-                    if (err) {
-                        console.error('Error deleting file:', err);
-                        req.flash('error', 'Failed to delete the file');
-                    } else {
-                        console.log('File successfully deleted:', filePathToDelete);
-                        req.flash('success', 'File successfully deleted');
-                    }
-                    // Redirect back to the new-files page
-                    res.redirect(`/classAdvisor/view-files/${recordId}`);
-                });
-            } else {
-                // If the file is not in the new-files directory, show an error message
-                req.flash('error', 'File does not exist in new files');
+            // Delete the file from the file system
+            fs.unlink(fileToDelete.filePath, (err) => {
+                if (err) {
+                    console.error('Error deleting file:', err);
+                    req.flash('error', 'Failed to delete the file');
+                } else {
+                    console.log('File successfully deleted:', fileToDelete.filePath);
+                    req.flash('success', 'File successfully deleted');
+                }
+                // Redirect back to the view-files page
                 res.redirect(`/classAdvisor/view-files/${recordId}`);
-            }
+            });
         } else {
             // Set error flash message for an invalid file index
             req.flash('error', 'Invalid file index');
@@ -498,10 +492,6 @@ router.post('/deleteNewFile/:recordId/:index', async (req, res, next) => {
     }
 });
 
-  
-  
-
-// Add this route for handling record updates
 router.post('/edit-record/:recordId', async (req, res, next) => {
 	try {
 		const recordId = req.params.recordId;

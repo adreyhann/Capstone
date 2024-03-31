@@ -99,6 +99,99 @@ router.get('/records', async (req, res, next) => {
 	res.render('admin/records', { person, records, currentUserRole, gradeLevel });
 });
 
+router.get('/studentFolders/:id', async (req, res, next) => {
+    try {
+        const person = req.user;
+        const studentId = req.params.id;
+        const student = await Records.findById(studentId);
+        const records = await Records.find();
+        const archives = await Archives.find();
+        
+        res.render('admin/studentFolders', { person, student, records, archives });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
+router.get('/oldFiles/:id', async (req, res, next) => {
+    try {
+        const studentId = req.params.id;
+        const student = await Records.findById(studentId);
+
+        if (!student) {
+            res.status(404).send('Record not found');
+            return;
+        }
+
+        const oldFiles = student.oldFiles || []; // Retrieve old files from the separate field
+
+        const base64PDF = await Promise.all(
+            oldFiles.map(async (fileData) => {
+                const pdfData = await fs.promises.readFile(fileData.filePath);
+                const pdfDoc = await PDFDocument.load(pdfData);
+                const pdfBytes = await pdfDoc.save();
+                return Buffer.from(pdfBytes).toString('base64');
+            })
+        );
+
+        const filenames = oldFiles.map(fileData => fileData.fileName);
+
+        const person = req.user;
+        res.render('admin/oldFiles', {
+            student,
+            person,
+            base64PDF,
+            filenames,
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
+router.get('/view-files/:id', async (req, res, next) => {
+    try {
+        const studentId = req.params.id;
+        const student = await Records.findById(studentId);
+
+        console.log('Student:', student);
+
+        if (!student) {
+            res.status(404).send('Record not found');
+            return;
+        }
+
+        const newFiles = student.newFiles || []; // Retrieve new files from the separate field
+
+        const base64PDF = await Promise.all(
+            newFiles.map(async (fileData) => {
+                if (fileData && fileData.filePath) {
+                    const pdfData = await fs.promises.readFile(fileData.filePath);
+                    const pdfDoc = await PDFDocument.load(pdfData);
+                    const pdfBytes = await pdfDoc.save();
+                    return Buffer.from(pdfBytes).toString('base64');
+                } else {
+                    return null; 
+                }
+            })
+        );
+
+        const filenames = newFiles.map(fileData => fileData.fileName);
+
+        const person = req.user;
+        res.render('admin/view-files', {
+            student,
+            person,
+            base64PDF,
+            filenames,
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
 router.get('/goBackToRecords', (req, res) => {
 	const gradeLevel = req.query.gradeLevel || ''; // Get the grade level from the query parameter
 
@@ -224,50 +317,6 @@ const upload = multer({
 	},
 });
 
-router.get('/view-files/:id', async (req, res, next) => {
-	try {
-		const studentId = req.params.id;
-		const student = await Records.findById(studentId);
-
-		console.log('Student:', student);
-
-		if (!student) {
-			res.status(404).send('Record not found');
-			return;
-		}
-
-		const base64PDF = await Promise.all(
-			student.pdfFilePath.map(async (filePath) => {
-				if (filePath) {
-					const pdfData = await fs.promises.readFile(filePath);
-					const pdfDoc = await PDFDocument.load(pdfData);
-					const pdfBytes = await pdfDoc.save();
-					return Buffer.from(pdfBytes).toString('base64');
-				} else {
-					return null; // or handle the case where filePath is null
-				}
-			})
-		);
-
-		// Assuming pdfFilePath is an array of file paths
-		const filename = base64PDF.map((_, index) => {
-			return student.pdfFilePath[index]
-				? path.basename(student.pdfFilePath[index])
-				: null;
-		});
-
-		const person = req.user;
-		res.render('admin/view-files', {
-			student,
-			person,
-			base64PDF,
-			filename,
-		});
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
-});
 
 router.post('/submit-form', upload.array('pdfFile'), async (req, res, next) => {
 	try {
@@ -446,8 +495,6 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 	}
 });
 
-// this  aint belong to CA
-// Add this route for moving records to the archive
 router.post('/move-to-archive/:recordId', async (req, res, next) => {
 	try {
 		const recordId = req.params.recordId;
@@ -487,50 +534,49 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
 
 // Add this route for viewing files of an archived record
 router.get('/archived-files/:recordId', async (req, res, next) => {
-	try {
-		const recordId = req.params.recordId;
-		const student = await Archives.findById(recordId);
-		// Find the archived record by ID
-		const archivedRecord = await Archives.findById(recordId);
+    try {
+        const recordId = req.params.recordId;
 
-		if (!archivedRecord) {
-			res.status(404).send('Archived Record not found');
-			return;
-		}
+        // Find the archived record by ID
+        const archivedRecord = await Archives.findById(recordId);
 
-		const base64PDF = await Promise.all(
-			student.pdfFilePath.map(async (filePath) => {
-				if (filePath) {
-					const pdfData = await fs.promises.readFile(filePath);
-					const pdfDoc = await PDFDocument.load(pdfData);
-					const pdfBytes = await pdfDoc.save();
-					return Buffer.from(pdfBytes).toString('base64');
-				} else {
-					return null; // or handle the case where filePath is null
-				}
-			})
-		);
+        if (!archivedRecord) {
+            res.status(404).send('Archived Record not found');
+            return;
+        }
 
-		// Assuming pdfFilePath is an array of file paths
-		const filename = base64PDF.map((_, index) => {
-			return student.pdfFilePath[index]
-				? path.basename(student.pdfFilePath[index])
-				: null;
-		});
+        const base64OldPDF = await Promise.all(
+            archivedRecord.oldFiles.map(async (file) => {
+                const pdfData = await fs.promises.readFile(file.filePath);
+                return Buffer.from(pdfData).toString('base64');
+            })
+        );
 
-		const person = req.user;
+        const filenameOld = archivedRecord.oldFiles.map((file) => path.basename(file.filePath));
 
-		res.render('admin/archived-files', {
-			archivedRecord,
-			student,
-			person,
-			base64PDF,
-			filename,
-		}); // Adjust the view name as needed
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
+        const base64NewPDF = await Promise.all(
+            archivedRecord.newFiles.map(async (file) => {
+                const pdfData = await fs.promises.readFile(file.filePath);
+                return Buffer.from(pdfData).toString('base64');
+            })
+        );
+
+        const filenameNew = archivedRecord.newFiles.map((file) => path.basename(file.filePath));
+
+        const person = req.user;
+
+        res.render('admin/archived-files', {
+            archivedRecord,
+            person,
+            base64OldPDF,
+            filenameOld,
+            base64NewPDF,
+            filenameNew,
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
 
 router.post('/edit-users/:_id', async (req, res, next) => {

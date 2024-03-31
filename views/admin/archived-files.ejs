@@ -108,7 +108,7 @@
 							aria-expanded="false"
 							data-menuitem="archives"
 						>
-							<i class="fa-regular fa-user pe-2"></i>
+							<i class="fa-solid fa-archive pe-2"></i>
 							Archives
 						</a>
 					</li>
@@ -187,34 +187,44 @@
 				</div>
 			</nav>
 			<div class="container-lg position-relative">
-				<h2 class="mt-2">Documents</h2>
+				<h2 class="mt-2">All Documents</h2>
 				<hr />
 				<div class="container-lg">
 					<% try { %>
 						<%- include('../credentials/flash-message.ejs') %>
-					  <% } catch (error) { %>
+					<% } catch (error) { %>
 						<div>Error: <%= error.message %></div>
-					  <% } %>
-					
-				
-					  <% if (filename.length === 0) { %>
-						<div class="alert alert-warning text-center" role="alert">
+					<% } %>
+					<% if (filenameOld.length === 0 && filenameNew.length === 0) { %>
+						<div class="alert alert-warning d-flex align-items-center justify-content-center" role="alert">
 							No PDF files available.
 						</div>
 					<% } else { %>
-						<% for (let i = 0; i < Math.min(2, filename.length); i++) { %>
+						<!-- Display old files -->
+						<% for (let i = 0; i < filenameOld.length; i++) { %>
 							<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">
 								<div class="card-header text-center bg-info position-relative">
-									<%= filename[i] %>
+									<%= filenameOld[i] %>
 								</div>
 								<div class="card-body">
-									<!-- Display the PDF for each file -->
-									<embed src="data:application/pdf;base64, <%= base64PDF[i] %>" width="100%" height="100%" />
+									<!-- Display the PDF for each old file -->
+									<embed src="data:application/pdf;base64, <%= base64OldPDF[i] %>" width="100%" height="100%"/>
+								</div>
+							</div>
+						<% } %>
+						<!-- Display new files -->
+						<% for (let i = 0; i < filenameNew.length; i++) { %>
+							<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">
+								<div class="card-header text-center bg-info position-relative">
+									<%= filenameNew[i] %>
+								</div>
+								<div class="card-body">
+									<!-- Display the PDF for each new file -->
+									<embed src="data:application/pdf;base64, <%= base64NewPDF[i] %>" width="100%" height="100%"/>
 								</div>
 							</div>
 						<% } %>
 					<% } %>
-					
 				</div>
 				
 				

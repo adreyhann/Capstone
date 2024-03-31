@@ -113,7 +113,7 @@
 								aria-expanded="false"
 								data-menuitem="archives"
 							>
-								<i class="fa-regular fa-user pe-2"></i>
+								<i class="fa-solid fa-archive pe-2"></i>
 								Archives
 							</a>
 						</li>
@@ -209,18 +209,18 @@
 						</a>
 
 						<!-- Loop to display up to 2 PDF files -->
-						<% if (filename.length === 0) { %>
+						<% if (filenames.length === 0) { %>
 						<div
 							class="alert alert-warning d-flex align-items-center justify-content-center"
 							role="alert"
 						>
 							No PDF files available.
 						</div>
-						<% } else { %> <% for (let i = 0; i < Math.min(2, filename.length);
+						<% } else { %> <% for (let i = 0; i < Math.min(2, filenames.length);
 						i++) { %>
 						<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">
 							<div class="card-header text-center bg-info position-relative">
-								<%= filename[i] %>
+								<%= filenames[i] %>
 							</div>
 							<div class="card-body">
 								<embed

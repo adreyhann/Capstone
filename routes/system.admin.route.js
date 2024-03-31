@@ -628,9 +628,6 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
 });
 
 
-
-
-
 router.post('/archive-selected', async (req, res, next) => {
     try {
         const selectedRecordIds = req.body.selectedRecords;

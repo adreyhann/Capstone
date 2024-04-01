@@ -35,6 +35,10 @@ const UserSchema = new mongoose.Schema({
 		default: 'active',
 		required: true,
 	},
+	profilePicture: {
+        type: String,
+		required: false,
+    },
 	resetCode: {
 		type: Number,
 		

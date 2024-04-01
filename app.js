@@ -24,7 +24,8 @@ app.use(express.static('public'));
 app.use('/css', express.static(__dirname + '/public/css'));
 app.use('/img', express.static(__dirname + '/public/img'));
 app.use('/js', express.static(__dirname + '/public/js'));
-app.use('/uploads', express.static(path.join(__dirname + '/public/uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '/public/uploads')));
+
 
 const client = new MongoClient(process.env.MONGO_URI);
 const mongoStore = new MongoStore({ client });

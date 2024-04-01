@@ -199,6 +199,13 @@ router.post('/submit-form', async (req, res, next) => {
                 return res.redirect('/classAdvisor/addRecords');
             }
 
+            // Check if LRN already exists
+            const existingRecord = await Records.findOne({ lrn: parseInt(lrn) });
+            if (existingRecord) {
+                req.flash('error', 'LRN already exists. Please enter a different LRN.');
+                return res.redirect('/classAdvisor/addRecords');
+            }
+
             // Check if oldPdfFiles are required when transferee is not 'No'
             if (transferee !== 'No') {
                 const oldPdfFiles = req.files['oldPdf'] || [];
@@ -258,14 +265,10 @@ router.post('/submit-form', async (req, res, next) => {
             res.redirect('/classAdvisor/addRecords');
         });
     } catch (error) {
-        if (error.code === 11000 && error.keyPattern && error.keyPattern.lrn === 1) {
-            req.flash('error', 'LRN already exists. Please enter a different LRN.');
-            return res.redirect('/classAdvisor/addRecords');
-        } else {
-            next(error);
-        }
+        next(error);
     }
 });
+
 
 
 router.post('/addFile/:recordId', upload.single('newPdf'), async (req, res, next) => {

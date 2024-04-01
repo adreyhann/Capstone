@@ -47,7 +47,7 @@ async function validateEmail(email) {
 		if (data.data.result === 'deliverable') {
 			return true; // Email is valid
 		} else {
-			return false; // Email is not deliverable
+			return false; // Email is invalid
 		}
 	} catch (error) {
 		console.error('Error validating email:', error.message);

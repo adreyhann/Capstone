@@ -7,6 +7,9 @@ const ResetToken = require('../models/reset.model');
 const bcrypt = require('bcrypt');
 const History = require('../models/history.model');
 const nodemailer = require('nodemailer');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 const crypto = require('crypto');
 
@@ -32,10 +35,45 @@ const transporter = nodemailer.createTransport({
 	},
 });
 
+// Define storage for the uploaded files
+const storage = multer.diskStorage({
+	destination: function (req, file, cb) {
+		cb(null, 'public/img'); // Specify the directory where uploaded files should be stored
+	},
+	filename: function (req, file, cb) {
+		cb(null, Date.now() + '-' + file.fieldname); // Set the filename as current timestamp + original filename
+	},
+});
+
+// Initialize multer middleware with the defined storage
+const upload = multer({
+	storage: storage,
+	limits: {
+		fileSize: 1024 * 1024 * 2, // Set the maximum file size allowed (2MB in this example)
+	},
+	fileFilter: function (req, file, cb) {
+		// Accept only image files
+		const filetypes = /jpeg|jpg|png/;
+		const mimetype = filetypes.test(file.mimetype);
+		const extname = filetypes.test(
+			path.extname(file.originalname).toLowerCase()
+		);
+
+		if (mimetype && extname) {
+			cb(null, true);
+		} else {
+			req.flash('error', 'Only JPEG, JPG, or PNG files are allowed');
+			cb(null, false);
+		}
+		
+	},
+}).single('profilePicture');
+
 router.post(
 	'/register',
 	ensureAuthenticated,
 	ensureSystemAdminOrAdmin,
+	upload,
 	[
 		body('email')
 			.trim()
@@ -216,8 +254,18 @@ router.post(
 				return res.redirect('/auth/register');
 			}
 
-			const user = new User(req.body);
+			let profilePicturePath = req.file
+				? req.file.path
+				: '/img/default-img.jpg';
+
+			const user = new User({
+				...req.body,
+				profilePicture: profilePicturePath,
+			});
+
 			await user.save();
+
+			
 
 			const historyLog = new History({
 				userEmail: req.user.email,
@@ -285,6 +333,7 @@ router.post(
 				person,
 				email: req.body.email,
 				currentUserRole,
+				profilePicture: profilePicturePath,
 				messages: req.flash(),
 				error: error.message,
 			});

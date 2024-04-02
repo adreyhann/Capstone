@@ -237,6 +237,17 @@ router.get('/archives', async (req, res, next) => {
 	res.render('admin/archives', { person, archivedRecord });
 });
 
+// Endpoint to get events
+router.get('/events', async (req, res) => {
+	try {
+		const events = await Event.find();
+		res.json(events);
+	} catch (error) {
+		console.error('Error fetching events:', error);
+		res.status(500).json({ error: 'Failed to fetch events' });
+	}
+});
+
 router.get('/calendar', async (req, res, next) => {
 	try {
 		const person = req.user;
@@ -246,6 +257,48 @@ router.get('/calendar', async (req, res, next) => {
 	} catch (error) {
 		console.error('Error:', error);
 		next(error);
+	}
+});
+
+// Endpoint to add a new event
+router.post('/events', async (req, res) => {
+	try {
+		const { date, eventName } = req.body;
+		const event = new Event({ date, eventName });
+		const savedEvent = await event.save();
+		res.status(201).json(savedEvent);
+	} catch (error) {
+		console.error('Error adding event:', error);
+		res.status(500).json({ error: 'Failed to add event' });
+	}
+});
+
+// Endpoint to edit an existing event
+router.put('/events/:date/:eventName', async (req, res) => {
+	try {
+		const { date, eventName } = req.params;
+		const { newEventName } = req.body;
+		const updatedEvent = await Event.findOneAndUpdate(
+			{ date, eventName },
+			{ eventName: newEventName },
+			{ new: true }
+		);
+		res.json(updatedEvent);
+	} catch (error) {
+		console.error('Error editing event:', error);
+		res.status(500).json({ error: 'Failed to edit event' });
+	}
+});
+
+// Endpoint to delete an existing event
+router.delete('/events/:date/:eventName', async (req, res) => {
+	try {
+		const { date, eventName } = req.params;
+		await Event.findOneAndDelete({ date, eventName });
+		res.sendStatus(204);
+	} catch (error) {
+		console.error('Error deleting event:', error);
+		res.status(500).json({ error: 'Failed to delete event' });
 	}
 });
 

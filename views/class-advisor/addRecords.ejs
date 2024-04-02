@@ -38,6 +38,7 @@
 		<script defer src="/js/toggler.js"></script>
 		<script defer src="/js/limit.number.js"></script>
 		<script defer src="/js/toggleFileInput.js"></script>
+		<script defer src="/js/spinner3.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<link rel="icon" type="image/x-icon" href="/img/logo.png">
 
@@ -149,7 +150,7 @@
 						<div class="card custom-card-2 border-0">
 							<div class="card-body">
                                 
-								<form action="/classAdvisor/submit-form" method="post" enctype="multipart/form-data">
+								<form id="addRecord" action="/classAdvisor/submit-form" method="post" enctype="multipart/form-data">
 									<% try { %>
 										<%- include('../credentials/flash-message.ejs') %>
 									  <% } catch (error) { %>
@@ -232,7 +233,7 @@
 										<input type="file" class="form-control" name="newPdf" id="newPdf" accept=".pdf" multiple>
 									  </div>
                                     <div class="card-footer">
-                                        <input class="btn btn-success" style="width: 100%;" type="submit" value="Submit" />
+                                        <button class="btn btn-success" id="submitButton" style="width: 100%;" type="submit">Submit</button>
                                     </div>
 								</form>
 							</div>

@@ -1,121 +1,160 @@
-// Load events from local storage on page load
-const events = JSON.parse(localStorage.getItem('events')) || {};
+function displayEvents(events) {
+	const eventList = document.getElementById('eventList');
+	eventList.innerHTML = '';
 
-function addEvent() {
-  const dateInput = document.getElementById('datepicker');
-  const selectedDate = dateInput.value;
-  if (selectedDate) {
-    if (!events[selectedDate]) {
-      events[selectedDate] = [];
-    }
-    const eventName = prompt('Enter event name:');
-    if (eventName) {
-      events[selectedDate].push(eventName);
-      displayEvents();
-      saveEventsToLocalStorage();
-    }
-  }
+	// Check if events array is empty
+	if (events.length === 0) {
+		const noEventsMessage = document.createElement('div');
+		noEventsMessage.classList.add('alert', 'alert-info', 'text-center'); // Add text-center class
+		noEventsMessage.textContent = 'No events yet.';
+		eventList.appendChild(noEventsMessage);
+		return; // Exit the function if no events are found
+	}
+
+	// Iterate over each event object
+	for (const event of events) {
+		const date = new Date(event.date); // Convert date string to Date object
+
+		// Format the date and time
+		const formattedDate = date.toLocaleDateString('en-US', {
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric',
+		});
+		const formattedTime = date.toLocaleString('en-US', {
+			hour: 'numeric',
+			minute: '2-digit',
+			hour12: true,
+		});
+
+		// Create a list item for the event
+		const eventItem = document.createElement('li');
+		eventItem.classList.add(
+			'list-group-item',
+			'd-flex',
+			'justify-content-between',
+			'align-items-center'
+		);
+
+		// Display the formatted date and time
+		const dateTimeSpan = document.createElement('span');
+		dateTimeSpan.textContent = `${formattedDate}, ${formattedTime}`;
+		eventItem.appendChild(dateTimeSpan);
+
+		// Display the event name
+		const eventNameSpan = document.createElement('span');
+		eventNameSpan.textContent = event.eventName;
+		eventItem.appendChild(eventNameSpan);
+
+		// Add buttons container
+		const buttonsContainer = document.createElement('div');
+
+		// Add buttons for editing and deleting the event
+		const editButton = document.createElement('button');
+		editButton.textContent = 'Edit';
+		editButton.classList.add('btn', 'btn-sm', 'btn-primary', 'me-2');
+		editButton.addEventListener('click', () =>
+			editEvent(date, event.eventName)
+		);
+		buttonsContainer.appendChild(editButton);
+
+		const deleteButton = document.createElement('button');
+		deleteButton.textContent = 'Delete';
+		deleteButton.classList.add('btn', 'btn-sm', 'btn-danger');
+		deleteButton.addEventListener('click', () =>
+			deleteEvent(date, event.eventName)
+		);
+		buttonsContainer.appendChild(deleteButton);
+
+		// Append the buttons container to the event list item
+		eventItem.appendChild(buttonsContainer);
+
+		// Append the event list item to the event list
+		eventList.appendChild(eventItem);
+	}
 }
 
-function editEvent(date, eventName) {
-  const newEventName = prompt('Edit event name:', eventName);
-  if (newEventName) {
-    const eventIndex = events[date].indexOf(eventName);
-    if (eventIndex !== -1) {
-      events[date][eventIndex] = newEventName;
-      displayEvents();
-      saveEventsToLocalStorage();
-    }
-  }
+async function loadEventsFromServer() {
+	try {
+		const response = await fetch('/systemAdmin/events');
+		const events = await response.json();
+		displayEvents(events);
+	} catch (error) {
+		console.error('Error loading events:', error);
+	}
 }
 
-function deleteEvent(date, eventName) {
-  const confirmDelete = confirm(`Are you sure you want to delete '${eventName}' on ${date}?`);
-  if (confirmDelete) {
-    events[date] = events[date].filter(e => e !== eventName);
-    if (events[date].length === 0) {
-      delete events[date];
-    }
-    displayEvents();
-    saveEventsToLocalStorage();
-  }
+async function addEvent() {
+	const dateInput = document.getElementById('datepicker');
+	const selectedDate = dateInput.value;
+	if (selectedDate) {
+		const eventName = prompt('Enter event name:');
+		if (eventName) {
+			try {
+				const response = await fetch('/systemAdmin/events', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({ date: selectedDate, eventName }),
+				});
+				if (response.ok) {
+					loadEventsFromServer();
+				} else {
+					console.error('Failed to add event:', response.statusText);
+				}
+			} catch (error) {
+				console.error('Error adding event:', error);
+			}
+		}
+	}
 }
 
-function displayEvents() {
-  const eventList = document.getElementById('eventList');
-  eventList.innerHTML = '';
-
-  for (const date in events) {
-      const dateItem = document.createElement('li');
-      dateItem.style.listStyle = 'none'; // Remove default list styling
-      dateItem.style.marginBottom = '10px'; // Add some margin for spacing
-      dateItem.style.display = 'flex';
-      dateItem.style.justifyContent = 'space-between'; // Align content to the right
-      dateItem.style.alignItems = 'center';
-
-      const dateText = document.createElement('span');
-      dateText.textContent = date + ':';
-      dateItem.appendChild(dateText);
-
-      const eventSubList = document.createElement('ul');
-      eventSubList.style.listStyle = 'none'; // Remove default list styling
-      eventSubList.style.padding = '0'; // Remove default padding
-
-      for (const eventName of events[date]) {
-          const eventItem = document.createElement('li');
-          eventItem.style.display = 'flex';
-          eventItem.style.justifyContent = 'center'; // Align content to the center
-          eventItem.style.alignItems = 'center';
-          eventItem.style.width = '100%'; // Ensure the full width is used
-
-          const eventNameText = document.createElement('span');
-          eventNameText.textContent = eventName;
-          eventNameText.style.display = 'flex'
-          eventNameText.style.justifyContent = 'center'
-          eventNameText.style.alignItems = 'center'
-          eventNameText.style.marginRight = '70px'; // Push the text to the left
-
-          const buttonContainer = document.createElement('div');
-          buttonContainer.style.display = 'flex'; // Make it a flex container
-          buttonContainer.style.marginLeft = 'auto'; // Push the buttons to the right
-
-          const editButton = document.createElement('button');
-          editButton.textContent = 'Edit';
-          editButton.className = 'btn btn-sm btn-info';
-          editButton.onclick = function () {
-              editEvent(date, eventName);
-          };
-
-          const deleteButton = document.createElement('button');
-          deleteButton.textContent = 'Delete';
-          deleteButton.className = 'btn btn-sm btn-danger ms-1'; // Add margin to separate buttons
-          deleteButton.onclick = function () {
-              deleteEvent(date, eventName);
-          };
-
-          buttonContainer.appendChild(editButton);
-          buttonContainer.appendChild(deleteButton);
-
-          eventItem.appendChild(eventNameText);
-          eventItem.appendChild(buttonContainer);
-          eventSubList.appendChild(eventItem);
-      }
-
-      dateItem.appendChild(eventSubList);
-      eventList.appendChild(dateItem);
-  }
+async function editEvent(date, eventName) {
+	const newEventName = prompt('Edit event name:', eventName);
+	if (newEventName) {
+		try {
+			const response = await fetch(`/systemAdmin/events/${date}/${eventName}`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ newEventName }),
+			});
+			if (response.ok) {
+				loadEventsFromServer();
+			} else {
+				console.error('Failed to edit event:', response.statusText);
+			}
+		} catch (error) {
+			console.error('Error editing event:', error);
+		}
+	}
 }
 
-
-
-function saveEventsToLocalStorage() {
-  localStorage.setItem('events', JSON.stringify(events));
+async function deleteEvent(date, eventName) {
+	const confirmDelete = confirm(
+		`Are you sure you want to delete '${eventName}' on ${date}?`
+	);
+	if (confirmDelete) {
+		try {
+			const response = await fetch(`/systemAdmin/events/${date}/${eventName}`, {
+				method: 'DELETE',
+			});
+			if (response.ok) {
+				loadEventsFromServer();
+			} else {
+				console.error('Failed to delete event:', response.statusText);
+			}
+		} catch (error) {
+			console.error('Error deleting event:', error);
+		}
+	}
 }
 
-flatpickr("#datepicker", {
-  enableTime: true,
-  dateFormat: "Y-m-d H:i",
+flatpickr('#datepicker', {
+	enableTime: true,
+	dateFormat: 'Y-m-d H:i',
 });
 
-// Initial display of events on page load
-displayEvents();
+loadEventsFromServer();

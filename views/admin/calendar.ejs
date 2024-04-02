@@ -35,7 +35,7 @@
 			src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"
 		></script>
 		<script defer src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-		<script defer src="/js/calendar.js"></script>
+		<script defer src="/js/ca-calendar.js"></script>
 		<script defer src="/js/toggler.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<link rel="icon" type="image/x-icon" href="/img/logo.png">
@@ -206,23 +206,23 @@
 									<div class="card custom-card-2 border-0" style="width: 36rem;">
 										<div class="card-body" style="height: 365px; overflow-y: auto;">
 											<ul id="eventList" class="list-group">
-												<% for (const date in events) { %>
-													<li class="list-group-item">
-														<span><%= date %>:</span>
-														<ul>
-															<% for (const eventName of events[date]) { %>
+												<% if (events && events.length > 0) { %>
+													<% events.forEach((event, index) => { %>
+														<li class="list-group-item" data-event-date="<%= event.date %>" data-event-name="<%= event.eventName %>">
+															<span><%= new Date(event.date).toLocaleDateString() %></span>
+															<ul>
 																<li class="d-flex justify-content-between align-items-center">
-																	<%= eventName %>
+																	<%= event.eventName %>
 																	<div>
-																		<button class="btn btn-sm btn-primary" onclick="editEvent('<%= date %>', '<%= eventName %>')">Edit</button>
-																		<button class="btn btn-sm btn-danger" onclick="deleteEvent('<%= date %>', '<%= eventName %>')">Delete</button>
 																	</div>
 																</li>
-															<% } %>
-														</ul>
-													</li>
+															</ul>
+														</li>
+													<% }); %>
+												<% } else { %>
 												<% } %>
 											</ul>
+											
 										</div>
 									</div>
 									

@@ -24,6 +24,7 @@
 		<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 		<script defer src="/js/charts.js"></script>
 		<script defer src="/js/toggler.js"></script>
+		<script defer src="/js/spinner3.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<link rel="icon" type="image/x-icon" href="/img/logo.png" />
 		<title>View Files</title>
@@ -165,6 +166,7 @@
 						<!-- Form to upload additional files -->
 						<form
 							action="/classAdvisor/addOldFile/<%= student._id %>"
+							id="addFile"
 							method="post"
 							enctype="multipart/form-data"
 							class="mb-3"
@@ -178,7 +180,7 @@
 									accept=".pdf"
 									required
 								/>
-								<button type="submit" class="btn btn-sm btn-success">
+								<button type="submit" id="deleteButton" class="btn btn-sm btn-success">
 									Submit
 								</button>
 							</div>

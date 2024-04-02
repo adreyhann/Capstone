@@ -17,6 +17,17 @@ router.get('/dashboard', async (req, res, next) => {
 	res.render('class-advisor/dashboard', { person, records, archives, events });
 });
 
+// Endpoint to get events
+router.get('/events', async (req, res) => {
+	try {
+		const events = await Event.find();
+		res.json(events);
+	} catch (error) {
+		console.error('Error fetching events:', error);
+		res.status(500).json({ error: 'Failed to fetch events' });
+	}
+});
+
 router.get('/records', async (req, res, next) => {
 	const person = req.user;
 	const currentUserRole = req.user.role;

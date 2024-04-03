@@ -197,7 +197,7 @@
 											<% if (events && events.length > 0) { %>
 												<% events.forEach((event, index) => { %>
 													<li class="list-group-item" data-event-date="<%= event.date %>" data-event-name="<%= event.eventName %>">
-														<span><%= new Date(event.date).toLocaleDateString() %></span>
+														<span style="font-weight: bold;"><%= new Date(event.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) %></span>
 														<ul>
 															<li class="d-flex justify-content-between align-items-center">
 																<%= event.eventName %>

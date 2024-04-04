@@ -59,9 +59,7 @@
 					<div class="container my-2">
 						<div class="row">
 							<div class="col-md-4 mx-2">
-								<span class="material-symbols-outlined" style="font-size: 5rem;">
-									account_circle
-								</span>
+								<img src="<%= person.profilePicture || '/img/default-img.jpg' %>" alt="Profile Picture" style="width: 70px; height: 65px; border-radius: 50%;" />
 							</div>
 							<div class="col-md-6">
 								<p class="my-0 pt-2" style="font-size: 15px"><%= person.fname %> <%= person.lname %></p>

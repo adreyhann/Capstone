@@ -1064,7 +1064,6 @@ router.post('/edit-profile/:id', async (req, res) => {
 	}
 });
 
-// Add this route to get record counts
 router.get('/get-record-counts', async (req, res, next) => {
 	try {
 		const activeCount = await Records.countDocuments({
@@ -1079,7 +1078,6 @@ router.get('/get-record-counts', async (req, res, next) => {
 	}
 });
 
-// Add this route to get record counts based on gradeLevel
 router.get('/get-gradeLevel-counts', async (req, res, next) => {
 	try {
 		// Assuming 'gradeLevel' is a property in the 'Records' collection

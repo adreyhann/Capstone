@@ -19,20 +19,6 @@ function countVisibleUsersInTable(users, currentUser) {
 	return visibleUsersInTable.length;
 }
 
-// Function to add a history log
-async function addHistoryLog(userId, action, details) {
-	try {
-		const historyLog = new History({
-			userId,
-			action,
-			details,
-		});
-
-		await historyLog.save();
-	} catch (error) {
-		console.error('Error adding history log:', error);
-	}
-}
 
 // Function to validate email using Hunter.io API
 async function validateEmail(email) {
@@ -58,7 +44,7 @@ async function validateEmail(email) {
 router.get('/dashboard', async (req, res, next) => {
 	// console.log(req.user)
 	const person = req.user;
-
+	const profilePicture = req.user.profilePicture;
 	const users = await User.find();
 	const records = await Records.find();
 	const archives = await Archives.find();
@@ -67,6 +53,7 @@ router.get('/dashboard', async (req, res, next) => {
 		users,
 		records,
 		archives,
+		profilePicture,
 		countVisibleUsersInTable: countVisibleUsersInTable(users, person),
 	});
 });
@@ -678,131 +665,126 @@ router.post('/archive-selected', async (req, res, next) => {
 });
 
 router.get('/backup', async (req, res, next) => {
-	try {
-		// Fetch records from the database
-		const records = await Records.find();
+    try {
+        const records = await Records.find();
 
-		// Create a zip stream
-		const archive = archiver('zip', {
-			zlib: { level: 9 }, // Sets the compression level
-		});
+        const archive = archiver('zip', {
+            zlib: { level: 9 },
+        });
 
-		// Pipe the archive to the response stream
-		archive.pipe(res);
+        archive.pipe(res);
 
-		// Organize files by grade level and student
-		const gradeLevels = new Set(records.map((record) => record.gradeLevel));
-		for (const gradeLevel of gradeLevels) {
-			const gradeLevelFolderName = `${gradeLevel}`;
-			const gradeLevelRecords = records.filter(
-				(record) => record.gradeLevel === gradeLevel
-			);
-			for (const record of gradeLevelRecords) {
-				const studentFolderName = `${record.lName}_${record.fName}`;
-				const transfereeStudentFilesFolderName = 'transferee-student-files';
-				for (const file of record.oldFiles) {
-					const filePath = file.filePath;
-					const fileName = path.basename(filePath);
-					const folderPath = path.join(
-						gradeLevelFolderName,
-						studentFolderName,
-						transfereeStudentFilesFolderName
-					);
-					archive.file(filePath, { name: path.join(folderPath, fileName) });
-				}
-				const newFilesFolderName = 'new-files';
-				for (const file of record.newFiles) {
-					const filePath = file.filePath;
-					const fileName = path.basename(filePath);
-					const folderPath = path.join(
-						gradeLevelFolderName,
-						studentFolderName,
-						newFilesFolderName
-					);
-					archive.file(filePath, { name: path.join(folderPath, fileName) });
-				}
-			}
-		}
+        const gradeLevels = new Set(records.map((record) => record.gradeLevel));
+        for (const gradeLevel of gradeLevels) {
+            const gradeLevelFolder = archive.directory(gradeLevel);
 
-		// Set response headers for downloading the zip file
-		res.setHeader(
-			'Content-Disposition',
-			'attachment; filename=student_records.zip'
-		);
-		res.setHeader('Content-Type', 'application/zip');
+            const gradeLevelRecords = records.filter((record) => record.gradeLevel === gradeLevel);
+            for (const record of gradeLevelRecords) {
+                const studentName = `${record.fName} ${record.lName}`;
+                const genderFolder = record.gender === 'Male' ? 'Male' : 'Female';
 
-		// Finalize the archive
-		archive.finalize();
+                const folderPath = `${gradeLevel}/${genderFolder}/${studentName}`;
+                const studentFolder = gradeLevelFolder.directory(folderPath);
 
-		// Log the backup generation action
-		const historyLog = new History({
-			userEmail: req.user.email,
-			userFirstName: req.user.fname,
-			userLastName: req.user.lname,
-			action: `${req.user.fname} ${req.user.lname} generated a backup of student records`,
-			details: `Number of records backed up: ${records.length}`,
-		});
-		await historyLog.save();
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
+                const oldFilesFolder = studentFolder.directory('Old Files');
+                for (const file of record.oldFiles) {
+                    archive.file(file.filePath, {
+                        name: `${folderPath}/Transferre student files/${file.fileName}`,
+                    });
+                }
+
+                const newFilesFolder = studentFolder.directory('New Files');
+                for (const file of record.newFiles) {
+                    archive.file(file.filePath, {
+                        name: `${folderPath}/Current files/${file.fileName}`,
+                    });
+                }
+            }
+        }
+
+        res.setHeader(
+            'Content-Disposition',
+            'attachment; filename=Student active records.zip'
+        );
+        res.setHeader('Content-Type', 'application/zip');
+
+        // Finalize the archive
+        archive.finalize();
+
+        const historyLog = new History({
+            userEmail: req.user.email,
+            userFirstName: req.user.fname,
+            userLastName: req.user.lname,
+            action: `${req.user.fname} ${req.user.lname} generated a backup of active records`,
+            details: `Number of archived records backed up: ${records.length}`,
+        });
+
+        await historyLog.save();
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
+
+
+
 
 router.get('/backup-archive', async (req, res, next) => {
-	try {
-		const records = await Archives.find();
+    try {
+        const records = await Archives.find();
 
-		const archive = archiver('zip', {
-			zlib: { level: 9 },
-		});
+        const archive = archiver('zip', {
+            zlib: { level: 9 },
+        });
 
-		archive.pipe(res);
+        archive.pipe(res);
 
-		for (const record of records) {
-			const date = new Date(record.dateAddedToArchive);
-			const year = date.getFullYear();
-			const month = String(date.getMonth() + 1).padStart(2, '0');
-			const day = String(date.getDate()).padStart(2, '0');
-			const studentName = `${record.lName}_${record.fName}`;
+        for (const record of records) {
+            const date = new Date(record.dateAddedToArchive);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const studentName = `${record.fName} ${record.lName}`;
+            const genderFolder = record.gender === 'Male' ? 'Male' : 'Female';
 
-			const folderPath = `${year}_${month}_${day}/${studentName}`;
+            const folderPath = `${year}/${genderFolder}/${studentName}`;
 
-			for (const file of record.oldFiles) {
-				archive.file(file.filePath, {
-					name: `${folderPath}/transferee_student_files/${file.fileName}`,
-				});
-			}
-			for (const file of record.newFiles) {
-				archive.file(file.filePath, {
-					name: `${folderPath}/new_files/${file.fileName}`,
-				});
-			}
-		}
+            for (const file of record.oldFiles) {
+                archive.file(file.filePath, {
+                    name: `${folderPath}/Transferre student files/${file.fileName}`,
+                });
+            }
+            for (const file of record.newFiles) {
+                archive.file(file.filePath, {
+                    name: `${folderPath}/Current files/${file.fileName}`,
+                });
+            }
+        }
 
-		res.setHeader(
-			'Content-Disposition',
-			'attachment; filename=student_archives_records.zip'
-		);
-		res.setHeader('Content-Type', 'application/zip');
+        res.setHeader(
+            'Content-Disposition',
+            'attachment; filename=Student archives records.zip'
+        );
+        res.setHeader('Content-Type', 'application/zip');
 
-		// Finalize the archive
-		archive.finalize();
+        // Finalize the archive
+        archive.finalize();
 
-		const historyLog = new History({
-			userEmail: req.user.email,
-			userFirstName: req.user.fname,
-			userLastName: req.user.lname,
-			action: `${req.user.fname} ${req.user.lname} generated a backup of archived records`,
-			details: `Number of archived records backed up: ${records.length}`,
-		});
+        const historyLog = new History({
+            userEmail: req.user.email,
+            userFirstName: req.user.fname,
+            userLastName: req.user.lname,
+            action: `${req.user.fname} ${req.user.lname} generated a backup of archived records`,
+            details: `Number of archived records backed up: ${records.length}`,
+        });
 
-		await historyLog.save();
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
+        await historyLog.save();
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
+
 
 router.post('/edit-users/:_id', async (req, res, next) => {
 	try {

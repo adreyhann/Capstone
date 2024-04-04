@@ -14,15 +14,20 @@ require('dotenv').config();
 const crypto = require('crypto');
 
 router.get(
-	'/register',
-	ensureAuthenticated,
-	ensureSystemAdminOrAdmin,
-	async (req, res, next) => {
-		const person = req.user;
-		const currentUserRole = req.user.role;
-		res.render('credentials/register', { person, currentUserRole });
-	}
+    '/register',
+    ensureAuthenticated,
+    ensureSystemAdminOrAdmin,
+    async (req, res, next) => {
+        try {
+            const person = req.user;
+            const currentUserRole = req.user.role;
+            res.render('credentials/register', { person, currentUserRole, profilePicture: req.user.profilePicture });
+        } catch (error) {
+            next(error);
+        }
+    }
 );
+
 
 const transporter = nodemailer.createTransport({
 	service: 'gmail',
@@ -38,18 +43,17 @@ const transporter = nodemailer.createTransport({
 // Define storage for the uploaded files
 const storage = multer.diskStorage({
 	destination: function (req, file, cb) {
-		cb(null, 'public/img'); // Specify the directory where uploaded files should be stored
+		cb(null, 'public/uploads/profile-picture'); 
 	},
 	filename: function (req, file, cb) {
-		cb(null, Date.now() + '-' + file.fieldname); // Set the filename as current timestamp + original filename
+		cb(null, Date.now() + '-' + file.originalname);
 	},
 });
 
-// Initialize multer middleware with the defined storage
 const upload = multer({
 	storage: storage,
 	limits: {
-		fileSize: 1024 * 1024 * 2, // Set the maximum file size allowed (2MB in this example)
+		fileSize: 1024 * 1024 * 2, 
 	},
 	fileFilter: function (req, file, cb) {
 		// Accept only image files
@@ -130,10 +134,13 @@ router.post(
 				});
 				const person = req.user;
 				const currentUserRole = req.user.role;
+				// Extract the profile picture path from the request object
+				const profilePicturePath = req.file ? req.file.path : '/img/default-img.jpg';
 				return res.render('credentials/register', {
 					person,
 					email: req.body.email,
 					currentUserRole,
+					profilePicturePath,
 					messages: req.flash(),
 				});
 			}
@@ -254,9 +261,8 @@ router.post(
 				return res.redirect('/auth/register');
 			}
 
-			let profilePicturePath = req.file
-				? req.file.path
-				: '/img/default-img.jpg';
+			// Extract the profile picture path from the request object
+			const profilePicturePath = req.file ? req.file.path : '/img/default-img.jpg';
 
 			const user = new User({
 				...req.body,
@@ -329,11 +335,13 @@ router.post(
 		} catch (error) {
 			const person = req.user;
 			const currentUserRole = req.user.role;
+			// Extract the profile picture path from the request object
+			const profilePicturePath = req.file ? req.file.path : '/img/default-img.jpg';
 			res.render('credentials/register', {
 				person,
 				email: req.body.email,
 				currentUserRole,
-				profilePicture: profilePicturePath,
+				profilePicturePath,
 				messages: req.flash(),
 				error: error.message,
 			});

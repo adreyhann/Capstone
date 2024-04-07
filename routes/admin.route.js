@@ -2,7 +2,7 @@ const router = require('express').Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { PDFDocument } = require('pdf-lib');
+const { PDFDocument: PDFLibDocument } = require('pdf-lib');
 const User = require('../models/user.model');
 const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
@@ -129,7 +129,7 @@ router.get('/oldFiles/:id', async (req, res, next) => {
         const base64PDF = await Promise.all(
             oldFiles.map(async (fileData) => {
                 const pdfData = await fs.promises.readFile(fileData.filePath);
-                const pdfDoc = await PDFDocument.load(pdfData);
+                const pdfDoc = await PDFLibDocument.load(pdfData);
                 const pdfBytes = await pdfDoc.save();
                 return Buffer.from(pdfBytes).toString('base64');
             })
@@ -168,7 +168,7 @@ router.get('/view-files/:id', async (req, res, next) => {
             newFiles.map(async (fileData) => {
                 if (fileData && fileData.filePath) {
                     const pdfData = await fs.promises.readFile(fileData.filePath);
-                    const pdfDoc = await PDFDocument.load(pdfData);
+                    const pdfDoc = await PDFLibDocument.load(pdfData);
                     const pdfBytes = await pdfDoc.save();
                     return Buffer.from(pdfBytes).toString('base64');
                 } else {

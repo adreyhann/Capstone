@@ -2,11 +2,12 @@ const router = require('express').Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { PDFDocument } = require('pdf-lib');
+const { PDFDocument: PDFLibDocument } = require('pdf-lib');
 const Event = require('../models/events.model');
 const User = require('../models/user.model');
 const { Records, Archives } = require('../models/records.model');
 const History = require('../models/history.model');
+const AdvisorActivity = require('../models/adviser.activity.model')
 
 router.get('/dashboard', async (req, res, next) => {
 	// console.log(req.user)
@@ -122,7 +123,7 @@ router.get('/oldFiles/:id', async (req, res, next) => {
         const base64PDF = await Promise.all(
             oldFiles.map(async (fileData) => {
                 const pdfData = await fs.promises.readFile(fileData.filePath);
-                const pdfDoc = await PDFDocument.load(pdfData);
+                const pdfDoc = await PDFLibDocument.load(pdfData);
                 const pdfBytes = await pdfDoc.save();
                 return Buffer.from(pdfBytes).toString('base64');
             })
@@ -162,7 +163,7 @@ router.get('/view-files/:id', async (req, res, next) => {
             newFiles.map(async (fileData) => {
                 if (fileData && fileData.filePath) {
                     const pdfData = await fs.promises.readFile(fileData.filePath);
-                    const pdfDoc = await PDFDocument.load(pdfData);
+                    const pdfDoc = await PDFLibDocument.load(pdfData);
                     const pdfBytes = await pdfDoc.save();
                     return Buffer.from(pdfBytes).toString('base64');
                 } else {
@@ -261,6 +262,18 @@ router.post('/submit-form', async (req, res, next) => {
             newRecord.studentName = studentName;
 
             const savedRecord = await newRecord.save();
+
+            // Log activity in AdvisorActivity
+            const fullName = `${req.user.fname} ${req.user.lname}`;
+            const activity = new AdvisorActivity({
+                userEmail: req.user.email,
+                userFirstName: req.user.fname,
+                userLastName: req.user.lname,
+                action: `${fullName} added a record in ${gradeLevel}`,
+                details: `Added student record for LRN: ${lrn} in ${gradeLevel}`,
+            });
+            
+            await activity.save();
 
             const historyEntry = new History({
                 userEmail: req.user.email,

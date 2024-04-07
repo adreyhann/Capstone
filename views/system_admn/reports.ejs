@@ -59,7 +59,11 @@
 					<div class="container my-2">
 						<div class="row">
 							<div class="col-md-4 mx-2">
-								<img src="<%= person.profilePicture || '/img/default-img.jpg' %>" alt="Profile Picture" style="width: 70px; height: 65px; border-radius: 50%;" />
+								<img
+									src="<%= person.profilePicture || '/img/default-img.jpg' %>"
+									alt="Profile Picture"
+									style="width: 70px; height: 65px; border-radius: 50%"
+								/>
 							</div>
 							<div class="col-md-6">
 								<p class="my-0 pt-2" style="font-size: 15px">
@@ -193,65 +197,55 @@
 					<h2 class="my-1">Reports</h2>
 					<hr />
 					<div class="card custom-card-2 border-0">
-						<div class="card-header border-0">
+						<div class="card-header border-0 d-flex justify-content-between">
 							<p class="my-0">Summary reports</p>
+							<a href="/systemAdmin/generate-pdf" class="btn btn-info btn-sm">Download PDF</a>
 						</div>
 						<div class="card-body">
 							<div class="row">
 								<div class="col-3">
 									<canvas id="reportsChart"></canvas>
 								</div>
-								<div
-									class="col"
-									style="
-										border-left: 1px solid gray;
-										height: 400px;
-										overflow-y: auto;
-									"
-								>
+								<div class="col" style="border-left: 1px solid gray; height: 400px; overflow-y: auto;">
 									<p>Activity logs</p>
-									<% if (historyLogs.length === 0) { %>
+									<% if (activity.length === 0) { %>
 									<div class="alert alert-info d-flex align-items-center justify-content-center" role="alert">
-										No history available.
+										No activity available.
 									</div>
-									<% } else { %> <% historyLogs.slice().reverse().forEach(log =>
-									{ %>
+									<% } else { %> 
+									<% activity.slice().reverse().forEach(log => { %>
 									<div class="card my-2 custom-card-2 border-0">
 										<div class="card-body position-relative">
 											<p class="m-0 fs-5 fw-medium"><%= log.action %></p>
-											<p class="m-0" style="color: #72726e">
-												<%= log.timestamp %>
-											</p>
-
-											<p
-												class="d-inline-flex gap-1 mb-0 position-absolute top-0 end-0 translate-middle"
-												style="padding-top: 80px"
-											>
-												<a
-													class="btn btn-primary btn-sm"
-													data-bs-toggle="collapse"
-													href="#collapseExample<%= log._id %>"
-													role="button"
-													aria-expanded="false"
-													aria-controls="collapseExample<%= log._id %>"
-												>
+											<p class="m-0" style="color: #72726e"><%= log.timestamp %></p>
+								
+											<p class="d-inline-flex gap-1 mb-0 position-absolute top-0 end-0 translate-middle" style="padding-top: 80px">
+												<a class="btn btn-primary btn-sm" data-bs-toggle="collapse" href="#collapseExample<%= log._id %>" role="button" aria-expanded="false" aria-controls="collapseExample<%= log._id %>">
 													View details
 												</a>
 											</p>
 											<div class="collapse" id="collapseExample<%= log._id %>">
 												<div class="card card-body">
-													<p class="m-0"><span style="font-weight: bold;">Details:</span> <%= log.details %></p>
-													<p class="m-0"><span style="font-weight: bold;">Email:</span> <%= log.userEmail %></p>
 													<p class="m-0">
-														<span style="font-weight: bold;">First Name:</span> <%= log.userFirstName %>
+														<span style="font-weight: bold">Details:</span> <%= log.details %>
 													</p>
-													<p class="m-0"><span style="font-weight: bold;">Last Name:</span> <%= log.userLastName %></p>
+													<p class="m-0">
+														<span style="font-weight: bold">Email:</span> <%= log.userEmail %>
+													</p>
+													<p class="m-0">
+														<span style="font-weight: bold">First Name:</span> <%= log.userFirstName %>
+													</p>
+													<p class="m-0">
+														<span style="font-weight: bold">Last Name:</span> <%= log.userLastName %>
+													</p>
 												</div>
 											</div>
 										</div>
 									</div>
-									<% }); %> <% } %>
+									<% }); %> 
+									<% } %>
 								</div>
+								
 							</div>
 						</div>
 					</div>

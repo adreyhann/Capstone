@@ -2,12 +2,14 @@ const router = require('express').Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { PDFDocument } = require('pdf-lib');
+const { PDFDocument: PDFLibDocument, rgb } = require('pdf-lib');
+const PDFDocument = require('pdfkit');
 const User = require('../models/user.model');
 const InactiveUser = require('../models/inactive.model');
 const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
 const Event = require('../models/events.model');
+const AdvisorActivity = require('../models/adviser.activity.model');
 const archiver = require('archiver');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
@@ -18,7 +20,6 @@ function countVisibleUsersInTable(users, currentUser) {
 	});
 	return visibleUsersInTable.length;
 }
-
 
 // Function to validate email using Hunter.io API
 async function validateEmail(email) {
@@ -148,7 +149,7 @@ router.get('/oldFiles/:id', async (req, res, next) => {
 		const base64PDF = await Promise.all(
 			oldFiles.map(async (fileData) => {
 				const pdfData = await fs.promises.readFile(fileData.filePath);
-				const pdfDoc = await PDFDocument.load(pdfData);
+				const pdfDoc = await PDFLibDocument.load(pdfData);
 				const pdfBytes = await pdfDoc.save();
 				return Buffer.from(pdfBytes).toString('base64');
 			})
@@ -187,7 +188,7 @@ router.get('/view-files/:id', async (req, res, next) => {
 			newFiles.map(async (fileData) => {
 				if (fileData && fileData.filePath) {
 					const pdfData = await fs.promises.readFile(fileData.filePath);
-					const pdfDoc = await PDFDocument.load(pdfData);
+					const pdfDoc = await PDFLibDocument.load(pdfData);
 					const pdfBytes = await pdfDoc.save();
 					return Buffer.from(pdfBytes).toString('base64');
 				} else {
@@ -261,9 +262,9 @@ router.get('/reports', async (req, res, next) => {
 		const person = req.user;
 
 		// Fetch history logs from the database
-		const historyLogs = await History.find().populate(); // Assuming 'User' model has 'name' field
+		const activity = await AdvisorActivity.find({}).populate(); // Assuming 'User' model has 'name' field
 
-		res.render('system_admn/reports', { person, historyLogs });
+		res.render('system_admn/reports', { person, activity });
 	} catch (error) {
 		console.error('Error:', error);
 		next(error);
@@ -663,123 +664,124 @@ router.post('/archive-selected', async (req, res, next) => {
 });
 
 router.get('/backup', async (req, res, next) => {
-    try {
-        const records = await Records.find();
+	try {
+		const records = await Records.find();
 
-        const archive = archiver('zip', {
-            zlib: { level: 9 },
-        });
+		const archive = archiver('zip', {
+			zlib: { level: 9 },
+		});
 
-        archive.pipe(res);
+		archive.pipe(res);
 
-        const gradeLevels = new Set(records.map((record) => record.gradeLevel));
-        for (const gradeLevel of gradeLevels) {
-            const gradeLevelFolder = archive.directory(gradeLevel);
+		const gradeLevels = new Set(records.map((record) => record.gradeLevel));
+		for (const gradeLevel of gradeLevels) {
+			const gradeLevelFolder = archive.directory(gradeLevel);
 
-            const gradeLevelRecords = records.filter((record) => record.gradeLevel === gradeLevel);
-            for (const record of gradeLevelRecords) {
-                const studentName = `${record.fName} ${record.lName}`;
-                const genderFolder = record.gender === 'Male' ? 'Male' : 'Female';
+			const gradeLevelRecords = records.filter(
+				(record) => record.gradeLevel === gradeLevel
+			);
+			for (const record of gradeLevelRecords) {
+				const studentName = `${record.fName} ${record.lName}`;
+				const genderFolder = record.gender === 'Male' ? 'Male' : 'Female';
 
-                const folderPath = `${gradeLevel}/${genderFolder}/${studentName}`;
-                const studentFolder = gradeLevelFolder.directory(folderPath);
+				const folderPath = `${gradeLevel}/${genderFolder}/${studentName}`;
+				const studentFolder = gradeLevelFolder.directory(folderPath);
 
-                const oldFilesFolder = studentFolder.directory('Old Files');
-                for (const file of record.oldFiles) {
-                    archive.file(file.filePath, {
-                        name: `${folderPath}/Transferre student files/${file.fileName}`,
-                    });
-                }
+				const oldFilesFolder = studentFolder.directory('Old Files');
+				for (const file of record.oldFiles) {
+					archive.file(file.filePath, {
+						name: `${folderPath}/Transferre student files/${file.fileName}`,
+					});
+				}
 
-                const newFilesFolder = studentFolder.directory('New Files');
-                for (const file of record.newFiles) {
-                    archive.file(file.filePath, {
-                        name: `${folderPath}/Current files/${file.fileName}`,
-                    });
-                }
-            }
-        }
+				const newFilesFolder = studentFolder.directory('New Files');
+				for (const file of record.newFiles) {
+					archive.file(file.filePath, {
+						name: `${folderPath}/Current files/${file.fileName}`,
+					});
+				}
+			}
+		}
 
-        res.setHeader(
-            'Content-Disposition',
-            'attachment; filename=Student active records.zip'
-        );
-        res.setHeader('Content-Type', 'application/zip');
+		res.setHeader(
+			'Content-Disposition',
+			'attachment; filename=Student active records.zip'
+		);
+		res.setHeader('Content-Type', 'application/zip');
 
-        // Finalize the archive
-        archive.finalize();
+		// Finalize the archive
+		archive.finalize();
 
-        const historyLog = new History({
-            userEmail: req.user.email,
-            userFirstName: req.user.fname,
-            userLastName: req.user.lname,
-            action: `${req.user.fname} ${req.user.lname} generated a backup of active records`,
-            details: `Number of archived records backed up: ${records.length}`,
-        });
+		const historyLog = new History({
+			userEmail: req.user.email,
+			userFirstName: req.user.fname,
+			userLastName: req.user.lname,
+			action: `${req.user.fname} ${req.user.lname} generated a backup of active records`,
+			details: `Number of archived records backed up: ${records.length}`,
+		});
 
-        await historyLog.save();
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		await historyLog.save();
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 router.get('/backup-archive', async (req, res, next) => {
-    try {
-        const records = await Archives.find();
+	try {
+		const records = await Archives.find();
 
-        const archive = archiver('zip', {
-            zlib: { level: 9 },
-        });
+		const archive = archiver('zip', {
+			zlib: { level: 9 },
+		});
 
-        archive.pipe(res);
+		archive.pipe(res);
 
-        for (const record of records) {
-            const date = new Date(record.dateAddedToArchive);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const studentName = `${record.fName} ${record.lName}`;
-            const genderFolder = record.gender === 'Male' ? 'Male' : 'Female';
+		for (const record of records) {
+			const date = new Date(record.dateAddedToArchive);
+			const year = date.getFullYear();
+			const month = String(date.getMonth() + 1).padStart(2, '0');
+			const day = String(date.getDate()).padStart(2, '0');
+			const studentName = `${record.fName} ${record.lName}`;
+			const genderFolder = record.gender === 'Male' ? 'Male' : 'Female';
 
-            const folderPath = `${year}/${genderFolder}/${studentName}`;
+			const folderPath = `${year}/${genderFolder}/${studentName}`;
 
-            for (const file of record.oldFiles) {
-                archive.file(file.filePath, {
-                    name: `${folderPath}/Transferre student files/${file.fileName}`,
-                });
-            }
-            for (const file of record.newFiles) {
-                archive.file(file.filePath, {
-                    name: `${folderPath}/Current files/${file.fileName}`,
-                });
-            }
-        }
+			for (const file of record.oldFiles) {
+				archive.file(file.filePath, {
+					name: `${folderPath}/Transferre student files/${file.fileName}`,
+				});
+			}
+			for (const file of record.newFiles) {
+				archive.file(file.filePath, {
+					name: `${folderPath}/Current files/${file.fileName}`,
+				});
+			}
+		}
 
-        res.setHeader(
-            'Content-Disposition',
-            'attachment; filename=Student archives records.zip'
-        );
-        res.setHeader('Content-Type', 'application/zip');
+		res.setHeader(
+			'Content-Disposition',
+			'attachment; filename=Student archives records.zip'
+		);
+		res.setHeader('Content-Type', 'application/zip');
 
-        // Finalize the archive
-        archive.finalize();
+		// Finalize the archive
+		archive.finalize();
 
-        const historyLog = new History({
-            userEmail: req.user.email,
-            userFirstName: req.user.fname,
-            userLastName: req.user.lname,
-            action: `${req.user.fname} ${req.user.lname} generated a backup of archived records`,
-            details: `Number of archived records backed up: ${records.length}`,
-        });
+		const historyLog = new History({
+			userEmail: req.user.email,
+			userFirstName: req.user.fname,
+			userLastName: req.user.lname,
+			action: `${req.user.fname} ${req.user.lname} generated a backup of archived records`,
+			details: `Number of archived records backed up: ${records.length}`,
+		});
 
-        await historyLog.save();
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		await historyLog.save();
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
-
 
 router.post('/edit-users/:_id', async (req, res, next) => {
 	try {
@@ -1177,7 +1179,6 @@ router.post('/deactivate/:userId', async (req, res, next) => {
 	}
 });
 
-// Route to activate a user
 router.post('/activate/:userId', async (req, res) => {
 	try {
 		const userId = req.params.userId;
@@ -1298,7 +1299,6 @@ router.post('/activate/:userId', async (req, res) => {
 	}
 });
 
-// deactivating own account
 router.post('/deactivateProfile', async (req, res, next) => {
 	try {
 		const userId = req.user.id; // user ID is stored in req.user.id
@@ -1385,7 +1385,6 @@ router.post('/deactivateProfile', async (req, res, next) => {
 	}
 });
 
-// Endpoint to get events
 router.get('/events', async (req, res) => {
 	try {
 		const events = await Event.find();
@@ -1408,7 +1407,6 @@ router.get('/calendar', async (req, res, next) => {
 	}
 });
 
-// Endpoint to add a new event
 router.post('/events', async (req, res) => {
 	try {
 		const { date, eventName } = req.body;
@@ -1421,7 +1419,6 @@ router.post('/events', async (req, res) => {
 	}
 });
 
-// Endpoint to edit an existing event
 router.put('/events/:date/:eventName', async (req, res) => {
 	try {
 		const { date, eventName } = req.params;
@@ -1438,7 +1435,6 @@ router.put('/events/:date/:eventName', async (req, res) => {
 	}
 });
 
-// Endpoint to delete an existing event
 router.delete('/events/:date/:eventName', async (req, res) => {
 	try {
 		const { date, eventName } = req.params;
@@ -1447,6 +1443,108 @@ router.delete('/events/:date/:eventName', async (req, res) => {
 	} catch (error) {
 		console.error('Error deleting event:', error);
 		res.status(500).json({ error: 'Failed to delete event' });
+	}
+});
+
+router.get('/generate-pdf', async (req, res, next) => {
+	try {
+		// Fetch activity logs from the database
+		const activity = await AdvisorActivity.find();
+
+		// Fetch counts of active and archived records
+		const activeCount = await Records.countDocuments();
+		const archivedCount = await Archives.countDocuments();
+
+		// Load the logo images
+		const leftLogoData = fs.readFileSync('public/img/logo.png');
+		const rightLogoData = fs.readFileSync('public/img/logo.png');
+
+		const doc = new PDFDocument();
+
+		// Set response headers for PDF download
+		res.setHeader('Content-Type', 'application/pdf');
+		res.setHeader('Content-Disposition', 'attachment; filename=report.pdf');
+
+		doc.pipe(res);
+
+		const { width, height } = doc.page;
+		const headerHeight = 100;
+
+		// Add left logo
+		doc.image(leftLogoData, { x: 50, y: 50, width: 50, height: 50 });
+
+		// Add right logo
+		doc.image(rightLogoData, { x: width - 100, y: 50, width: 50, height: 50 });
+
+		// Add text lines in the middle
+		const headerText1 = 'Bethany Chrstian Academy';
+		const headerText2 = 'Maitim 2nd East, Tagaytay City';
+		const headerText3 = '123456789';
+
+		const textWidth = doc.widthOfString(headerText1);
+		const textYPosition1 = 50;
+		const textYPosition2 = textYPosition1 + 20; 
+		const textYPosition3 = textYPosition2 + 20; 
+
+		doc
+			.fontSize(16)
+			.fillColor('black')
+			.text(headerText1, {
+				x: (width - textWidth) / 2,
+				y: textYPosition1,
+				align: 'center',
+			});
+		doc
+			.fontSize(13)
+			.fillColor('black')
+			.text(headerText2, {
+				x: (width - textWidth) / 2,
+				y: textYPosition2,
+				align: 'center',
+			});
+		doc
+			.fontSize(12)
+			.fillColor('black')
+			.text(headerText3, {
+				x: (width - textWidth) / 2,
+				y: textYPosition3,
+				align: 'center',
+			});
+
+		doc.moveDown();
+		doc.moveDown();
+		doc.moveDown();
+		doc.moveDown();
+
+		// Add summary reports
+		doc.fontSize(16).text('Summary reports', { align: 'center' });
+		doc.moveDown();
+		doc
+			.fontSize(12)
+			.text(`Number of Active Records: ${activeCount}`, { align: 'left' });
+		doc.text(`Number of Archives: ${archivedCount}`, { align: 'left' });
+		doc.moveDown();
+		doc.moveDown();
+		doc.moveDown();
+
+		// Add activity logs
+		doc.fontSize(16).text('Activity logs', { align: 'center' });
+		doc.moveDown();
+
+		activity.forEach((log, index) => {
+			const actionWithUser = `${log.action}`;
+			doc
+				.fontSize(12)
+				.text(`${index + 1}. Action: ${actionWithUser}`, { align: 'left' });
+			doc.text(`   Date: ${log.timestamp}`, { align: 'left' });
+			doc.text(`   Details: ${log.details}`, { align: 'left' });
+			doc.moveDown();
+		});
+
+		doc.end();
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
 	}
 });
 

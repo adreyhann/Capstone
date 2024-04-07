@@ -326,7 +326,6 @@ const upload = multer({
 		if (file.mimetype === 'application/pdf') {
 			cb(null, true);
 		} else {
-			// Instead of throwing an error, use a flash message
 			req.flash('error', 'Only PDF files are allowed!');
 			cb(null, false);
 		}
@@ -427,7 +426,6 @@ router.post('/deleteFile/:recordId/:index', async (req, res, next) => {
 	}
 });
 
-// Add this route for handling record updates
 router.post('/edit-record/:recordId', async (req, res, next) => {
 	try {
 		const recordId = req.params.recordId;
@@ -725,9 +723,6 @@ router.get('/backup', async (req, res, next) => {
         next(error);
     }
 });
-
-
-
 
 router.get('/backup-archive', async (req, res, next) => {
     try {

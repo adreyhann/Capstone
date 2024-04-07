@@ -161,24 +161,25 @@
 				</nav>
 				<div class="container-lg">
 					<h2 class="my-1">Records Management</h2>
-					<hr />
-					<div class="container w-100 position-relative">
+					<hr class="mb-2" />
+					<a
+							id="addRow"
+							class="btn btn-success btn-sm my-2 ms-3"
+							href="/classAdvisor/addRecords"
+							>Add new record</a
+						>
+					<div class="container w-100 position-relative" style="max-height: 466px; overflow-y: auto;"> 
 						<% try { %>
 							<%- include('../credentials/flash-message.ejs') %>
 						  <% } catch (error) { %>
 							<div>Error: <%= error.message %></div>
 						  <% } %>
-						<a
-							id="addRow"
-							class="btn btn-success btn-sm my-2"
-							href="/classAdvisor/addRecords"
-							>Add new record</a
-						>
+						
 						
 						<table
 							id="example"
 							class="table table-striped hover"
-							style="width: 100%"
+							style="width: 100%; "
 						>
 							<thead class="table-info">
 								<tr>

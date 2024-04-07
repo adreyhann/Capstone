@@ -1447,105 +1447,126 @@ router.delete('/events/:date/:eventName', async (req, res) => {
 });
 
 router.get('/generate-pdf', async (req, res, next) => {
-	try {
-		// Fetch activity logs from the database
-		const activity = await AdvisorActivity.find();
+    try {
+        // Fetch activity logs from the database
+        const activity = await AdvisorActivity.find();
 
-		// Fetch counts of active and archived records
-		const activeCount = await Records.countDocuments();
-		const archivedCount = await Archives.countDocuments();
+        // Fetch counts of active and archived records
+        const activeCount = await Records.countDocuments();
+        const archivedCount = await Archives.countDocuments();
 
-		// Load the logo images
-		const leftLogoData = fs.readFileSync('public/img/logo.png');
-		const rightLogoData = fs.readFileSync('public/img/logo.png');
+        // Load the logo images
+        const leftLogoData = fs.readFileSync('public/img/logo.png');
+        const rightLogoData = fs.readFileSync('public/img/logo.png');
 
-		const doc = new PDFDocument();
+        const doc = new PDFDocument();
 
-		// Set response headers for PDF download
-		res.setHeader('Content-Type', 'application/pdf');
-		res.setHeader('Content-Disposition', 'attachment; filename=report.pdf');
+        // Set response headers for PDF download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=report.pdf');
 
-		doc.pipe(res);
+        doc.pipe(res);
 
-		const { width, height } = doc.page;
-		const headerHeight = 100;
+        const { width, height } = doc.page;
+        const headerHeight = 100;
 
-		// Add left logo
-		doc.image(leftLogoData, { x: 50, y: 50, width: 50, height: 50 });
+        // Add left logo
+        doc.image(leftLogoData, { x: 50, y: 50, width: 50, height: 50 });
 
-		// Add right logo
-		doc.image(rightLogoData, { x: width - 100, y: 50, width: 50, height: 50 });
+        // Add right logo
+        doc.image(rightLogoData, { x: width - 100, y: 50, width: 50, height: 50 });
 
-		// Add text lines in the middle
-		const headerText1 = 'Bethany Chrstian Academy';
-		const headerText2 = 'Maitim 2nd East, Tagaytay City';
-		const headerText3 = '123456789';
+        // Add text lines in the middle
+        const headerText1 = 'Bethany Chrstian Academy';
+        const headerText2 = 'Maitim 2nd East, Tagaytay City';
+        const headerText3 = '123456789';
 
-		const textWidth = doc.widthOfString(headerText1);
-		const textYPosition1 = 50;
-		const textYPosition2 = textYPosition1 + 20; 
-		const textYPosition3 = textYPosition2 + 20; 
+        const textWidth = doc.widthOfString(headerText1);
+        const textYPosition1 = 50;
+        const textYPosition2 = textYPosition1 + 20;
+        const textYPosition3 = textYPosition2 + 20;
 
-		doc
-			.fontSize(16)
-			.fillColor('black')
-			.text(headerText1, {
-				x: (width - textWidth) / 2,
-				y: textYPosition1,
-				align: 'center',
-			});
-		doc
-			.fontSize(13)
-			.fillColor('black')
-			.text(headerText2, {
-				x: (width - textWidth) / 2,
-				y: textYPosition2,
-				align: 'center',
-			});
-		doc
-			.fontSize(12)
-			.fillColor('black')
-			.text(headerText3, {
-				x: (width - textWidth) / 2,
-				y: textYPosition3,
-				align: 'center',
-			});
+        doc
+            .fontSize(16)
+            .fillColor('black')
+            .text(headerText1, {
+                x: (width - textWidth) / 2,
+                y: textYPosition1,
+                align: 'center',
+            });
+        doc
+            .fontSize(13)
+            .fillColor('black')
+            .text(headerText2, {
+                x: (width - textWidth) / 2,
+                y: textYPosition2,
+                align: 'center',
+            });
+        doc
+            .fontSize(12)
+            .fillColor('black')
+            .text(headerText3, {
+                x: (width - textWidth) / 2,
+                y: textYPosition3,
+                align: 'center',
+            });
+
+        function checkRemainingSpace(height) {
+            return height > 100; 
+        }
 
 		doc.moveDown();
 		doc.moveDown();
 		doc.moveDown();
 		doc.moveDown();
 
-		// Add summary reports
-		doc.fontSize(16).text('Summary reports', { align: 'center' });
-		doc.moveDown();
-		doc
-			.fontSize(12)
-			.text(`Number of Active Records: ${activeCount}`, { align: 'left' });
-		doc.text(`Number of Archives: ${archivedCount}`, { align: 'left' });
-		doc.moveDown();
-		doc.moveDown();
-		doc.moveDown();
+        const summaryReportsText = 'Summary reports';
+        const summaryReportsHeight = doc.heightOfString(summaryReportsText, {
+            width: width - 100,
+            align: 'center',
+        });
+        if (!checkRemainingSpace(height - headerHeight - summaryReportsHeight)) {
+            doc.addPage();
+        }
 
-		// Add activity logs
-		doc.fontSize(16).text('Activity logs', { align: 'center' });
-		doc.moveDown();
+        doc.fontSize(16).text(summaryReportsText, { align: 'center' });
+        doc.moveDown();
+        doc
+            .fontSize(12)
+            .text(`Number of Active Records: ${activeCount}`, { align: 'left' });
+        doc.text(`Number of Archives: ${archivedCount}`, { align: 'left' });
+        doc.moveDown();
+        doc.moveDown();
+        doc.moveDown();
 
-		activity.forEach((log, index) => {
-			const actionWithUser = `${log.action}`;
-			doc
-				.fontSize(12)
-				.text(`${index + 1}. Action: ${actionWithUser}`, { align: 'left' });
-			doc.text(`   Date: ${log.timestamp}`, { align: 'left' });
-			doc.text(`   Details: ${log.details}`, { align: 'left' });
-			doc.moveDown();
-		});
+        const activityLogsText = 'Activity logs';
+        const activityLogsHeight = doc.heightOfString(activityLogsText, {
+            width: width - 100,
+            align: 'center',
+        });
+        if (!checkRemainingSpace(height - headerHeight - activityLogsHeight)) {
+            doc.addPage();
+        }
 
-		doc.end();
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
+        doc.fontSize(16).text(activityLogsText, { align: 'center' });
+        doc.moveDown();
+
+        activity.forEach((log, index) => {
+            const actionWithUser = `${log.action}`;
+            doc
+                .fontSize(12)
+                .text(`${index + 1}. Action: ${actionWithUser}`, { align: 'left' });
+            doc.text(`   Date: ${log.timestamp}`, { align: 'left' });
+            doc.text(`   Details: ${log.details}`, { align: 'left' });
+            doc.moveDown();
+        });
+
+        doc.end();
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
+
 
 module.exports = router;

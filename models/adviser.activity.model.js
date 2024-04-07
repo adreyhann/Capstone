@@ -20,7 +20,8 @@ const advisorActivitySchema = new mongoose.Schema({
       timestamp: { 
         type: Date, 
         default: Date.now, 
-        get: timestamp => new Date(timestamp).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }) 
+        get: timestamp => new Date(timestamp).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })
+       
     },
 })
 

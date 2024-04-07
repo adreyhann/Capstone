@@ -192,14 +192,9 @@
 				</nav>
 				<div class="container-lg">
 					<h2 class="my-1"><%= gradeLevel %></h2>
-					<hr />
-					<div class="container w-100 position-relative">
-						<% try { %> <%- include('../credentials/flash-message.ejs') %> <% }
-						catch (error) { %>
-						<div>Error: <%= error.message %></div>
-						<% } %>
-
-						<a class="btn btn-sm mb-2" href="/systemAdmin/records-menu">
+					<hr class="mb-0" />
+					<div class="mt-1 mb-0 d-flex justify-content-start">
+						<a class="btn btn-sm" href="/systemAdmin/records-menu">
 							<span 
 							class="material-symbols-outlined"
 							data-bs-toggle="tooltip"
@@ -213,7 +208,7 @@
 
 						<button
 							type="button"
-							class="btn btn-sm mb-2"
+							class="btn btn-sm"
 							id="archiveButton"
 							style="display: none"
 							onclick="archiveSelected()"
@@ -227,7 +222,12 @@
 								archive
 							</span>
 						</button>
-						
+					</div>
+					<div class="container w-100 position-relative" style="max-height: 466px; overflow-y: auto;">
+						<% try { %> <%- include('../credentials/flash-message.ejs') %> <% }
+						catch (error) { %>
+						<div>Error: <%= error.message %></div>
+						<% } %>
 
 						<table
 							id="example"

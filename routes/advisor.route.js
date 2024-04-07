@@ -293,8 +293,6 @@ router.post('/submit-form', async (req, res, next) => {
     }
 });
 
-
-
 router.post('/addFile/:recordId', upload.single('newPdf'), async (req, res, next) => {
     try {
         const recordId = req.params.recordId;
@@ -348,8 +346,6 @@ router.post('/addFile/:recordId', upload.single('newPdf'), async (req, res, next
         next(error);
     }
 });
-
-
 
 router.post('/addOldFile/:recordId', upload.single('oldPdf'), async (req, res, next) => {
     try {

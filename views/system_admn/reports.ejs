@@ -217,7 +217,7 @@
 									<div class="card my-2 custom-card-2 border-0">
 										<div class="card-body position-relative">
 											<p class="m-0 fs-5 fw-medium"><%= log.action %></p>
-											<p class="m-0" style="color: #72726e"><%= log.timestamp %></p>
+											<p class="m-0" style="color: #72726e"><%= new Date(log.dateCreated).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }) %></p>
 								
 											<p class="d-inline-flex gap-1 mb-0 position-absolute top-0 end-0 translate-middle" style="padding-top: 80px">
 												<a class="btn btn-primary btn-sm" data-bs-toggle="collapse" href="#collapseExample<%= log._id %>" role="button" aria-expanded="false" aria-controls="collapseExample<%= log._id %>">
@@ -226,18 +226,20 @@
 											</p>
 											<div class="collapse" id="collapseExample<%= log._id %>">
 												<div class="card card-body">
-													<p class="m-0">
-														<span style="font-weight: bold">Details:</span> <%= log.details %>
+													<p>
+														<span style="font-weight: bold">> Added by</span> <br>
+														<span style="font-weight: bold" class="ms-4">Email:</span> <%= log.userEmail %><br>
+														<span style="font-weight: bold" class="ms-4">Adviser Name:</span> <%= log.adviserName %><br>
 													</p>
 													<p class="m-0">
-														<span style="font-weight: bold">Email:</span> <%= log.userEmail %>
+														<span style="font-weight: bold">> Student Details</span> <br>
+														<span style="font-weight: bold" class="ms-4">LRN:</span> <%= log.lrn %><br>
+														<span style="font-weight: bold" class="ms-4">Last Name:</span> <%= log.fName %><br>
+														<span style="font-weight: bold" class="ms-4">First Name:</span> <%= log.lName %><br>
+														<span style="font-weight: bold" class="ms-4">Gender:</span> <%= log.gender %><br>
+														<span style="font-weight: bold" class="ms-4">Grade level:</span> <%= log.gradeLevel %><br>	
 													</p>
-													<p class="m-0">
-														<span style="font-weight: bold">First Name:</span> <%= log.userFirstName %>
-													</p>
-													<p class="m-0">
-														<span style="font-weight: bold">Last Name:</span> <%= log.userLastName %>
-													</p>
+													
 												</div>
 											</div>
 										</div>

@@ -7,7 +7,7 @@ const Event = require('../models/events.model');
 const User = require('../models/user.model');
 const { Records, Archives } = require('../models/records.model');
 const History = require('../models/history.model');
-const AdvisorActivity = require('../models/adviser.activity.model')
+const Activity = require('../models/activity.model')
 
 router.get('/dashboard', async (req, res, next) => {
 	// console.log(req.user)
@@ -234,7 +234,7 @@ router.post('/submit-form', async (req, res, next) => {
                 req.flash('error', 'You can only upload up to 2 files for each category.');
                 return res.redirect('/classAdvisor/addRecords');
             }
-
+ 
             const processFiles = async (files) => {
                 return Promise.all(files.map(async (file) => {
                     return {
@@ -263,17 +263,25 @@ router.post('/submit-form', async (req, res, next) => {
 
             const savedRecord = await newRecord.save();
 
-            // Log activity in AdvisorActivity
-            const fullName = `${req.user.fname} ${req.user.lname}`;
-            const activity = new AdvisorActivity({
+            const details = `Details:\n\n\tLRN: ${lrn}\n\tLast Name: ${lName}\n\tFirst Name: ${fName}\n\tGender: ${gender}\n\tGrade Level: ${gradeLevel}`;
+
+            const AdviserName = `${req.user.fname} ${req.user.lname}`
+
+            const newActivity = new Activity({
                 userEmail: req.user.email,
-                userFirstName: req.user.fname,
-                userLastName: req.user.lname,
-                action: `${fullName} added a record in ${gradeLevel}`,
-                details: `Added student record for LRN: ${lrn} in ${gradeLevel}`,
+                adviserName: AdviserName,
+                lrn: lrn,
+                lName: lName,
+                fName: fName,
+                gender: gender,
+                transferee: transferee,
+                gradeLevel: gradeLevel,
+                action: `Record added in ${gradeLevel}`,
+                details: details,
+                // Include other fields as needed
             });
-            
-            await activity.save();
+             
+            await newActivity.save();
 
             const historyEntry = new History({
                 userEmail: req.user.email,
@@ -285,7 +293,7 @@ router.post('/submit-form', async (req, res, next) => {
 
             await historyEntry.save();
 
-            req.flash('success', `${savedRecord.studentName} is successfully saved`);
+            req.flash('success', `Student ${savedRecord.studentName} is successfully saved`);
             res.redirect('/classAdvisor/addRecords');
         });
     } catch (error) {

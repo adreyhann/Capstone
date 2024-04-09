@@ -215,6 +215,7 @@
 									<th>Last Name</th>
 									<th>First Name</th>
 									<th>Gender</th>
+									<th>Grade Level</th>
 									<th>Date Added</th>
 									<th>Action</th>
 								</tr>
@@ -226,8 +227,10 @@
 									<td><%= record.lName %></td>
 									<td><%= record.fName %></td>
 									<td><%= record.gender %></td>
+									<td><%= record.gradeLevel %></td>
 									<td>
-										<%= new Date(record.dateAddedToArchive).toLocaleString() %>
+										<%= new Date(record.dateAddedToArchive).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }) %>
+
 									</td>
 									<td>
 										<a
@@ -263,6 +266,7 @@
 									<th>Last Name</th>
 									<th>First Name</th>
 									<th>Gender</th>
+									<th>Grade Level</th>
 									<th>Date Added</th>
 									<th>Action</th>
 								</tr>

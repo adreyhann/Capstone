@@ -187,30 +187,41 @@
 				<div class="container-lg position-relative">
 					<h2 class="mt-2">Student Folders</h2>
 					<hr />
-                    <div class="row d-flex justify-content-start mx-4 grid gap-4">
+					<a
+							class="btn btn-sm mb-2"
+							href="/admin/goBackToRecords?gradeLevel=<%= student.gradeLevel %>"
+						>
+							<span
+								class="material-symbols-outlined"
+								data-bs-toggle="tooltip"
+								data-bs-placement="top"
+								data-bs-title="Go back"
+							>
+								arrow_back
+							</span>
+						</a>
+                    <div class="row d-flex justify-content-start mx-4 gap-5">
 						<% if (student.transferee === 'Yes') { %>
-							<div class="card custom-card" style="width: 18rem; height: 130px">
-								<div class="card-body">
-									<h4 class="card-title position-relative">Old files</h4>
-									<p class="card-text">View student old files</p>
-									<a
-										href="/admin/oldFiles/<%= student._id %>"
-										class="card-link"
-										>View Old files</a
-									>
-								</div>
+							<div class="col-md-3">
+								<a href="/admin/oldFiles/<%= student._id %>" class="text-decoration-none">
+									<div class="card custom-card" style="width: 18rem; height: 145px">
+										<div class="card-body">
+											<h4 class="card-title position-relative">Transferee student files</h4>
+											<p class="card-text">View student files</p>
+										</div>
+									</div>
+								</a>
 							</div>
 						<% } %>
-						<div class="card custom-card" style="width: 18rem; height: 130px">
-							<div class="card-body">
-								<h4 class="card-title position-relative">Current files</h4>
-								<p class="card-text">View student current files</p>
-								<a
-									href="/admin/view-files/<%= student._id %>"
-									class="card-link"
-									>View current files</a
-								>
-							</div>
+						<div class="col-sm-3">
+							<a href="/admin/view-files/<%= student._id %>" class="text-decoration-none">
+								<div class="card custom-card" style="width: 18rem; height: 145px">
+									<div class="card-body">
+										<h4 class="card-title position-relative">Permanent records</h4>
+										<p class="card-text pt-4">View student files</p>
+									</div>
+								</div>
+							</a>
 						</div>
 					</div>
 				</div>

@@ -51,7 +51,11 @@
 					<div class="container my-2">
 						<div class="row">
 							<div class="col-md-4 mx-2">
-								<img src="<%= person.profilePicture || '/img/default-img.jpg' %>" alt="Profile Picture" style="width: 70px; height: 65px; border-radius: 50%;" />
+								<img
+									src="<%= person.profilePicture || '/img/default-img.jpg' %>"
+									alt="Profile Picture"
+									style="width: 70px; height: 65px; border-radius: 50%"
+								/>
 							</div>
 							<div class="col-md-6">
 								<p class="my-0 pt-2" style="font-size: 15px">
@@ -195,7 +199,7 @@
 
 						<a
 							class="btn btn-sm mb-2"
-							href="/systemAdmin/goBackToRecords?gradeLevel=<%= student.gradeLevel %>"
+							href="/systemAdmin/goBackToFolder?_id=<%= student._id %>"
 						>
 							<span
 								class="material-symbols-outlined"
@@ -209,7 +213,10 @@
 
 						<!-- Loop to display up to 2 PDF files -->
 						<% if (filenames.length === 0) { %>
-						<div class="alert alert-warning d-flex align-items-center justify-content-center" role="alert">
+						<div
+							class="alert alert-warning d-flex align-items-center justify-content-center"
+							role="alert"
+						>
 							No PDF files available.
 						</div>
 						<% } else { %> <% for (let i = 0; i < Math.min(2, filenames.length);
@@ -217,7 +224,6 @@
 						<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">
 							<div class="card-header text-center bg-info position-relative">
 								<%= filenames[i] %>
-								
 							</div>
 							<div class="card-body">
 								<embed

@@ -219,6 +219,12 @@ router.get('/goBackToRecords', (req, res) => {
 	res.redirect(`/systemAdmin/records?gradeLevel=${gradeLevel}`);
 });
 
+router.get('/goBackToFolder', (req, res) => {
+	const studentId = req.query._id;
+
+	res.redirect(`/systemAdmin/studentFolders/${studentId}`);
+});
+
 router.get('/records-menu', async (req, res, next) => {
 	try {
 		const person = req.user;
@@ -1447,167 +1453,175 @@ router.delete('/events/:date/:eventName', async (req, res) => {
 });
 
 router.get('/generate-pdf', async (req, res, next) => {
-    try {
-        // Fetch activity logs from the database
-        const activityLogs = await Activity.find();
+	try {
+		// Fetch activity logs from the database
+		const activityLogs = await Activity.find();
 
-        // Fetch counts of active and archived records
-        const activeCount = await Records.countDocuments();
-        const archivedCount = await Archives.countDocuments();
+		// Fetch counts of active and archived records
+		const activeCount = await Records.countDocuments();
+		const archivedCount = await Archives.countDocuments();
 
-        // Load the logo images
-        const leftLogoData = fs.readFileSync('public/img/logo.png');
-        const rightLogoData = fs.readFileSync('public/img/logo.png');
+		// Load the logo images
+		const leftLogoData = fs.readFileSync('public/img/logo.png');
+		const rightLogoData = fs.readFileSync('public/img/depedlogo.png');
 
-        const doc = new PDFDocument();
+		const doc = new PDFDocument();
 
-        // Set response headers for PDF download
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename=report.pdf');
+		// Set response headers for PDF download
+		res.setHeader('Content-Type', 'application/pdf');
+		res.setHeader('Content-Disposition', 'attachment; filename=report.pdf');
 
-        doc.pipe(res);
+		doc.pipe(res);
 
-        const { width, height } = doc.page;
-        const headerHeight = 100;
+		const { width, height } = doc.page;
+		const headerHeight = 100;
 
-        // Add left logo
-        doc.image(leftLogoData, { x: 50, y: 50, width: 50, height: 50 });
+		// Add left logo
+		doc.image(leftLogoData, { x: 50, y: 50, width: 50, height: 50 });
 
-        // Add right logo
-        doc.image(rightLogoData, { x: width - 100, y: 50, width: 50, height: 50 });
+		// Add right logo
+		doc.image(rightLogoData, { x: width - 100, y: 50, width: 50, height: 50 });
 
-        // Add text lines in the middle
-        const headerText1 = 'Bethany Christian Academy';
-        const headerText2 = 'Maitim 2nd East, Tagaytay City';
-        const headerText3 = '09338557850';
+		// Add text lines in the middle
+		const headerText1 = 'Bethany Christian Academy';
+		const headerText2 = 'Maitim 2nd East, Tagaytay City';
+		const headerText3 = 'bethaychristian2002@yahoo.com';
+		const headerText4 = '09338557850';
 
-        const textWidth = doc.widthOfString(headerText1);
-        const textYPosition1 = 50;
-        const textYPosition2 = textYPosition1 + 20;
-        const textYPosition3 = textYPosition2 + 20;
+		const textWidth = doc.widthOfString(headerText1);
+		const textYPosition1 = 50;
+		const textYPosition2 = textYPosition1 + 20;
+		const textYPosition3 = textYPosition2 + 20;
+		const textYPosition4 = textYPosition3 + 20;
 
-        doc
-            .fontSize(16)
-            .fillColor('black')
-            .text(headerText1, {
-                x: (width - textWidth) / 2,
-                y: textYPosition1,
-                align: 'center',
-            });
-        doc
-            .fontSize(13)
-            .fillColor('black')
-            .text(headerText2, {
-                x: (width - textWidth) / 2,
-                y: textYPosition2,
-                align: 'center',
-            });
-        doc
-            .fontSize(12)
-            .fillColor('black')
-            .text(headerText3, {
-                x: (width - textWidth) / 2,
-                y: textYPosition3,
-                align: 'center',
-            });
+		doc
+			.fontSize(14)
+			.fillColor('black')
+			.text(headerText1, {
+				x: (width - textWidth) / 2,
+				y: textYPosition1,
+				align: 'center',
+			});
+		doc
+			.fontSize(11)
+			.fillColor('black')
+			.text(headerText2, {
+				x: (width - textWidth) / 2,
+				y: textYPosition2,
+				align: 'center',
+			});
+		doc
+			.fontSize(10)
+			.fillColor('black')
+			.text(headerText3, {
+				x: (width - textWidth) / 2,
+				y: textYPosition3,
+				align: 'center',
+			});
 
-        function checkRemainingSpace(height) {
-            return height > 100;
-        }
+		doc
+			.fontSize(9)
+			.fillColor('black')
+			.text(headerText4, {
+				// Add the new text line
+				x: (width - textWidth) / 2,
+				y: textYPosition4,
+				align: 'center',
+			});
 
-        // Add current date and time at the left top corner of the summary reports
-        const currentDate = new Date().toLocaleString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric'
-        });
-        const dateTextWidth = doc.widthOfString(currentDate);
-        const dateTextX = 50; // Adjust as needed
-        const dateTextY = headerHeight + 60; // Adjust as needed
+		function checkRemainingSpace(height) {
+			return height > 100;
+		}
 
-        doc
-            .fontSize(12)
-            .fillColor('black')
-            .text(currentDate, dateTextX, dateTextY);
+		// Add current date and time at the left top corner of the summary reports
+		const currentDate = new Date().toLocaleString('en-US', {
+			month: 'long',
+			day: 'numeric',
+			year: 'numeric',
+		});
+		const dateTextWidth = doc.widthOfString(currentDate);
+		const dateTextX = 50; // Adjust as needed
+		const dateTextY = headerHeight + 60; // Adjust as needed
 
-        doc.moveDown();
-        doc.moveDown();
-        doc.moveDown();
-        doc.moveDown();
+		doc.fontSize(12).fillColor('black').text(currentDate, dateTextX, dateTextY);
 
-        const summaryReportsText = 'Summary reports';
-        const summaryReportsHeight = doc.heightOfString(summaryReportsText, {
-            width: width - 100,
-            align: 'center',
-        });
-        if (!checkRemainingSpace(height - headerHeight - summaryReportsHeight)) {
-            doc.addPage();
-        }
+		doc.moveDown();
+		doc.moveDown();
+		doc.moveDown();
+		doc.moveDown();
 
-        doc.fontSize(16).text(summaryReportsText, { align: 'center' });
-        doc.moveDown();
-        doc
-            .fontSize(12)
-            .text(`Number of Active Records: ${activeCount}`, { align: 'left' });
-        doc.text(`Number of Archives: ${archivedCount}`, { align: 'left' });
-        doc.moveDown();
-        doc.moveDown();
-        doc.moveDown();
+		const summaryReportsText = 'Summary reports';
+		const summaryReportsHeight = doc.heightOfString(summaryReportsText, {
+			width: width - 100,
+			align: 'center',
+		});
+		if (!checkRemainingSpace(height - headerHeight - summaryReportsHeight)) {
+			doc.addPage();
+		}
 
-        const activityLogsText = 'Activity logs';
-        const activityLogsHeight = doc.heightOfString(activityLogsText, {
-            width: width - 100,
-            align: 'center',
-        });
-        if (!checkRemainingSpace(height - headerHeight - activityLogsHeight)) {
-            doc.addPage();
-        }
+		doc.fontSize(16).text(summaryReportsText, { align: 'center' });
+		doc.moveDown();
+		doc
+			.fontSize(12)
+			.text(`Number of Active Records: ${activeCount}`, { align: 'left' });
+		doc.text(`Number of Archives: ${archivedCount}`, { align: 'left' });
+		doc.moveDown();
+		doc.moveDown();
+		doc.moveDown();
 
-        doc.fontSize(16).text(activityLogsText, { align: 'center' });
-        doc.moveDown();
+		const activityLogsText = 'Activity logs';
+		const activityLogsHeight = doc.heightOfString(activityLogsText, {
+			width: width - 100,
+			align: 'center',
+		});
+		if (!checkRemainingSpace(height - headerHeight - activityLogsHeight)) {
+			doc.addPage();
+		}
 
-        activityLogs.forEach((log, index) => {
-            // Add activity log details
-            doc.fontSize(12);
-            doc.text(`${index + 1}. Action: ${log.action}`, { align: 'left' });
-            doc.text(`   Date: ${log.dateCreated.toLocaleString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-                hour: 'numeric',
-                minute: 'numeric',
-                hour12: true
-            })}`, { align: 'left' });
-            
+		doc.fontSize(16).text(activityLogsText, { align: 'center' });
+		doc.moveDown();
+
+		activityLogs.forEach((log, index) => {
+			// Add activity log details
+			doc.fontSize(10);
+			doc.text(`${index + 1}. Action: ${log.action}`, { align: 'left' });
+			doc.text(
+				`    Date: ${log.dateCreated.toLocaleString('en-US', {
+					month: 'long',
+					day: 'numeric',
+					year: 'numeric',
+					hour: 'numeric',
+					minute: 'numeric',
+					hour12: true,
+				})}`,
+				{ align: 'left' }
+			);
+
 			doc.moveDown();
 			doc.moveDown();
-            // Add "Added by" section
-            doc.text('   Added by', { align: 'left' });
+			// Add "Added by" section
+			doc.text('   Added by', { align: 'left' });
 			doc.moveDown();
-            doc.text(`       Email: ${log.userEmail}`, { align: 'left' });
-            doc.text(`       Class Adviser: ${log.adviserName}`, { align: 'left' });
+			doc.text(`       Email: ${log.userEmail}`, { align: 'left' });
+			doc.text(`       Class Adviser: ${log.adviserName}`, { align: 'left' });
 			doc.moveDown();
-            // Add student details
+			// Add student details
 			doc.text(`   Student Details`, { align: 'left' });
 			doc.moveDown();
-            doc.text(`       LRN: ${log.lrn}`, { align: 'left' });
-            doc.text(`       Last Name: ${log.lName}`, { align: 'left' });
-            doc.text(`       First Name: ${log.fName}`, { align: 'left' });
-            doc.text(`       Gender: ${log.gender}`, { align: 'left' });
-            doc.text(`       Grade level: ${log.gradeLevel}`, { align: 'left' });
+			doc.text(`       LRN: ${log.lrn}`, { align: 'left' });
+			doc.text(`       Last Name: ${log.lName}`, { align: 'left' });
+			doc.text(`       First Name: ${log.fName}`, { align: 'left' });
+			doc.text(`       Gender: ${log.gender}`, { align: 'left' });
+			doc.text(`       Grade level: ${log.gradeLevel}`, { align: 'left' });
 
-            doc.moveDown();
-        });
+			doc.moveDown();
+		});
 
-        doc.end();
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		doc.end();
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
-
-
-
-
 
 module.exports = router;

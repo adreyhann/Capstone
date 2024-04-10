@@ -218,7 +218,8 @@
 									<td><%= record.lName %></td>
 									<td><%= record.fName %></td>
 									<td><%= record.gender %></td>
-									<td><%= new Date(record.dateAddedToArchive).toLocaleString() %></td>
+									<td><%= new Date(record.dateAddedToArchive).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }) %>
+									</td>
 									<td>
 										<a
 											class="btn btn-sm"

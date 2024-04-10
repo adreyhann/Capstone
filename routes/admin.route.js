@@ -7,6 +7,7 @@ const User = require('../models/user.model');
 const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
 const Event = require('../models/events.model');
+const Activity = require('../models/activity.model');
 require('dotenv').config();
 
 function countVisibleUsers(users, currentUser) {
@@ -199,6 +200,12 @@ router.get('/goBackToRecords', (req, res) => {
 	res.redirect(`/admin/records?gradeLevel=${gradeLevel}`);
 });
 
+router.get('/goBackToFolder', (req, res) => {
+	const studentId = req.query._id;
+
+	res.redirect(`/admin/studentFolders/${studentId}`);
+});
+
 router.get('/records-menu', async (req, res, next) => {
 	try {
 		const person = req.user;
@@ -306,9 +313,10 @@ router.get('/reports', async (req, res, next) => {
 	try {
 		const person = req.user;
 
-		const historyLogs = await History.find().populate(); 
+		// Fetch history logs from the database
+		const activity = await Activity.find({}).populate();
 
-		res.render('admin/reports', { person, historyLogs });
+		res.render('admin/reports', { person, activity });
 	} catch (error) {
 		console.error('Error:', error);
 		next(error);

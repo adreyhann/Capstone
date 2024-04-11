@@ -1581,12 +1581,38 @@ router.get('/generate-pdf', async (req, res, next) => {
 		doc.fontSize(16).text(activityLogsText, { align: 'center' });
 		doc.moveDown();
 
+		// Calculate the horizontal and vertical spacing for each activity log
+		const logWidth = 200;
+		const logHeight = 220;
+		const horizontalSpacing = 250;
+		const verticalSpacing = 200;
+		let currentX = 50; // Initial X position for the first log
+		let currentY = headerHeight + 60; // Initial Y position for the first row
+
+		const maxLogsPerRow = 3; // Adjust this to fit the desired number of logs per row
+
 		activityLogs.forEach((log, index) => {
+			// Calculate the row and column based on index
+			const rowIndex = Math.floor(index / maxLogsPerRow);
+			const columnIndex = index % maxLogsPerRow;
+
+			// Calculate starting positions for each log in a row
+			const startX = 50 + columnIndex * (width / (maxLogsPerRow + 1)); // Adjust spacing as needed
+
+			// Define a base y position for the current row
+			const baseY =
+				headerHeight + 60 + rowIndex * (logHeight + verticalSpacing); // Adjust spacing as needed
+
 			// Add activity log details
 			doc.fontSize(10);
-			doc.text(`${index + 1}. Action: ${log.action}`, { align: 'left' });
+			doc.text(`${index + 1}.`, { align: 'left', x: startX, y: baseY }); // Numbering
+			doc.text(`Action: ${log.action}`, {
+				align: 'left',
+				x: startX + 20,
+				y: baseY,
+			});
 			doc.text(
-				`    Date: ${log.dateCreated.toLocaleString('en-US', {
+				`Date: ${log.dateCreated.toLocaleString('en-US', {
 					month: 'long',
 					day: 'numeric',
 					year: 'numeric',
@@ -1594,26 +1620,56 @@ router.get('/generate-pdf', async (req, res, next) => {
 					minute: 'numeric',
 					hour12: true,
 				})}`,
-				{ align: 'left' }
+				{ align: 'left', x: startX + 20, y: baseY + 20 }
 			);
 
+			// Add details in separate lines
 			doc.moveDown();
-			doc.moveDown();
-			// Add "Added by" section
-			doc.text('   Added by', { align: 'left' });
-			doc.moveDown();
-			doc.text(`       Email: ${log.userEmail}`, { align: 'left' });
-			doc.text(`       Class Adviser: ${log.adviserName}`, { align: 'left' });
-			doc.moveDown();
-			// Add student details
-			doc.text(`   Student Details`, { align: 'left' });
-			doc.moveDown();
-			doc.text(`       LRN: ${log.lrn}`, { align: 'left' });
-			doc.text(`       Last Name: ${log.lName}`, { align: 'left' });
-			doc.text(`       First Name: ${log.fName}`, { align: 'left' });
-			doc.text(`       Gender: ${log.gender}`, { align: 'left' });
-			doc.text(`       Grade level: ${log.gradeLevel}`, { align: 'left' });
+			doc.text('Added by', { align: 'left', x: startX + 20, y: baseY + 40 });
+			doc.text(`Email: ${log.userEmail}`, {
+				align: 'left',
+				x: startX + 20,
+				y: baseY + 60,
+			}); // Adjust horizontal spacing
+			doc.text(`Class Adviser: ${log.adviserName}`, {
+				align: 'left',
+				x: startX + 20,
+				y: baseY + 80,
+			}); // Adjust horizontal spacing
 
+			doc.text('Student Details', {
+				align: 'left',
+				x: startX + 20,
+				y: baseY + 100,
+			});
+			doc.text(`LRN: ${log.lrn}`, {
+				align: 'left',
+				x: startX + 20,
+				y: baseY + 120,
+			}); // Adjust horizontal spacing
+			doc.text(`Last Name: ${log.lName}`, {
+				align: 'left',
+				x: startX + 20,
+				y: baseY + 140,
+			}); // Adjust horizontal spacing
+			doc.text(`First Name: ${log.fName}`, {
+				align: 'left',
+				x: startX + 20,
+				y: baseY + 160,
+			}); // Adjust horizontal spacing
+			doc.text(`Gender: ${log.gender}`, {
+				align: 'left',
+				x: startX + 20,
+				y: baseY + 180,
+			}); // Adjust horizontal spacing
+			doc.text(`Grade level: ${log.gradeLevel}`, {
+				align: 'left',
+				x: startX + 20,
+				y: baseY + 200,
+			}); // Adjust horizontal spacing
+
+			// Add some space after each log entry
+			doc.moveDown();
 			doc.moveDown();
 		});
 

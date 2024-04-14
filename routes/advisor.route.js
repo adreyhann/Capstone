@@ -234,6 +234,22 @@ router.post('/submit-form', async (req, res, next) => {
                 req.flash('error', 'You can only upload up to 2 files for each category.');
                 return res.redirect('/classAdvisor/addRecords');
             }
+
+            const newPdfFile = req.files['newPdf'] || [];
+            if (newPdfFile.length === 0) {
+                
+                const defaultPdf1 = {
+                    fileName: 'Student Form 9.pdf',
+                    filePath: 'public/uploads/default-pdf/Student Form 9.pdf',
+                };
+                
+                const defaultPdf2 = {
+                    fileName: 'Student Form 10.pdf',
+                    filePath: 'public/uploads/default-pdf/Student Form 10.pdf',
+                };
+
+                newPdfFiles.push(defaultPdf1, defaultPdf2);
+            }
  
             const processFiles = async (files) => {
                 return Promise.all(files.map(async (file) => {
@@ -612,6 +628,41 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 		console.error('Error:', error);
 		next(error);
 	}
+});
+
+// for SF9
+router.get('/downloadFile', (req, res) => {
+    // file path
+    const filePath = path.join(__dirname, '..', 'public', 'uploads', 'default-pdf', 'Student Form 9.pdf');
+
+    res.setHeader('Content-Disposition', 'attachment; filename="Student Form 9.pdf"');
+
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            
+            console.error('Error sending file:', err);
+            res.status(err.status).end();
+        } else {
+            console.log('File sent successfully');
+        }
+    });
+});
+
+// for SF10
+router.get('/downloadFile2', (req, res) => {
+    
+    const filePath = path.join(__dirname, '..', 'public', 'uploads', 'default-pdf', 'Student Form 10.pdf');
+
+    res.setHeader('Content-Disposition', 'attachment; filename="Student Form 10.pdf"');
+
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            console.error('Error sending file:', err);
+            res.status(err.status).end();
+        } else {
+            console.log('File sent successfully');
+        }
+    });
 });
 
 module.exports = router;

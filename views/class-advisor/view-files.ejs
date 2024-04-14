@@ -47,7 +47,11 @@
 					<div class="container my-2">
 						<div class="row">
 							<div class="col-md-4 mx-2">
-								<img src="<%= person.profilePicture || '/img/default-img.jpg' %>" alt="Profile Picture" style="width: 70px; height: 65px; border-radius: 50%;" />
+								<img
+									src="<%= person.profilePicture || '/img/default-img.jpg' %>"
+									alt="Profile Picture"
+									style="width: 70px; height: 65px; border-radius: 50%"
+								/>
 							</div>
 							<div class="col-md-6">
 								<p class="my-0 pt-2" style="font-size: 15px">
@@ -150,8 +154,11 @@
 						</ul>
 					</div>
 				</nav>
-				<div class="container-lg position-relative" style="overflow-y: auto; max-height: 90vh;">
-					<h2 class="mt-2">New Documents</h2>
+				<div
+					class="container-lg position-relative"
+					style="overflow-y: auto; max-height: 90vh"
+				>
+					<h2 class="mt-2">Permanent records</h2>
 					<hr />
 					<div class="container-lg">
 						<% try { %> <%- include('../credentials/flash-message.ejs') %> <% }
@@ -159,32 +166,64 @@
 						<div>Error: <%= error.message %></div>
 						<% } %>
 
-						<!-- Form to upload additional files in new-files directory -->
-						<form
-							action="/classAdvisor/addFile/<%= student._id %>"
-							id="addFile"
-							method="post"
-							enctype="multipart/form-data"
-							class="mb-3"
-						>
-							<div class="row">
-								<input
-									class="form-control mb-3"
-									type="file"
-									name="newPdf"
-									id="newPdf"
-									accept=".pdf"
-									required
-								/>
-								<button id="submitButton" type="submit" class="btn btn-sm btn-success">Submit</button>
+						<div class="row">
+							<div class="col-md-6">
+								<!-- Form -->
+								<form
+									action="/classAdvisor/addFile/<%= student._id %>"
+									id="addFile"
+									method="post"
+									enctype="multipart/form-data"
+									class="mb-3"
+								>
+									<div class="input-group">
+										<input
+											class="form-control mb-3"
+											type="file"
+											name="newPdf"
+											id="newPdf"
+											accept=".pdf"
+											required
+										/>
+										<button
+											id="submitButton"
+											type="submit"
+											class="btn btn-sm btn-success mb-3"
+										>
+											Upload
+										</button>
+									</div>
+								</form>
 							</div>
-						</form>
+							<div class="col-md-6">
+								<!-- Dropdown Menu -->
+								<div class="dropdown">
+									<button
+										class="btn btn-info dropdown-toggle"
+										type="button"
+										data-bs-toggle="dropdown"
+										aria-expanded="false"
+									>
+										Download editable forms
+									</button>
+									<ul class="dropdown-menu">
+										<li><a class="dropdown-item" target="_blank" href="/classAdvisor/downloadFile">Student Form 9 (SF9)</a></li>
+										<li>
+											<a class="dropdown-item" href="#">Student Form 10 (SF10)</a>
+										</li>
+									</ul>
+								</div>
+							</div>
+						</div>
 
 						<!-- Loop to display up to 2 PDF files -->
 						<% if (filenames.length === 0) { %>
-							<div class="alert alert-warning d-flex align-items-center justify-content-center" role="alert">
+						<div
+							class="alert alert-warning d-flex align-items-center justify-content-center"
+							role="alert"
+						>
 							No PDF files available.
-							</div>
+						</div>
 						<% } else { %> <% for (let i = 0; i < Math.min(2, filenames.length);
 						i++) { %>
 						<div class="card mb-3 custom-card-2 border-0" style="height: 100vh">

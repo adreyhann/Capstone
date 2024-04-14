@@ -1161,7 +1161,7 @@ router.post('/deactivate/:userId', async (req, res, next) => {
 		const greeting = `Dear ${userToDeactivate.lname} ${userToDeactivate.fname},`;
 		// Send email notification
 		const mailOptions = {
-			from: 'bethanychristianacademy@gmail.com',
+			from: 'Bethany Christian Academy',
 			to: userToDeactivate.email,
 			subject: 'Account Deactivation Notification',
 			text: `${greeting}\n\nWe regret to inform you that your account with Bethany Christian Academy has been deactivated. If you believe this is an error, please do not hesitate to contact the System Admin.\n\nBest regards,\nThe Bethany Christian Academy Team`,
@@ -1279,7 +1279,7 @@ router.post('/activate/:userId', async (req, res) => {
 		});
 
 		const mailOptions = {
-			from: 'bethanychristianacademy@gmail.com',
+			from: 'Bethany Christian Academy',
 			to: inactiveUser.email,
 			subject: 'Account Activation Notification',
 			html: `<p>Dear ${inactiveUser.fname},</p>
@@ -1365,7 +1365,7 @@ router.post('/deactivateProfile', async (req, res, next) => {
 		const greeting = `Dear ${userToDeactivate.lname} ${userToDeactivate.fname},`;
 		// Send email notification
 		const mailOptions = {
-			from: 'bethanychristianacademy@gmail.com',
+			from: 'Bethany Christian Academy',
 			to: userToDeactivate.email,
 			subject: 'Account Deactivation Notification',
 			text: `${greeting}\n\nWe regret to inform you that your account with Bethany Christian Academy has been deactivated. If you believe this is an error or require further assistance, please do not hesitate to contact our support team.\n\nBest regards,\nThe Bethany Christian Academy Team`,

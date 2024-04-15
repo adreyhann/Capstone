@@ -319,119 +319,129 @@ router.get('/addRecords', async (req, res, next) => {
 
 const storage = multer.diskStorage({
 	destination: function (req, file, cb) {
-		cb(null, 'public/uploads');
+		cb(null, 'public/uploads/profile-picture'); 
 	},
 	filename: function (req, file, cb) {
-		cb(null, file.originalname);
+		cb(null, Date.now() + '-' + file.originalname);
 	},
 });
 
 const upload = multer({
 	storage: storage,
-	limits: { fileSize: 5 * 1024 * 1024 },
+	limits: {
+		fileSize: 1024 * 1024 * 2, 
+	},
 	fileFilter: function (req, file, cb) {
-		if (file.mimetype === 'application/pdf') {
+		// Accept only image files
+		const filetypes = /jpeg|jpg|png/;
+		const mimetype = filetypes.test(file.mimetype);
+		const extname = filetypes.test(
+			path.extname(file.originalname).toLowerCase()
+		);
+
+		if (mimetype && extname) {
 			cb(null, true);
 		} else {
-			req.flash('error', 'Only PDF files are allowed!');
+			req.flash('error', 'Only JPEG, JPG, or PNG files are allowed');
 			cb(null, false);
 		}
+		
 	},
-});
+}).single('profilePicture');
 
-router.post(
-	'/addFile/:recordId',
-	upload.single('pdfFile'),
-	async (req, res, next) => {
-		try {
-			const recordId = req.params.recordId;
+// router.post(
+// 	'/addFile/:recordId',
+// 	upload.single('pdfFile'),
+// 	async (req, res, next) => {
+// 		try {
+// 			const recordId = req.params.recordId;
 
-			// Find the record by ID
-			const record = await Records.findById(recordId);
+// 			// Find the record by ID
+// 			const record = await Records.findById(recordId);
 
-			if (!record) {
-				res.status(404).send('Record not found');
-				return;
-			}
+// 			if (!record) {
+// 				res.status(404).send('Record not found');
+// 				return;
+// 			}
 
-			// Check if a file was uploaded
-			if (req.file) {
-				// Check if the number of files is less than 2
-				if (record.pdfFilePath.length < 2) {
-					const newPdfPath = req.file.path;
+// 			// Check if a file was uploaded
+// 			if (req.file) {
+// 				// Check if the number of files is less than 2
+// 				if (record.pdfFilePath.length < 2) {
+// 					const newPdfPath = req.file.path;
 
-					// Update the existing record with the new file path
-					record.pdfFilePath.push(newPdfPath);
-					await record.save();
+// 					// Update the existing record with the new file path
+// 					record.pdfFilePath.push(newPdfPath);
+// 					await record.save();
 
-					// Redirect back to the view-files page
-					req.flash('success', 'Successfully uploaded');
-					res.redirect(`/systemAdmin/view-files/${recordId}`);
-				} else {
-					// Display a flash message for exceeding the maximum allowed files
-					req.flash('error', 'You can only upload up to 2 files.');
-					res.redirect(`/systemAdmin/view-files/${recordId}`);
-				}
-			} else {
-				// req.flash('error', 'No PDF file uploaded');
-				res.redirect(`/systemAdmin/view-files/${recordId}`);
-			}
-		} catch (error) {
-			console.error('Error:', error);
-			next(error);
-		}
-	}
-);
+// 					// Redirect back to the view-files page
+// 					req.flash('success', 'Successfully uploaded');
+// 					res.redirect(`/systemAdmin/view-files/${recordId}`);
+// 				} else {
+// 					// Display a flash message for exceeding the maximum allowed files
+// 					req.flash('error', 'You can only upload up to 2 files.');
+// 					res.redirect(`/systemAdmin/view-files/${recordId}`);
+// 				}
+// 			} else {
+// 				// req.flash('error', 'No PDF file uploaded');
+// 				res.redirect(`/systemAdmin/view-files/${recordId}`);
+// 			}
+// 		} catch (error) {
+// 			console.error('Error:', error);
+// 			next(error);
+// 		}
+// 	}
+// );
 
-router.post('/deleteFile/:recordId/:index', async (req, res, next) => {
-	try {
-		const recordId = req.params.recordId;
-		const index = req.params.index;
+// router.post('/deleteFile/:recordId/:index', async (req, res, next) => {
+// 	try {
+// 		const recordId = req.params.recordId;
+// 		const index = req.params.index;
 
-		// Find the record by ID
-		const record = await Records.findById(recordId);
+// 		// Find the record by ID
+// 		const record = await Records.findById(recordId);
 
-		if (!record) {
-			req.flash('error', 'Record not found');
-			res.redirect(`/systemAdmin/view-files/${recordId}`); // Redirect to an error route
-			return;
-		}
+// 		if (!record) {
+// 			req.flash('error', 'Record not found');
+// 			res.redirect(`/systemAdmin/view-files/${recordId}`); // Redirect to an error route
+// 			return;
+// 		}
 
-		const lrn = record.lrn;
-		const gradeLevel = record.gradeLevel;
-		const filePath = record.pdfFilePath[index];
-		const fileName = path.basename(filePath);
+// 		const lrn = record.lrn;
+// 		const gradeLevel = record.gradeLevel;
+// 		const filePath = record.pdfFilePath[index];
+// 		const fileName = path.basename(filePath);
 
-		// Check if the index is valid
-		if (index >= 0 && index < record.pdfFilePath.length) {
-			// Remove the file path at the specified index
-			record.pdfFilePath.splice(index, 1);
-			await record.save();
+// 		// Check if the index is valid
+// 		if (index >= 0 && index < record.pdfFilePath.length) {
+// 			// Remove the file path at the specified index
+// 			record.pdfFilePath.splice(index, 1);
+// 			await record.save();
 
-			// Set success flash message
-			req.flash('success', 'File successfully deleted');
+// 			// Set success flash message
+// 			req.flash('success', 'File successfully deleted');
 
-			const historyLog = new History({
-				userEmail: req.user.email,
-				userFirstName: req.user.fname,
-				userLastName: req.user.lname,
-				action: `${req.user.fname} ${req.user.lname} deleted a file from record`,
-				details: `Deleted file '${fileName}' from record with LRN ${lrn} in ${gradeLevel}`,
-			});
+// 			const historyLog = new History({
+// 				userEmail: req.user.email,
+// 				userFirstName: req.user.fname,
+// 				userLastName: req.user.lname,
+// 				action: `${req.user.fname} ${req.user.lname} deleted a file from record`,
+// 				details: `Deleted file '${fileName}' from record with LRN ${lrn} in ${gradeLevel}`,
+// 			});
 
-			await historyLog.save();
-		} else {
-			// Set error flash message for an invalid file index
-			req.flash('error', 'Invalid file index');
-		}
+// 			await historyLog.save();
+// 		} else {
+// 			// Set error flash message for an invalid file index
+// 			req.flash('error', 'Invalid file index');
+// 		}
 
-		// Redirect back to the view-files page
-		res.redirect(`/systemAdmin/view-files/${recordId}`);
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
-});
+// 		// Redirect back to the view-files page
+// 		res.redirect(`/systemAdmin/view-files/${recordId}`);
+// 	} catch (error) {
+// 		console.error('Error:', error);
+// 		next(error);
+// 	}
+// });
 
 router.post('/edit-record/:recordId', async (req, res, next) => {
 	try {

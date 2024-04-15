@@ -134,8 +134,8 @@ router.post(
 				});
 				const person = req.user;
 				const currentUserRole = req.user.role;
-				// Extract the profile picture path from the request object
-				const profilePicturePath = req.file ? req.file.path : '/img/default-img.jpg';
+				// Extract the profile picture path
+				const profilePicturePath = req.user.profilePicture;
 				return res.render('credentials/register', {
 					person,
 					email: req.body.email,
@@ -261,7 +261,8 @@ router.post(
 				return res.redirect('/auth/register');
 			}
 
-			const profilePicturePath = req.file ? req.file.path : '/img/default-img.jpg';
+			const profilePicturePath = req.file ? req.file.path.replace('public', '') : '/img/default-img.jpg';
+
 
 			const user = new User({
 				...req.body,
@@ -333,9 +334,8 @@ router.post(
 			});
 		} catch (error) {
 			const person = req.user;
-			const currentUserRole = req.user.role;
-			// Extract the profile picture path from the request object
-			const profilePicturePath = req.file ? req.file.path : '/img/default-img.jpg';
+			const currentUserRole = req.user.role;// Extract the profile picture path
+			const profilePicturePath = req.user.profilePicture;
 			res.render('credentials/register', {
 				person,
 				email: req.body.email,

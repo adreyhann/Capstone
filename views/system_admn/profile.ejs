@@ -32,6 +32,8 @@
 		<script defer src="/js/disable.button.js"></script>
 		<script defer src="/js/spinner2.js"></script>
 		<script defer src="/js/deact-profile.js"></script>
+		<script defer src="/js/previewProfilePicture.js"></script>
+		<script defer src="/js/edit.button.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<link rel="icon" type="image/x-icon" href="/img/logo.png">
 		<title>Profile</title>
@@ -281,7 +283,7 @@
 						</div>
 						<div class="card-footer bg-info border-0"></div>
 					</div>
-					<!-- ========== Start modal ========== -->
+					<!-- ========== edit form ========== -->
 					<div
 						class="modal fade"
 						id="editUserModal"
@@ -306,6 +308,13 @@
 								</div>
 								<div class="modal-body">
 									<form id="editUserForm" action="" method="post">
+										<!-- <div class="col-md-2" style="position: relative;">
+											<label for="profilePicture" class="mb-3" style="cursor: pointer; position: relative;">
+												<img id="profilePicturePreview" src="<%= person.profilePicture %>" alt="Preview" style="width: 100px; height: 100px; margin-bottom: 10px; border-radius: 50%;" />
+												<input type="file" class="form-control" name="profilePicture" id="profilePicture" accept="image/*" onchange="previewProfilePicture(event)" style="display: none;" />
+												<span class="material-symbols-outlined edit-icon" style="position: absolute; top: 0; right: 0; background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 50%;">edit</span>
+											</label>
+										</div> -->
 										<div class="form-floating mb-3">
 											<input
 												type="text"

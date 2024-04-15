@@ -27,6 +27,7 @@ app.use('/js', express.static(__dirname + '/public/js'));
 app.use('/uploads', express.static(__dirname + '/public/uploads/profile-picture'));
 
 
+
 const client = new MongoClient(process.env.MONGO_URI);
 const mongoStore = new MongoStore({ client });
 

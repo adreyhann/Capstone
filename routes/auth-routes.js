@@ -261,7 +261,6 @@ router.post(
 				return res.redirect('/auth/register');
 			}
 
-			// Extract the profile picture path from the request object
 			const profilePicturePath = req.file ? req.file.path : '/img/default-img.jpg';
 
 			const user = new User({

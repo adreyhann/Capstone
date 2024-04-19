@@ -13,6 +13,6 @@ $(document).ready(function () {
     function updateArchivedButtonVisibility() {
         const anyCheckboxChecked = $('input[name="selectedRecords"]:checked').length > 0;
         
-        $('#archiveButton').toggle(anyCheckboxChecked);
+        $('#archiveButton, #advancedButton').toggle(anyCheckboxChecked);
     }
 });

@@ -9,6 +9,7 @@ const InactiveUser = require('../models/inactive.model');
 const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
 const Event = require('../models/events.model');
+const moment = require('moment');
 const Activity = require('../models/activity.model');
 const archiver = require('archiver');
 const nodemailer = require('nodemailer');
@@ -1403,7 +1404,7 @@ router.post('/deactivateProfile', async (req, res, next) => {
 
 router.get('/events', async (req, res) => {
 	try {
-		const events = await Event.find();
+		const events = await Event.find().sort({ date: 1 });
 		res.json(events);
 	} catch (error) {
 		console.error('Error fetching events:', error);
@@ -1414,7 +1415,7 @@ router.get('/events', async (req, res) => {
 router.get('/calendar', async (req, res, next) => {
 	try {
 		const person = req.user;
-		const events = await Event.find();
+		const events = await Event.find().sort({ date: 1 });
 
 		res.render('system_admn/calendar', { person, events });
 	} catch (error) {
@@ -1689,5 +1690,89 @@ router.get('/generate-pdf', async (req, res, next) => {
 		next(error);
 	}
 });
+
+router.post('/advance-grade-level', async (req, res) => {
+    try {
+        const selectedRecordIds = req.body.selectedRecords;
+
+        if (!selectedRecordIds || selectedRecordIds.length === 0) {
+            return res.status(400).json({ error: 'Please select at least one record to advance grade level.' });
+        }
+
+        // Define a mapping of grade levels from string to numeric values
+        const gradeLevelMap = {
+            'Kinder': 0,
+            'Grade 1': 1,
+            'Grade 2': 2,
+            'Grade 3': 3,
+            'Grade 4': 4,
+            'Grade 5': 5,
+            'Grade 6': 6,
+            // Add more grade levels as needed
+        };
+
+        // Retrieve the records with the selected IDs
+        const records = await Records.find({ _id: { $in: selectedRecordIds } });
+
+        // Increment the grade level of each selected record
+        for (const record of records) {
+            // Get the current grade level as a numeric value using the mapping
+            const currentGradeLevel = gradeLevelMap[record.gradeLevel];
+            if (currentGradeLevel === 6) {
+                return res.status(400).json({ error: 'Selected student(s) are already in Grade 6 and cannot be advanced further.' });
+            }
+            // Increment the grade level
+            const newGradeLevel = currentGradeLevel + 1;
+            // Update the record with the new grade level
+            await Records.updateOne({ _id: record._id }, { $set: { gradeLevel: `Grade ${newGradeLevel}` } });
+        }
+
+        return res.status(200).json({ message: 'Grade level advanced successfully.' });
+    } catch (error) {
+        console.error('Error advancing grade level:', error);
+        return res.status(500).json({ error: 'An error occurred while advancing grade level.' });
+    }
+});
+
+
+router.post('/advance-grade-level/:recordId', async (req, res) => {
+    try {
+        const recordId = req.params.recordId;
+
+        // Retrieve the record by ID
+        const record = await Records.findById(recordId);
+
+        if (!record) {
+            return res.status(404).json({ error: 'Record not found.' });
+        }
+
+        // Define a mapping of grade levels from string to numeric values
+        const gradeLevelMap = {
+            'Kinder': 0,
+            'Grade 1': 1,
+            'Grade 2': 2,
+            'Grade 3': 3,
+			'Grade 4': 4,
+			'Grade 5': 5,
+			'Grade 6': 6,
+            // Add more grade levels as needed
+        };
+
+        // Get the current grade level as a numeric value using the mapping
+        const currentGradeLevel = gradeLevelMap[record.gradeLevel];
+        // Ensure the gradeLevel is parsed to an integer before incrementing
+        const newGradeLevel = currentGradeLevel + 1;
+
+        // Update the record with the new grade level
+        await Records.updateOne({ _id: recordId }, { $set: { gradeLevel: `Grade ${newGradeLevel}` } });
+
+        return res.status(200).json({ message: 'Grade level advanced successfully.' });
+    } catch (error) {
+        console.error('Error advancing grade level:', error);
+        return res.status(500).json({ error: 'An error occurred while advancing grade level.' });
+    }
+});
+
+
 
 module.exports = router;

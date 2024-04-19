@@ -209,23 +209,21 @@
 											<ul id="eventList" class="list-group">
 												<% if (events && events.length > 0) { %>
 													<% events.forEach((event, index) => { %>
-														<li class="list-group-item" data-event-date="<%= event.date %>" data-event-name="<%= event.eventName %>">
+														<li class="list-group-item" data-event-date="<%= event.date %>" data-event-name="<%= event.eventName %>" style="display: flex; justify-content: space-between; align-items: center;">
 															<span><%= new Date(event.date).toLocaleDateString() %></span>
-															<ul>
-																<li class="d-flex justify-content-between align-items-center">
-																	<%= event.eventName %>
-																	<div>
-																	</div>
-																</li>
-															</ul>
+															<span style="max-width: calc(100% - 100px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><%= event.eventName %></span>
+															<div>
+																<!-- Your buttons or other elements here -->
+															</div>
 														</li>
 													<% }); %>
 												<% } else { %>
+													<!-- Handle case where there are no events -->
 												<% } %>
 											</ul>
 										</div>
-										
 									</div>
+									
 								</div>
 							</div>
 						</div>

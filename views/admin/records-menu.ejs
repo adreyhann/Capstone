@@ -197,17 +197,12 @@
 							>Add new record</a
 						> -->
 					</div>
-					<div class="row gap-4 ms-3 mb-3">
-						
-						<div
-							class="card custom-card-2 border-0 p-0"
-							style="width: 18rem; height: 10rem"
-						>
-							<div class="card-header bg-info border-0"></div>	
+					<div class="row gap-4 ms-3 mb-3" style="max-height: 430px; overflow-y: auto;">
+						<a href="/admin/records?gradeLevel=Kinder" class="card custom-card-3 border-0 p-0" style="width: 14rem; height: 8rem; position: relative;">
+							<div class="card-header bg-info border-0"></div>
 							<div class="card-body">
-								
-								<h5 class="card-title">Kinder
-									<span class="badge text-bg-secondary position-absolute" style="margin-left: 10rem;">
+								<h5 class="card-title" style="font-weight: bold;">Kinder 
+									<span class="badge text-bg-secondary position-absolute mt-4 me-2" style="top: 0; right: 0;">
 										<% if (gradeLevelCounts['Kinder']) { %>
 											<%= gradeLevelCounts['Kinder'] %>
 										<% } else { %>
@@ -215,18 +210,15 @@
 										<% } %>
 									</span>
 								</h5>
-								<p class="card-text">View records of Kinder students</p><br>
-								<a href="/admin/records?gradeLevel=Kinder" class="card-link">View</a>
+								<p class="card-text">View records of Kinder students</p>
 							</div>
-						</div>
-						<div
-							class="card custom-card-2 border-0 p-0"
-							style="width: 18rem; height: 10rem"
-						>
-						<div class="card-header bg-info border-0"></div>
+						</a>
+						<!-- Add more cards with similar styling -->
+						<a href="/admin/records?gradeLevel=Grade 1" class="card custom-card-3 border-0 p-0" style="width: 14rem; height: 8rem; position: relative;">
+							<div class="card-header bg-info border-0"></div>
 							<div class="card-body">
-								<h5 class="card-title">Grade 1
-									<span class="badge text-bg-secondary position-absolute" style="margin-left: 9.5rem;">
+								<h5 class="card-title" style="font-weight: bold;">Grade 1
+									<span class="badge text-bg-secondary position-absolute mt-4 me-2" style="top: 0; right: 0;">
 										<% if (gradeLevelCounts['Grade 1']) { %>
 											<%= gradeLevelCounts['Grade 1'] %>
 										<% } else { %>
@@ -235,17 +227,14 @@
 									</span>
 								</h5>
 								<p class="card-text">View records of Grade 1 students</p>
-								<a href="/admin/records?gradeLevel=Grade 1" class="card-link">View</a>
 							</div>
-						</div>
-						<div
-							class="card custom-card-2 border-0 p-0"
-							style="width: 18rem; height: 10rem"
-						>
-						<div class="card-header bg-info border-0"></div>
+						</a>
+
+						<a href="/admin/records?gradeLevel=Grade 2" class="card custom-card-3 border-0 p-0" style="width: 14rem; height: 8rem; position: relative;">
+							<div class="card-header bg-info border-0"></div>
 							<div class="card-body">
-								<h5 class="card-title">Grade 2
-									<span class="badge text-bg-secondary position-absolute" style="margin-left: 9rem;">
+								<h5 class="card-title" style="font-weight: bold;">Grade 2 
+									<span class="badge text-bg-secondary position-absolute mt-4 me-2" style="top: 0; right: 0;">
 										<% if (gradeLevelCounts['Grade 2']) { %>
 											<%= gradeLevelCounts['Grade 2'] %>
 										<% } else { %>
@@ -254,17 +243,14 @@
 									</span>
 								</h5>
 								<p class="card-text">View records of Grade 2 students</p>
-								<a href="/admin/records?gradeLevel=Grade 2" class="card-link">View</a>
 							</div>
-						</div>
-						<div
-							class="card custom-card-2 border-0 p-0"
-							style="width: 18rem; height: 10rem"
-						>
-						<div class="card-header bg-info border-0"></div>
+						</a>
+
+						<a href="/admin/records?gradeLevel=Grade 3" class="card custom-card-3 border-0 p-0" style="width: 14rem; height: 8rem; position: relative;">
+							<div class="card-header bg-info border-0"></div>
 							<div class="card-body">
-								<h5 class="card-title">Grade 3
-									<span class="badge text-bg-secondary position-absolute" style="margin-left: 9rem;">
+								<h5 class="card-title" style="font-weight: bold;">Grade 3 
+									<span class="badge text-bg-secondary position-absolute mt-4 me-2" style="top: 0; right: 0;">
 										<% if (gradeLevelCounts['Grade 3']) { %>
 											<%= gradeLevelCounts['Grade 3'] %>
 										<% } else { %>
@@ -273,17 +259,14 @@
 									</span>
 								</h5>
 								<p class="card-text">View records of Grade 3 students</p>
-								<a href="/admin/records?gradeLevel=Grade 3" class="card-link">View</a>
 							</div>
-						</div>
-						<div
-							class="card custom-card-2 border-0 p-0"
-							style="width: 18rem; height: 10rem"
-						>
-						<div class="card-header bg-info border-0"></div>
+						</a>
+
+						<a href="/admin/records?gradeLevel=Grade 4" class="card custom-card-3 border-0 p-0" style="width: 14rem; height: 8rem; position: relative;">
+							<div class="card-header bg-info border-0"></div>
 							<div class="card-body">
-								<h5 class="card-title">Grade 4
-									<span class="badge text-bg-secondary position-absolute" style="margin-left: 9rem;">
+								<h5 class="card-title" style="font-weight: bold;">Grade 4 
+									<span class="badge text-bg-secondary position-absolute mt-4 me-2" style="top: 0; right: 0;">
 										<% if (gradeLevelCounts['Grade 4']) { %>
 											<%= gradeLevelCounts['Grade 4'] %>
 										<% } else { %>
@@ -292,17 +275,14 @@
 									</span>
 								</h5>
 								<p class="card-text">View records of Grade 4 students</p>
-								<a href="/admin/records?gradeLevel=Grade 4" class="card-link">View</a>
 							</div>
-						</div>
-						<div
-							class="card custom-card-2 border-0 p-0"
-							style="width: 18rem; height: 10rem"
-						>
-						<div class="card-header bg-info border-0"></div>
+						</a>
+
+						<a href="/admin/records?gradeLevel=Grade 5" class="card custom-card-3 border-0 p-0" style="width: 14rem; height: 8rem; position: relative;">
+							<div class="card-header bg-info border-0"></div>
 							<div class="card-body">
-								<h5 class="card-title">Grade 5
-									<span class="badge text-bg-secondary position-absolute" style="margin-left: 9rem;">
+								<h5 class="card-title" style="font-weight: bold;">Grade 5 
+									<span class="badge text-bg-secondary position-absolute mt-4 me-2" style="top: 0; right: 0;">
 										<% if (gradeLevelCounts['Grade 5']) { %>
 											<%= gradeLevelCounts['Grade 5'] %>
 										<% } else { %>
@@ -311,17 +291,13 @@
 									</span>
 								</h5>
 								<p class="card-text">View records of Grade 5 students</p>
-								<a href="/admin/records?gradeLevel=Grade 5" class="card-link">View</a>
 							</div>
-						</div>
-						<div
-							class="card custom-card-2 border-0 p-0"
-							style="width: 18rem; height: 10rem"
-						>
-						<div class="card-header bg-info border-0"></div>
+						</a>
+						<a href="/admin/records?gradeLevel=Grade 6" class="card custom-card-3 border-0 p-0" style="width: 14rem; height: 8rem; position: relative;">
+							<div class="card-header bg-info border-0"></div>
 							<div class="card-body">
-								<h5 class="card-title">Grade 6
-									<span class="badge text-bg-secondary position-absolute" style="margin-left: 9rem;">
+								<h5 class="card-title" style="font-weight: bold;">Grade 6 
+									<span class="badge text-bg-secondary position-absolute mt-4 me-2" style="top: 0; right: 0;">
 										<% if (gradeLevelCounts['Grade 6']) { %>
 											<%= gradeLevelCounts['Grade 6'] %>
 										<% } else { %>
@@ -330,9 +306,8 @@
 									</span>
 								</h5>
 								<p class="card-text">View records of Grade 6 students</p>
-								<a href="/admin/records?gradeLevel=Grade 6" class="card-link">View</a>
 							</div>
-						</div>
+						</a>
 					</div>
 				</div>
 			</div>

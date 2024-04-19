@@ -11,7 +11,7 @@ function displayEvents(events) {
 		return; // Exit the function if no events are found
 	}
 
-	// Iterate over each event object
+	// stop here
 	for (const event of events) {
 		const date = new Date(event.date); // Convert date string to Date object
 
@@ -155,6 +155,8 @@ async function deleteEvent(date, eventName) {
 flatpickr('#datepicker', {
 	enableTime: true,
 	dateFormat: 'Y-m-d H:i',
+	minDate: 'today',
 });
+
 
 loadEventsFromServer();

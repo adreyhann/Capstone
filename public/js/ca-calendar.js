@@ -155,6 +155,7 @@ async function deleteEvent(date, eventName) {
 flatpickr('#datepicker', {
 	enableTime: true,
 	dateFormat: 'Y-m-d H:i',
+	minDate: 'today',
 });
 
 loadEventsFromServer();

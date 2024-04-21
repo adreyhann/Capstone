@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs'); 
 const { PDFDocument: PDFLibDocument, rgb } = require('pdf-lib');
 const PDFDocument = require('pdfkit');
 const User = require('../models/user.model');
@@ -21,7 +21,7 @@ function countVisibleUsersInTable(users, currentUser) {
 	});
 	return visibleUsersInTable.length;
 }
-
+  
 // Function to validate email using Hunter.io API
 async function validateEmail(email) {
 	const apiKey = process.env.HUNTER_IO_API_KEY; // Hunter.io API key

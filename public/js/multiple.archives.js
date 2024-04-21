@@ -8,39 +8,44 @@ function archiveSelected() {
         return;
     }
 
-    // Send a POST request to the server to archive the selected records
-    fetch('/systemAdmin/archive-selected', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ selectedRecords: selectedRecordIds }),
-    })
-        .then(response => {
-            if (response.ok) {
-                // Reload the records page after successful archiving
-                window.location.reload();
-            } else {
-                alert('Failed to archive selected records. Please try again.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while archiving selected records.');
+    // Display confirmation modal
+    $('#confirmationModal2').modal('show');
+
+    // Add event listener to confirm button
+    $('#confirmButton2').off('click').on('click', function() {
+        moveToArchiveConfirmed(selectedRecordIds);
+        $('#confirmationModal2').modal('hide');
+    });
+
+    // Add event listener to cancel button
+    $('#cancelButton2').off('click').on('click', function() {
+        $('#confirmationModal2').modal('hide');
+    });
+}
+
+// Function to be executed after confirmation
+async function moveToArchiveConfirmed(selectedRecordIds) {
+    const promises = selectedRecordIds.map(recordId => {
+        return fetch(`/systemAdmin/move-to-archive/${recordId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
         });
+    });
+
+    try {
+        const responses = await Promise.all(promises);
+
+        const successfulMoves = responses.filter(response => response.ok).length;
+        if (successfulMoves > 0) {
+            alert(`${successfulMoves} record(s) moved to archive successfully`);
+            location.reload();
+        } else {
+            alert('Failed to move records to archive');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while moving records to archive');
+    }
 }
-
-function updateArchiveButtonVisibility() {
-    const checkboxes = document.querySelectorAll('input[name="selectedRecords"]');
-    const selectedCheckboxes = Array.from(checkboxes).filter(checkbox => checkbox.checked);
-
-    const archiveButton = document.getElementById('archiveButton');
-
-    // Toggle the visibility of the button based on the number of selected checkboxes
-    archiveButton.style.display = selectedCheckboxes.length >= 2 ? 'block' : 'none';
-}
-
-// Add an event listener to each checkbox to update the button visibility
-document.querySelectorAll('input[name="selectedRecords"]').forEach(checkbox => {
-    checkbox.addEventListener('change', updateArchiveButtonVisibility);
-});

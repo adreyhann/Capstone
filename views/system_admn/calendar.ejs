@@ -232,5 +232,33 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- Modal for adding events -->
+		<div class="modal fade" id="addEventModal" tabindex="-1" aria-labelledby="addEventModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+				<h5 class="modal-title" id="addEventModalLabel">Add Event</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+				<div class="mb-3">
+					<label for="eventDateInput" class="form-label">Event Date</label>
+					<input type="text" class="form-control" id="eventDateInput" placeholder="Select Date and Time" required>
+				</div>
+				<div class="mb-3">
+					<label for="eventNameInput" class="form-label">Event Name</label>
+					<input type="text" class="form-control" id="eventNameInput" placeholder="Enter Event Name" required>
+				</div>
+				</div>
+				<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-primary" onclick="submitEvent()">Add Event</button>
+				</div>
+			</div>
+			</div>
+		</div>
+  
+
 	</body>
 </html>

@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs'); 
+const fs = require('fs');
 const { PDFDocument: PDFLibDocument, rgb } = require('pdf-lib');
 const PDFDocument = require('pdfkit');
 const User = require('../models/user.model');
@@ -10,7 +10,9 @@ const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
 const Event = require('../models/events.model');
 const moment = require('moment');
+const cron = require('node-cron');
 const Activity = require('../models/activity.model');
+const Card = require('../models/card.model');
 const archiver = require('archiver');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
@@ -21,7 +23,7 @@ function countVisibleUsersInTable(users, currentUser) {
 	});
 	return visibleUsersInTable.length;
 }
-  
+
 // Function to validate email using Hunter.io API
 async function validateEmail(email) {
 	const apiKey = process.env.HUNTER_IO_API_KEY; // Hunter.io API key
@@ -320,7 +322,7 @@ router.get('/addRecords', async (req, res, next) => {
 
 const storage = multer.diskStorage({
 	destination: function (req, file, cb) {
-		cb(null, 'public/uploads/profile-picture'); 
+		cb(null, 'public/uploads/profile-picture');
 	},
 	filename: function (req, file, cb) {
 		cb(null, Date.now() + '-' + file.originalname);
@@ -330,7 +332,7 @@ const storage = multer.diskStorage({
 const upload = multer({
 	storage: storage,
 	limits: {
-		fileSize: 1024 * 1024 * 2, 
+		fileSize: 1024 * 1024 * 2,
 	},
 	fileFilter: function (req, file, cb) {
 		// Accept only image files
@@ -346,7 +348,6 @@ const upload = multer({
 			req.flash('error', 'Only JPEG, JPG, or PNG files are allowed');
 			cb(null, false);
 		}
-		
 	},
 }).single('profilePicture');
 
@@ -1425,15 +1426,37 @@ router.get('/calendar', async (req, res, next) => {
 });
 
 router.post('/events', async (req, res) => {
-	try {
-		const { date, eventName } = req.body;
-		const event = new Event({ date, eventName });
-		const savedEvent = await event.save();
-		res.status(201).json(savedEvent);
-	} catch (error) {
-		console.error('Error adding event:', error);
-		res.status(500).json({ error: 'Failed to add event' });
-	}
+    try {
+        const { date, eventName } = req.body;
+
+        // Check if there's already an event with the same date and time
+        const existingEvent = await Event.findOne({ date });
+
+        if (existingEvent) {
+            return res.status(400).json({ error: 'An event already exists at this date and time. Please choose a different date or time for your event.' });
+        }
+
+        // If no existing event, create and save the new event
+        const event = new Event({ date, eventName });
+        const savedEvent = await event.save();
+
+        res.status(201).json(savedEvent);
+    } catch (error) {
+        console.error('Error adding event:', error);
+        res.status(500).json({ error: 'Failed to add event' });
+    }
+});
+
+// Schedule a task to run daily at midnight (00:00)
+cron.schedule('0 0 * * *', async () => {
+    try {
+        // Find and delete events that have already passed
+        const currentDate = new Date();
+        await Event.deleteMany({ date: { $lt: currentDate } });
+        console.log('Expired events deleted successfully.');
+    } catch (error) {
+        console.error('Error deleting expired events:', error);
+    }
 });
 
 router.put('/events/:date/:eventName', async (req, res) => {
@@ -1478,11 +1501,12 @@ router.get('/generate-pdf', async (req, res, next) => {
 
 		const doc = new PDFDocument();
 
-		// Set response headers for PDF download
+		// Set response header for content type
 		res.setHeader('Content-Type', 'application/pdf');
-		res.setHeader('Content-Disposition', 'attachment; filename=report.pdf');
 
-		doc.pipe(res);
+		// Set custom file name
+		const fileName = 'Summary Report.pdf';
+		res.setHeader('Content-Disposition', `inline; filename=${fileName}`);
 
 		const { width, height } = doc.page;
 		const headerHeight = 100;
@@ -1608,19 +1632,22 @@ router.get('/generate-pdf', async (req, res, next) => {
 			const columnIndex = index % maxLogsPerRow;
 
 			// Calculate starting positions for each log in a row
-			const startX = 50 + columnIndex * (width / (maxLogsPerRow + 1)); // Adjust spacing as needed
-
-			// Define a base y position for the current row
-			const baseY =
-				headerHeight + 60 + rowIndex * (logHeight + verticalSpacing); // Adjust spacing as needed
+			const startX =
+				(width -
+					(maxLogsPerRow * logWidth +
+						(maxLogsPerRow - 1) * horizontalSpacing)) /
+					2 +
+				columnIndex * (logWidth + horizontalSpacing);
+			const startY =
+				headerHeight + 60 + rowIndex * (logHeight + verticalSpacing);
 
 			// Add activity log details
 			doc.fontSize(10);
-			doc.text(`${index + 1}.`, { align: 'left', x: startX, y: baseY }); // Numbering
+			doc.text(`${index + 1}.`, { align: 'left', x: startX, y: startY }); // Numbering
 			doc.text(`Action: ${log.action}`, {
 				align: 'left',
 				x: startX + 20,
-				y: baseY,
+				y: startY,
 			});
 			doc.text(
 				`Date: ${log.dateCreated.toLocaleString('en-US', {
@@ -1631,58 +1658,60 @@ router.get('/generate-pdf', async (req, res, next) => {
 					minute: 'numeric',
 					hour12: true,
 				})}`,
-				{ align: 'left', x: startX + 20, y: baseY + 20 }
+				{ align: 'left', x: startX + 20, y: startY + 20 }
 			);
 
 			// Add details in separate lines
 			doc.moveDown();
-			doc.text('Added by', { align: 'left', x: startX + 20, y: baseY + 40 });
+			doc.text('Added by', { align: 'left', x: startX + 20, y: startY + 40 });
 			doc.text(`Email: ${log.userEmail}`, {
 				align: 'left',
 				x: startX + 20,
-				y: baseY + 60,
+				y: startY + 60,
 			}); // Adjust horizontal spacing
 			doc.text(`Class Adviser: ${log.adviserName}`, {
 				align: 'left',
 				x: startX + 20,
-				y: baseY + 80,
+				y: startY + 80,
 			}); // Adjust horizontal spacing
 
 			doc.text('Student Details', {
 				align: 'left',
 				x: startX + 20,
-				y: baseY + 100,
+				y: startY + 100,
 			});
 			doc.text(`LRN: ${log.lrn}`, {
 				align: 'left',
 				x: startX + 20,
-				y: baseY + 120,
+				y: startY + 120,
 			}); // Adjust horizontal spacing
 			doc.text(`Last Name: ${log.lName}`, {
 				align: 'left',
 				x: startX + 20,
-				y: baseY + 140,
+				y: startY + 140,
 			}); // Adjust horizontal spacing
 			doc.text(`First Name: ${log.fName}`, {
 				align: 'left',
 				x: startX + 20,
-				y: baseY + 160,
+				y: startY + 160,
 			}); // Adjust horizontal spacing
 			doc.text(`Gender: ${log.gender}`, {
 				align: 'left',
 				x: startX + 20,
-				y: baseY + 180,
+				y: startY + 180,
 			}); // Adjust horizontal spacing
 			doc.text(`Grade level: ${log.gradeLevel}`, {
 				align: 'left',
 				x: startX + 20,
-				y: baseY + 200,
+				y: startY + 200,
 			}); // Adjust horizontal spacing
 
 			// Add some space after each log entry
 			doc.moveDown();
 			doc.moveDown();
 		});
+
+		doc.pipe(res); // Pipe the PDF directly to the response
 
 		doc.end();
 	} catch (error) {
@@ -1692,87 +1721,118 @@ router.get('/generate-pdf', async (req, res, next) => {
 });
 
 router.post('/advance-grade-level', async (req, res) => {
-    try {
-        const selectedRecordIds = req.body.selectedRecords;
+	try {
+		const selectedRecordIds = req.body.selectedRecords;
 
-        if (!selectedRecordIds || selectedRecordIds.length === 0) {
-            return res.status(400).json({ error: 'Please select at least one record to advance grade level.' });
-        }
+		if (!selectedRecordIds || selectedRecordIds.length === 0) {
+			return res.status(400).json({
+				error: 'Please select at least one record to advance grade level.',
+			});
+		}
 
-        // Define a mapping of grade levels from string to numeric values
-        const gradeLevelMap = {
-            'Kinder': 0,
-            'Grade 1': 1,
-            'Grade 2': 2,
-            'Grade 3': 3,
-            'Grade 4': 4,
-            'Grade 5': 5,
-            'Grade 6': 6,
-            // Add more grade levels as needed
-        };
-
-        // Retrieve the records with the selected IDs
-        const records = await Records.find({ _id: { $in: selectedRecordIds } });
-
-        // Increment the grade level of each selected record
-        for (const record of records) {
-            // Get the current grade level as a numeric value using the mapping
-            const currentGradeLevel = gradeLevelMap[record.gradeLevel];
-            if (currentGradeLevel === 6) {
-                return res.status(400).json({ error: 'Selected student(s) are already in Grade 6 and cannot be advanced further.' });
-            }
-            // Increment the grade level
-            const newGradeLevel = currentGradeLevel + 1;
-            // Update the record with the new grade level
-            await Records.updateOne({ _id: record._id }, { $set: { gradeLevel: `Grade ${newGradeLevel}` } });
-        }
-
-        return res.status(200).json({ message: 'Grade level advanced successfully.' });
-    } catch (error) {
-        console.error('Error advancing grade level:', error);
-        return res.status(500).json({ error: 'An error occurred while advancing grade level.' });
-    }
-});
-
-
-router.post('/advance-grade-level/:recordId', async (req, res) => {
-    try {
-        const recordId = req.params.recordId;
-
-        // Retrieve the record by ID
-        const record = await Records.findById(recordId);
-
-        if (!record) {
-            return res.status(404).json({ error: 'Record not found.' });
-        }
-
-        // Define a mapping of grade levels from string to numeric values
-        const gradeLevelMap = {
-            'Kinder': 0,
-            'Grade 1': 1,
-            'Grade 2': 2,
-            'Grade 3': 3,
+		// Define a mapping of grade levels from string to numeric values
+		const gradeLevelMap = {
+			Kinder: 0,
+			'Grade 1': 1,
+			'Grade 2': 2,
+			'Grade 3': 3,
 			'Grade 4': 4,
 			'Grade 5': 5,
 			'Grade 6': 6,
-            // Add more grade levels as needed
-        };
+			// Add more grade levels as needed
+		};
 
-        // Get the current grade level as a numeric value using the mapping
-        const currentGradeLevel = gradeLevelMap[record.gradeLevel];
-        // Ensure the gradeLevel is parsed to an integer before incrementing
-        const newGradeLevel = currentGradeLevel + 1;
+		// Retrieve the records with the selected IDs
+		const records = await Records.find({ _id: { $in: selectedRecordIds } });
 
-        // Update the record with the new grade level
-        await Records.updateOne({ _id: recordId }, { $set: { gradeLevel: `Grade ${newGradeLevel}` } });
+		// Increment the grade level of each selected record
+		for (const record of records) {
+			// Get the current grade level as a numeric value using the mapping
+			const currentGradeLevel = gradeLevelMap[record.gradeLevel];
+			if (currentGradeLevel === 6) {
+				return res.status(400).json({
+					error:
+						'Selected student(s) are already in Grade 6 and cannot be advanced further.',
+				});
+			}
+			// Increment the grade level
+			const newGradeLevel = currentGradeLevel + 1;
+			// Update the record with the new grade level
+			await Records.updateOne(
+				{ _id: record._id },
+				{ $set: { gradeLevel: `Grade ${newGradeLevel}` } }
+			);
+		}
 
-        return res.status(200).json({ message: 'Grade level advanced successfully.' });
-    } catch (error) {
-        console.error('Error advancing grade level:', error);
-        return res.status(500).json({ error: 'An error occurred while advancing grade level.' });
-    }
+		return res
+			.status(200)
+			.json({ message: 'Grade level advanced successfully.' });
+	} catch (error) {
+		console.error('Error advancing grade level:', error);
+		return res
+			.status(500)
+			.json({ error: 'An error occurred while advancing grade level.' });
+	}
 });
 
+router.post('/advance-grade-level/:recordId', async (req, res) => {
+	try {
+		const recordId = req.params.recordId;
 
+		// Retrieve the record by ID
+		const record = await Records.findById(recordId);
+
+		if (!record) {
+			return res.status(404).json({ error: 'Record not found.' });
+		}
+
+		// Define a mapping of grade levels from string to numeric values
+		const gradeLevelMap = {
+			Kinder: 0,
+			'Grade 1': 1,
+			'Grade 2': 2,
+			'Grade 3': 3,
+			'Grade 4': 4,
+			'Grade 5': 5,
+			'Grade 6': 6,
+			// Add more grade levels as needed
+		};
+
+		// Get the current grade level as a numeric value using the mapping
+		const currentGradeLevel = gradeLevelMap[record.gradeLevel];
+		// Ensure the gradeLevel is parsed to an integer before incrementing
+		const newGradeLevel = currentGradeLevel + 1;
+
+		// Update the record with the new grade level
+		await Records.updateOne(
+			{ _id: recordId },
+			{ $set: { gradeLevel: `Grade ${newGradeLevel}` } }
+		);
+
+		return res
+			.status(200)
+			.json({ message: 'Grade level advanced successfully.' });
+	} catch (error) {
+		console.error('Error advancing grade level:', error);
+		return res
+			.status(500)
+			.json({ error: 'An error occurred while advancing grade level.' });
+	}
+});
+
+router.get('/sections', async (req, res, next) => {
+	try {
+		const person = req.user;
+		const records = await Records.find();
+
+		res.render('system_admn/sections', {
+			person,
+			records,
+		});
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
+});
 
 module.exports = router;

@@ -36,8 +36,8 @@ const RecordsSchema = new mongoose.Schema({
     },
     newFiles: {
         type: [{
-            fileName: { type: String, required: true },
-            filePath: { type: String, required: true },
+            filePath: { type: String, required: false },
+            fileName: { type: String, required: false },
         }],
         default: [],
     },

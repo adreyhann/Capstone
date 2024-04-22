@@ -787,4 +787,36 @@ router.get('/get-gradeLevel-counts', async (req, res, next) => {
 	}
 });
 
+router.get('/sections', async (req, res, next) => {
+	try {
+		const person = req.user;
+		const records = await Records.find();
+		const archives = await Archives.find();
+
+		// Assuming 'gradeLevel' is the property name in your data structure
+		const gradeLevelCounts = {};
+
+		// Count the number of records for each grade level
+		records.forEach((record) => {
+			const gradeLevel = record.gradeLevel;
+
+			if (!gradeLevelCounts[gradeLevel]) {
+				gradeLevelCounts[gradeLevel] = 1;
+			} else {
+				gradeLevelCounts[gradeLevel]++;
+			}
+		});
+
+		res.render('admin/sections', {
+			person,
+			records,
+			archives,
+			gradeLevelCounts,
+		});
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
+});
+
 module.exports = router;

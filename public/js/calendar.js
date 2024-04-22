@@ -84,31 +84,38 @@ async function loadEventsFromServer() {
 	}
 }
 
+// stop here final
 async function addEvent() {
-	const dateInput = document.getElementById('datepicker');
-	const selectedDate = dateInput.value;
-	if (selectedDate) {
-		const eventName = prompt('Enter event name:');
-		if (eventName) {
-			try {
-				const response = await fetch('/systemAdmin/events', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify({ date: selectedDate, eventName }),
-				});
-				if (response.ok) {
-					loadEventsFromServer();
-				} else {
-					console.error('Failed to add event:', response.statusText);
-				}
-			} catch (error) {
-				console.error('Error adding event:', error);
-			}
-		}
-	}
+    const dateInput = document.getElementById('datepicker');
+    const selectedDate = dateInput.value;
+    if (selectedDate) {
+        const eventName = prompt('Enter event name:');
+        if (eventName) {
+            try {
+                const response = await fetch('/systemAdmin/events', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ date: selectedDate, eventName }),
+                });
+                if (response.ok) {
+                    loadEventsFromServer();
+                } else {
+                    const errorResponse = await response.json(); // Extract error message from response
+                    const errorMessage = errorResponse.error; // Get error message
+                    console.error('Failed to add event:', errorMessage);
+                    alert(`Failed to add event: ${errorMessage}`); // Show error message to user
+                }
+            } catch (error) {
+                console.error('Error adding event:', error);
+                alert('Error adding event. Please try again later.'); // Show generic error message to user
+            }
+        }
+    }
 }
+
+
 
 async function editEvent(date, eventName) {
 	const newEventName = prompt('Edit event name:', eventName);

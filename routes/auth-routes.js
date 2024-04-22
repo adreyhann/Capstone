@@ -376,14 +376,15 @@ router.post(
 			default:
 				res.redirect('/auth/login');
 		}
+		
 	}
 );
 
-router.get('/forgot', (req, res, next) => {
+router.get('/forgot', ensureNotAuthenticated, (req, res, next) => {
 	res.render('credentials/forgot_password');
 });
 
-router.post('/forgot', async (req, res, next) => {
+router.post('/forgot', ensureNotAuthenticated, async (req, res, next) => {
 	const { email } = req.body;
 	// Validate that the email is not empty
 	if (!email) {
@@ -444,11 +445,11 @@ router.post('/forgot', async (req, res, next) => {
 	}
 });
 
-router.get('/reset-code', (req, res, next) => {
+router.get('/reset-code', ensureNotAuthenticated, (req, res, next) => {
 	res.render('credentials/reset-code');
 });
 
-router.post('/reset-code', async (req, res, next) => {
+router.post('/reset-code', ensureNotAuthenticated, async (req, res, next) => {
 	const { code } = req.body;
 
 	if (!code) {
@@ -475,7 +476,7 @@ router.post('/reset-code', async (req, res, next) => {
 	}
 });
 
-router.get('/resend-code', async (req, res) => {
+router.get('/resend-code', ensureNotAuthenticated, async (req, res) => {
 	try {
 		// Get the user by email
 		const user = await User.findOne({ email: req.query.email });
@@ -531,12 +532,12 @@ router.get('/resend-code', async (req, res) => {
 	}
 });
 
-router.get('/reset-password/:userId', (req, res, next) => {
+router.get('/reset-password/:userId', ensureNotAuthenticated, (req, res, next) => {
 	const userId = req.params.userId;
 	res.render('credentials/reset', { userId });
 });
 
-router.post('/reset-password/:userId', async (req, res, next) => {
+router.post('/reset-password/:userId', ensureNotAuthenticated, async (req, res, next) => {
 	const userId = req.params.userId;
 	const { password, password2 } = req.body;
 
@@ -613,10 +614,23 @@ function ensureAuthenticated(req, res, next) {
 
 function ensureNotAuthenticated(req, res, next) {
 	if (req.isAuthenticated()) {
-		res.redirect('/systemAdmin/dashboard');
-	} else {
-		next();
-	}
+        // Redirect logic based on user role
+        const userRole = req.user.role;
+
+        switch (userRole) {
+            case 'System Admin':
+                res.redirect('/systemAdmin/dashboard');
+                break;
+            case 'Class Advisor':
+                res.redirect('/classAdvisor/dashboard');
+                break;
+            case 'Admin':
+                res.redirect('/admin/dashboard');
+                break;
+        }
+    } else {
+        next();
+    }
 }
 
 function ensureSystemAdminOrAdmin(req, res, next) {

@@ -235,21 +235,7 @@ router.post('/submit-form', async (req, res, next) => {
                 return res.redirect('/classAdvisor/addRecords');
             }
 
-            const newPdfFile = req.files['newPdf'] || [];
-            if (newPdfFile.length === 0) {
-                
-                const defaultPdf1 = {
-                    fileName: 'Student Form 9.pdf',
-                    filePath: 'public/uploads/default-pdf/Student Form 9.pdf',
-                };
-                
-                const defaultPdf2 = {
-                    fileName: 'Student Form 10.pdf',
-                    filePath: 'public/uploads/default-pdf/Student Form 10.pdf',
-                };
-
-                newPdfFiles.push(defaultPdf1, defaultPdf2);
-            }
+            
  
             const processFiles = async (files) => {
                 return Promise.all(files.map(async (file) => {
@@ -633,9 +619,9 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 // for SF9
 router.get('/downloadFile', (req, res) => {
     // file path
-    const filePath = path.join(__dirname, '..', 'public', 'uploads', 'default-pdf', 'Student Form 9.pdf');
+    const filePath = path.join(__dirname, '..', 'public', 'uploads', 'default-pdf', 'Student_Form_9.pdf');
 
-    res.setHeader('Content-Disposition', 'attachment; filename="Student Form 9.pdf"');
+    res.setHeader('Content-Disposition', 'attachment; filename="Student_Form_9.pdf"');
 
     res.sendFile(filePath, (err) => {
         if (err) {
@@ -651,9 +637,9 @@ router.get('/downloadFile', (req, res) => {
 // for SF10
 router.get('/downloadFile2', (req, res) => {
     
-    const filePath = path.join(__dirname, '..', 'public', 'uploads', 'default-pdf', 'Student Form 10.pdf');
+    const filePath = path.join(__dirname, '..', 'public', 'uploads', 'default-pdf', 'School_Form_10.pdf');
 
-    res.setHeader('Content-Disposition', 'attachment; filename="Student Form 10.pdf"');
+    res.setHeader('Content-Disposition', 'attachment; filename="School_Form_10.pdf"');
 
     res.sendFile(filePath, (err) => {
         if (err) {

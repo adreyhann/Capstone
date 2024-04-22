@@ -28,6 +28,7 @@
 		<script defer src="/js/tooltip.js"></script>
 		<script defer src="/js/sa.charts.js"></script>
 		<script defer src="/js/toggler.js"></script>
+		<script defer src="/js/school.year.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<link rel="icon" type="image/x-icon" href="/img/logo.png">
 		<title>Grade levels</title>
@@ -181,19 +182,24 @@
 					</div>
 				</nav>
 				<div class="container-lg">
-					<h2 class="mt-2">Records</h2>
-					<hr />
+					<div class="d-flex justify-content-between m-0">
+						<h2 class="mt-2">Records</h2>
+						<!-- <p class="mt-2" id="school-year"></p> -->
+					</div>
+					<hr class="my-3"/>
 					<div class="container-lg mt-0">
 						
 						<a
 							type="button"
-							class="btn btn-sm btn-link"
+							class="icon-link icon-link-hover mb-3"
+							style="--bs-icon-link-transform: translate3d(0, -0.125rem, 0)"
 							data-bs-toggle="tooltip"
-							data-bs-placement="right"
+							data-bs-placement="top"
 							title="Download Backup"
 							alt="backup"
 							href="/systemAdmin/backup"
-							><span class="material-symbols-outlined"> backup_table </span></a
+							><span class="material-symbols-outlined"> backup_table </span
+							>Download all files</a
 						>
 				
 					</div>

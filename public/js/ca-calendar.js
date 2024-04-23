@@ -101,7 +101,10 @@ async function addEvent() {
 				if (response.ok) {
 					loadEventsFromServer();
 				} else {
-					console.error('Failed to add event:', response.statusText);
+					const errorResponse = await response.json(); // Extract error message from response
+                    const errorMessage = errorResponse.error; // Get error message
+                    console.error('Failed to add event:', errorMessage);
+                    alert(`Failed to add event: ${errorMessage}`);
 				}
 			} catch (error) {
 				console.error('Error adding event:', error);

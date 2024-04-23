@@ -8,6 +8,7 @@ const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
 const Event = require('../models/events.model');
 const Activity = require('../models/activity.model');
+const Card = require('../models/card.model');
 require('dotenv').config();
 
 function countVisibleUsers(users, currentUser) {
@@ -247,7 +248,7 @@ router.get('/archives', async (req, res, next) => {
 // Endpoint to get events
 router.get('/events', async (req, res) => {
 	try {
-		const events = await Event.find();
+		const events = await Event.find().sort({ date: 1 });
 		res.json(events);
 	} catch (error) {
 		console.error('Error fetching events:', error);
@@ -258,7 +259,7 @@ router.get('/events', async (req, res) => {
 router.get('/calendar', async (req, res, next) => {
 	try {
 		const person = req.user;
-		const events = await Event.find();
+		const events = await Event.find().sort({ date: 1 });
 
 		res.render('admin/calendar', { person, events });
 	} catch (error) {
@@ -271,6 +272,11 @@ router.get('/calendar', async (req, res, next) => {
 router.post('/events', async (req, res) => {
 	try {
 		const { date, eventName } = req.body;
+		const existingEvent = await Event.findOne({ date });
+
+        if (existingEvent) {
+            return res.status(400).json({ error: 'An event already exists at this date and time. Please choose a different date or time for your event.' });
+        }
 		const event = new Event({ date, eventName });
 		const savedEvent = await event.save();
 		res.status(201).json(savedEvent);
@@ -788,35 +794,19 @@ router.get('/get-gradeLevel-counts', async (req, res, next) => {
 });
 
 router.get('/sections', async (req, res, next) => {
-	try {
-		const person = req.user;
-		const records = await Records.find();
-		const archives = await Archives.find();
+    try {
+        const person = req.user;
+        // Fetch all sections from the database
+        const cards = await Card.find();
 
-		// Assuming 'gradeLevel' is the property name in your data structure
-		const gradeLevelCounts = {};
-
-		// Count the number of records for each grade level
-		records.forEach((record) => {
-			const gradeLevel = record.gradeLevel;
-
-			if (!gradeLevelCounts[gradeLevel]) {
-				gradeLevelCounts[gradeLevel] = 1;
-			} else {
-				gradeLevelCounts[gradeLevel]++;
-			}
-		});
-
-		res.render('admin/sections', {
-			person,
-			records,
-			archives,
-			gradeLevelCounts,
-		});
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
+        res.render('admin/sections', {
+            person,
+            cards, // Pass the fetched sections to the view
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
 
 module.exports = router;

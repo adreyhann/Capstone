@@ -1821,18 +1821,79 @@ router.post('/advance-grade-level/:recordId', async (req, res) => {
 });
 
 router.get('/sections', async (req, res, next) => {
-	try {
-		const person = req.user;
-		const records = await Records.find();
+    try {
+        const person = req.user;
+        // Fetch all sections from the database
+        const cards = await Card.find();
 
-		res.render('system_admn/sections', {
-			person,
-			records,
-		});
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
+        res.render('system_admn/sections', {
+            person,
+            cards, // Pass the fetched sections to the view
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
+
+router.post('/sections', async (req, res, next) => {
+    try {
+        // Parse section details from request body
+        const { name, description } = req.body;
+
+        // Create a new instance of Card model
+        const newCard = new Card({
+            name,
+            description,
+        });
+
+        // Save the new card to the database
+        const savedCard = await newCard.save();
+
+        res.status(201).json(savedCard); // Respond with the saved card data
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
+router.put('/cards/:id', async (req, res, next) => {
+    try {
+        const cardId = req.params.id;
+        const { name, description } = req.body;
+
+        // Find the card by its ID and update its details
+        const updatedCard = await Card.findByIdAndUpdate(cardId, { name, description }, { new: true });
+
+        if (!updatedCard) {
+            return res.status(404).json({ message: "Card not found" });
+        }
+
+        // Send the updated card as a response
+        res.json(updatedCard);
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
+router.delete('/cards/:id', async (req, res, next) => {
+    try {
+        const cardId = req.params.id;
+
+        // Find the card by its ID and delete it
+        const deletedCard = await Card.findByIdAndDelete(cardId);
+
+        if (!deletedCard) {
+            return res.status(404).json({ message: "Card not found" });
+        }
+
+        res.json({ message: "Card deleted successfully" });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
 
 module.exports = router;

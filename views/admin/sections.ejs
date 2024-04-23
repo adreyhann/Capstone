@@ -67,7 +67,7 @@
 					<ul class="sidebar-nav">
 						<li class="sidebar-item">
 							<a
-								href="/systemAdmin/dashboard"
+								href="/admin/dashboard"
 								class="sidebar-link collapsed"
 								data-bs-target="#dashboard"
 								aria-expanded="false"
@@ -80,7 +80,7 @@
 						</li>
 						<li class="sidebar-item">
 							<a
-								href="/systemAdmin/accounts"
+								href="/admin/accounts"
 								class="sidebar-link"
 								aria-expanded="false"
 								aria-controls="users"
@@ -92,7 +92,7 @@
 						</li>
 						<li class="sidebar-item" style="border-right: 2px solid #007bff; background: #e3edf0;">
 							<a
-								href="/systemAdmin/records-menu"
+								href="/admin/records-menu"
 								class="sidebar-link"
 								aria-expanded="false"
 								aria-controls="pages"
@@ -104,7 +104,7 @@
 						</li>
 						<li class="sidebar-item">
 							<a
-								href="/systemAdmin/archives"
+								href="/admin/archives"
 								class="sidebar-link"
 								aria-expanded="false"
 								data-menuitem="archives"
@@ -115,7 +115,7 @@
 						</li>
 						<li class="sidebar-item">
 							<a
-								href="/systemAdmin/calendar"
+								href="/admin/calendar"
 								class="sidebar-link collapsed"
 								data-bs-target="#dashboard"
 								aria-expanded="false"
@@ -127,7 +127,7 @@
 						</li>
 						<li class="sidebar-item">
 							<a
-								href="/systemAdmin/reports"
+								href="/admin/reports"
 								class="sidebar-link collapsed"
 								data-bs-target="#dashboard"
 								aria-expanded="false"
@@ -163,12 +163,12 @@
 								</a>
 								<ul class="dropdown-menu dropdown-menu-lg-end">
 									<li>
-										<a class="dropdown-item" href="/systemAdmin/profile"
+										<a class="dropdown-item" href="/admin/profile"
 											>View Profile</a
 										>
 									</li>
 									<li>
-										<a class="dropdown-item" href="/systemAdmin/historyLogs"
+										<a class="dropdown-item" href="/admin/historyLogs"
 											>History Logs</a
 										>
 									</li>
@@ -187,21 +187,41 @@
                     <h5 class="ms-3 mt-2 mb-3 " style="color: #45453a;">Sections</h5>
 					<div class="container-lg mt-0">
 						
-						<button id="addSectionBtn" class="btn btn-primary btn-sm mb-3 ms-3">Add new section</button>
+						<button onclick="addNewSection()" class="btn btn-primary btn-sm mb-3 ms-3">Add section</button>
 				
 					</div>
 					<div id="cardContainer" class="row gap-4 ms-3 mb-3" style="max-height: 430px; overflow-y: auto;">
-						<a href="" class="card custom-card-3 border-0 p-0" style="width: 14rem; height: 8rem; position: relative;">
-							<div class="card-header bg-info border-0"></div>
-							<div class="card-body">
-								<h5 class="card-title" style="font-weight: bold;">Section 1
-									<span class="badge text-bg-secondary position-absolute mt-4 me-2" style="top: 0; right: 0;">
-										0
-									</span>
-								</h5>
-								<p class="card-text">View records of Section 1</p>
+						<% if (cards.length === 0) { %>
+							<div class="alert alert-warning text-center" role="alert">
+								There are no sections available.
 							</div>
-						</a>
+						<% } else { %>
+							<% cards.forEach(card => { %>
+								<div class="card custom-card-2 border-0 p-0" style="width: 15rem; height: 8rem; position: relative;">
+									<div class="card-body" style="background-color: #A3FFD6;">
+										<h5 class="card-title" style="font-weight: bold;"><%= card.name %></h5>
+										<p class="card-text mb-0" style="font-size: 15px; ">List of Students in <%= card.name %></p>
+										<!-- Dropdown menu -->
+										<div class="btn-group position-absolute top-0 end-0 dropdown-menu-container" style="padding: 3px;">
+											<button type="button" style="background: none; border: none;" class="btn dropdown-toggle dropdown-toggle-sm menu-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+												<span class="material-symbols-outlined" style="height: 12px;">
+													menu
+												</span>
+											</button>
+											
+											<ul class="dropdown-menu" style="font-size: 15px;">
+												<li><a class="dropdown-item edit-card" href="#" data-card-id="<%= card._id %>">Edit</a></li>
+												<li><a class="dropdown-item delete-card" href="#" data-card-id="<%= card._id %>">Delete</a></li>
+											</ul>
+											
+										</div>
+									</div>
+									<a href="" class="card-footer text-center bg-0" style="font-size: 14px; border: 0; background-color: #FFF8DC;">
+										<p style="width: 100%;">View <%= card.name %></p>
+									</a>
+								</div>
+							<% }); %>
+						<% } %>
 						
 					</div>
 					

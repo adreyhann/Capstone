@@ -93,7 +93,7 @@
 								Account Management
 							</a>
 						</li>
-						<li class="sidebar-item" style="border-right: 2px solid #007bff; background: #e3edf0;">
+						<li class="sidebar-item">
 							<a
 								href="/systemAdmin/records-menu"
 								class="sidebar-link"
@@ -105,7 +105,7 @@
 								Records Management
 							</a>
 						</li>
-						<li class="sidebar-item">
+						<li class="sidebar-item" style="border-right: 2px solid #007bff; background: #e3edf0;">
 							<a
 								href="/systemAdmin/academic-year"
 								class="sidebar-link"
@@ -187,6 +187,20 @@
 				<div class="container-lg">
 					<h2 class="mt-2">Academic Year</h2>
 					<hr />
+					<div class="container-lg mt-0 mb-3">
+						<a
+							type="button"
+							class="icon-link icon-link-hover"
+							style="--bs-icon-link-transform: translate3d(0, -0.125rem, 0)"
+							data-bs-toggle="tooltip"
+							data-bs-placement="top"
+							title="Download all files"
+							alt="backup"
+							href="/systemAdmin/backup-archive"
+							><span class="material-symbols-outlined"> backup_table </span
+							>Download all files</a
+						>
+					</div>
 					<div id="cardContainer" class="row gap-4 ms-3 mb-3" style="max-height: 430px; overflow-y: auto;">
 						<% if (academicYear.length === 0) { %>
 							<div class="alert alert-warning text-center" role="alert">

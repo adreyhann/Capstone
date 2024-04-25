@@ -2,7 +2,6 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link
 			href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
@@ -20,15 +19,22 @@
 			integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
 			crossorigin="anonymous"
 		></script>
-        <script defer
+		<script
+			defer
 			src="https://kit.fontawesome.com/ae360af17e.js"
 			crossorigin="anonymous"
 		></script>
-        <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script defer src="/js/charts.js"></script>
-        <script defer src="/js/toggler.js"></script>
-        <link rel="stylesheet" type="text/css" href="/css/styles.css">
-		<title>Profile</title>
+		<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+		<script defer src="/js/tooltip.js"></script>
+		<script defer src="/js/sa.charts.js"></script>
+		<script defer src="/js/toggler.js"></script>
+		<script defer src="/js/create.new.card.js"></script>
+		<script defer src="/js/edit.card.js"></script>
+		<script defer src="/js/delete.card.js"></script>
+		<script defer src="/js/academic-year-filter2.js"></script>
+		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
+		<link rel="icon" type="image/x-icon" href="/img/logo.png">
+		<title>Academic Year</title>
 	</head>
 	<body>
 		<div class="wrapper">
@@ -38,9 +44,9 @@
 					<div class="sidebar-logo">
 						<a href="">
 							<img
-								src="../img/logo.png"
+								src="/img/logo.png"
 								class="img-thumbnail border-0"
-								alt="BCA"
+								alt="logo"
 							/>
 						</a>
 					</div>
@@ -51,7 +57,9 @@
 								<img src="<%= person.profilePicture || '/img/default-img.jpg' %>" alt="Profile Picture" style="width: 70px; height: 65px; border-radius: 50%;" />
 							</div>
 							<div class="col-md-6">
-								<p class="my-0 pt-2" style="font-size: 15px"><%= person.fname %> <%= person.lname %></p>
+								<p class="my-0 pt-2" style="font-size: 15px">
+									<%= person.fname %> <%= person.lname %>
+								</p>
 								<span class="badge rounded-pill text-bg-info my-0 fw-normal"
 									><%= person.role %></span
 								>
@@ -67,6 +75,7 @@
 								data-bs-target="#dashboard"
 								aria-expanded="false"
 								aria-controls="dashboard"
+								data-menuitem="dashboard"
 							>
 								<i class="fa-solid fa-sliders pe-2"></i>
 								Dashboard
@@ -78,28 +87,30 @@
 								class="sidebar-link"
 								aria-expanded="false"
 								aria-controls="users"
+								data-menuitem="accounts"
 							>
 								<i class="fa-solid fa-user pe-2"></i>
 								Account Management
 							</a>
 						</li>
-						<li class="sidebar-item">
+						<li class="sidebar-item" >
 							<a
 								href="/admin/records-menu"
 								class="sidebar-link"
 								aria-expanded="false"
 								aria-controls="pages"
+								data-menuitem="records"
 							>
 								<i class="fa-regular fa-file-lines pe-2"></i>
 								Records Management
 							</a>
 						</li>
-						<li class="sidebar-item">
+						<li class="sidebar-item" style="border-right: 2px solid #007bff; background: #e3edf0;">
 							<a
 								href="/admin/academic-year"
 								class="sidebar-link"
 								aria-expanded="false"
-								aria-controls="auth"
+								data-menuitem="archives"
 							>
 								<i class="fa-solid fa-archive pe-2"></i>
 								Archives
@@ -111,7 +122,7 @@
 								class="sidebar-link collapsed"
 								data-bs-target="#dashboard"
 								aria-expanded="false"
-								aria-controls="dashboard"
+								data-menuitem="calendar"
 							>
 								<i class="fa-regular fa-calendar pe-2"></i>
 								Calendar
@@ -124,6 +135,7 @@
 								data-bs-target="#dashboard"
 								aria-expanded="false"
 								aria-controls="dashboard"
+								data-menuitem="reports"
 							>
 								<i class="fa-regular fa-flag pe-2"></i>
 								Reports
@@ -145,7 +157,7 @@
 							<li class="nav-item dropdown">
 								<a
 									class="nav-link dropdown-toggle"
-									href="#"
+									
 									role="button"
 									data-bs-toggle="dropdown"
 									aria-expanded="false"
@@ -154,24 +166,18 @@
 								</a>
 								<ul class="dropdown-menu dropdown-menu-lg-end">
 									<li>
-										<a
-											class="dropdown-item"
-											href="/admin/profile"
+										<a class="dropdown-item" href="/admin/profile"
 											>View Profile</a
 										>
 									</li>
 									<li>
-										<a
-											class="dropdown-item"
-											href="/admin/historyLogs"
+										<a class="dropdown-item" href="/admin/historyLogs"
 											>History Logs</a
 										>
 									</li>
 									<li><hr class="dropdown-divider" /></li>
 									<li>
-										<a class="dropdown-item" href="/auth/logout"
-											>Logout</a
-										>
+										<a class="dropdown-item" href="/auth/logout">Logout</a>
 									</li>
 								</ul>
 							</li>
@@ -179,91 +185,32 @@
 					</div>
 				</nav>
 				<div class="container-lg">
-					<h2 class="mt-2">Profile</h2>
+					<h2 class="mt-2">Academic Year</h2>
 					<hr />
-					<div class="card custom-card-2 border-0">
-						<div class="card-header bg-info"></div>
-						<div class="card-body">
-							<div class="container">
-								<div class="col m-0">
-									<div class="container">
-										<h3 class="fw-bold">Profile</h3>
-										<hr />
-										<% try { %>
-											<%- include('../credentials/flash-message.ejs') %>
-										  <% } catch (error) { %>
-											<div>Error: <%= error.message %></div>
-										  <% } %>
-										<form action="">
-											<div class="mt-4 mb-2">
-												<label for="exampleInputEmail1" class="form-label"
-													>Email address</label
-												>
-												<input
-													type="email"
-													class="form-control"
-													id="exampleInputEmail1"
-													aria-describedby="emailHelp"
-													placeholder="<%= person.email %>"
-													disabled
-												/>
-											</div>
-
-											<div class="row">
-												<div class="my-2 col-6">
-													<label for="fname" class="form-label"
-														>Last Name</label
-													>
-													<input
-														type="text"
-														class="form-control"
-														id="fname"
-														disabled
-														placeholder="<%= person.lname %>"
-													/>
-												</div>
-												<div class="my-2 col-6">
-													<label for="fname" class="form-label"
-														>First Name</label
-													>
-													<input
-														type="text"
-														class="form-control"
-														id="lname"
-														disabled
-														placeholder="<%= person.fname %>"
-													/>
-												</div>
-												<div class="my-2 col-6">
-													<label for="role" class="form-label">Role</label>
-													<input
-														type="Text"
-														class="form-control"
-														id="role"
-														placeholder="<%= person.role %>"
-														disabled
-													/>
-												</div>
-												<div class="my-2 col-6">
-													<label for="role" class="form-label"
-														>Class Advisory</label
-													>
-													<input
-														type="Text"
-														class="form-control"
-														id="role"
-														placeholder="<%= person.classAdvisory %>"
-														disabled
-													/>
-												</div>
-											</div>
-										</form>
-									</div>
-								</div>
+					<div id="cardContainer" class="row gap-4 ms-3 mb-3" style="max-height: 430px; overflow-y: auto;">
+						<% if (academicYear.length === 0) { %>
+							<div class="alert alert-warning text-center" role="alert">
+								There are no archives records available.
 							</div>
-						</div>
-						<div class="card-footer bg-info"></div>
+						<% } else { %>
+							<% academicYear.forEach(academicYear => { %>
+								<div class="card custom-card-2 border-0 p-0" style="width: 15rem; height: 8rem; position: relative;">
+									<div class="card-body" style="background-color: #A3FFD6;">
+										<h5 class="card-title" style="font-weight: bold;"><%= academicYear.academicyear %></h5>
+										<p class="card-text mb-0" style="font-size: 15px; "> <%= academicYear.description %></p>
+										
+									</div>
+									<a href="" data-academic-year="<%= academicYear.academicyear %>" class="card-footer text-center bg-0 academic-year-link" style="font-size: 14px; border: 0; background-color: #FFF8DC;">
+										<p style="width: 100%;">View records</p>
+									</a>
+																		
+								</div>
+							<% }); %>
+						<% } %>
+						
 					</div>
+					
+					
 				</div>
 			</div>
 		</div>

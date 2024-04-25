@@ -9,6 +9,7 @@ const { Records, Archives } = require('../models/records.model');
 const Event = require('../models/events.model');
 const Activity = require('../models/activity.model');
 const Card = require('../models/card.model');
+const ArchiveAcademicYear = require('../models/academic.year.model');
 require('dotenv').config();
 
 function countVisibleUsers(users, currentUser) {
@@ -240,9 +241,34 @@ router.get('/records-menu', async (req, res, next) => {
 });
 
 router.get('/archives', async (req, res, next) => {
-	const person = req.user;
-	const archivedRecord = await Archives.find();
-	res.render('admin/archives', { person, archivedRecord });
+    try {
+        const person = req.user;
+        let archivedRecord;
+
+        // Check if the year parameter is provided in the query
+        if (req.query.year) {
+            // Parse the year from the query parameter
+            const selectedYear = parseInt(req.query.year);
+
+            // Fetch archived records for the selected year
+            archivedRecord = await Archives.find({
+                // Assuming `dateAddedToArchive` is a Date field in your schema
+                // Filter records where the year matches the selected year
+                "dateAddedToArchive": {
+                    $gte: new Date(selectedYear, 0, 1), // Start of selected year
+                    $lt: new Date(selectedYear + 1, 0, 1) // Start of next year
+                }
+            });
+        } else {
+            // If no year parameter is provided, fetch all archived records
+            archivedRecord = await Archives.find();
+        }
+
+        res.render('admin/archives', { person, archivedRecord });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
 
 // Endpoint to get events
@@ -802,6 +828,23 @@ router.get('/sections', async (req, res, next) => {
         res.render('admin/sections', {
             person,
             cards, // Pass the fetched sections to the view
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
+router.get('/academic-year', async (req, res, next) => {
+    try {
+        const person = req.user;
+		const archivedRecord = await Archives.find();
+        const academicYear = await ArchiveAcademicYear.find();
+
+        res.render('admin/archiveAcademicYear', {
+            person,
+            academicYear,
+			archivedRecord,
         });
     } catch (error) {
         console.error('Error:', error);

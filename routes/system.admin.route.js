@@ -293,8 +293,6 @@ router.get('/archives', async (req, res, next) => {
 });
 
 
-
-
 router.get('/reports', async (req, res, next) => {
 	try {
 		const person = req.user;

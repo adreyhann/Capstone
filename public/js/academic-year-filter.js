@@ -1,4 +1,4 @@
-
+// for system admin
 const academicYearLinks = document.querySelectorAll('.academic-year-link');
 
 academicYearLinks.forEach(link => {

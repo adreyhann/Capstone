@@ -21,7 +21,7 @@ document.querySelectorAll('.delete-card').forEach(button => {
             const cardElement = this.closest('.card');
             cardElement.remove();
 
-            alert('Card deleted successfully!');
+            alert('Section deleted successfully!');
             location.reload()
         } catch (error) {
             console.error('Error:', error);

@@ -13,6 +13,7 @@ const moment = require('moment');
 const cron = require('node-cron');
 const Activity = require('../models/activity.model');
 const Card = require('../models/card.model');
+const ArchiveAcademicYear = require('../models/academic.year.model');
 const archiver = require('archiver');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
@@ -261,10 +262,38 @@ router.get('/records-menu', async (req, res, next) => {
 });
 
 router.get('/archives', async (req, res, next) => {
-	const person = req.user;
-	const archivedRecord = await Archives.find();
-	res.render('system_admn/archives', { person, archivedRecord });
+    try {
+        const person = req.user;
+        let archivedRecord;
+
+        // Check if the year parameter is provided in the query
+        if (req.query.year) {
+            // Parse the year from the query parameter
+            const selectedYear = parseInt(req.query.year);
+
+            // Fetch archived records for the selected year
+            archivedRecord = await Archives.find({
+                // Assuming `dateAddedToArchive` is a Date field in your schema
+                // Filter records where the year matches the selected year
+                "dateAddedToArchive": {
+                    $gte: new Date(selectedYear, 0, 1), // Start of selected year
+                    $lt: new Date(selectedYear + 1, 0, 1) // Start of next year
+                }
+            });
+        } else {
+            // If no year parameter is provided, fetch all archived records
+            archivedRecord = await Archives.find();
+        }
+
+        res.render('system_admn/archives', { person, archivedRecord });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
+
+
+
 
 router.get('/reports', async (req, res, next) => {
 	try {
@@ -623,63 +652,77 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
 	}
 });
 
+// stop here
 router.post('/archive-selected', async (req, res, next) => {
-	try {
-		const selectedRecordIds = req.body.selectedRecords;
+    try {
+        const selectedRecordIds = req.body.selectedRecords;
 
-		if (!selectedRecordIds || selectedRecordIds.length === 0) {
-			req.flash('error', 'No records selected for archiving');
-			return res.redirect('/systemAdmin/records');
-		}
+        if (!selectedRecordIds || selectedRecordIds.length === 0) {
+            req.flash('error', 'No records selected for archiving');
+            return res.status(400).json({ error: 'No records selected for archiving', message: 'No records selected for archiving' });
+        }
 
-		const selectedRecords = await Records.find({
-			_id: { $in: selectedRecordIds },
-		});
+        const selectedRecords = await Records.find({
+            _id: { $in: selectedRecordIds },
+        });
 
-		const archivedRecords = selectedRecords.map((record) => {
-			return {
-				lrn: record.lrn,
-				lName: record.lName,
-				fName: record.fName,
-				gender: record.gender,
-				transferee: record.transferee,
-				gradeLevel: record.gradeLevel,
-				oldFiles: record.oldFiles,
-				newFiles: record.newFiles,
-				dateAddedToArchive: new Date(),
-			};
-		});
+        const archivedRecords = selectedRecords.map((record) => {
+            return {
+                lrn: record.lrn,
+                lName: record.lName,
+                fName: record.fName,
+                gender: record.gender,
+                transferee: record.transferee,
+                gradeLevel: record.gradeLevel,
+                oldFiles: record.oldFiles,
+                newFiles: record.newFiles,
+                dateAddedToArchive: new Date(),
+            };
+        });
 
-		// Save the archived records
-		await Archives.insertMany(archivedRecords);
+        // Save the archived records
+        await Archives.insertMany(archivedRecords);
 
-		// Delete the selected records from the original collection
-		await Records.deleteMany({ _id: { $in: selectedRecordIds } });
+        // Delete the selected records from the original collection
+        await Records.deleteMany({ _id: { $in: selectedRecordIds } });
 
-		const gradeLevels = [
-			...new Set(selectedRecords.map((record) => record.gradeLevel)),
-		];
-		const gradeLevelsMessage = gradeLevels.join(', ');
+		// Create a new entry in the ArchiveAcademicYear model based on the date of archive creation
+        const archiveDate = new Date();
+        const academicYear = `${archiveDate.getFullYear() - 1}-${archiveDate.getFullYear()}`;
+        const existingYear = await ArchiveAcademicYear.findOne({ academicyear: academicYear });
+        if (!existingYear) {
+            const newYear = new ArchiveAcademicYear({
+                academicyear: academicYear,
+                description: `Academic year ${academicYear}`,
+            });
+            await newYear.save();
+        }
 
-		const lrns = selectedRecords.map((record) => record.lrn).join('\n');
+        const gradeLevels = [
+            ...new Set(selectedRecords.map((record) => record.gradeLevel)),
+        ];
+        const gradeLevelsMessage = gradeLevels.join(', ');
 
-		const historyLog = new History({
-			userEmail: req.user.email,
-			userFirstName: req.user.fname,
-			userLastName: req.user.lname,
-			action: `${req.user.fname} ${req.user.lname} archived multiple records`,
-			details: `Archived ${selectedRecordIds.length} records from ${gradeLevelsMessage}:\n LRN: ${lrns}`,
-		});
-		await historyLog.save();
+        const lrns = selectedRecords.map((record) => record.lrn).join('\n');
 
-		req.flash('success', 'Selected records archived successfully');
-		res.redirect('/systemAdmin/records');
-	} catch (error) {
-		console.error('Error:', error);
-		req.flash('error', 'Failed to archive selected records');
-		res.redirect('/systemAdmin/records');
-	}
+        const historyLog = new History({
+            userEmail: req.user.email,
+            userFirstName: req.user.fname,
+            userLastName: req.user.lname,
+            action: `${req.user.fname} ${req.user.lname} archived multiple records`,
+            details: `Archived ${selectedRecordIds.length} records from ${gradeLevelsMessage}:\n LRN: ${lrns}`,
+        });
+        await historyLog.save();
+
+        req.flash('success', 'Selected records archived successfully');
+        res.status(200).json({ success: true, message: 'Selected records archived successfully' });
+    } catch (error) {
+        console.error('Error:', error);
+        req.flash('error', 'Failed to archive selected records');
+        res.status(500).json({ error: 'Failed to archive selected records', message: 'Failed to archive selected records' });
+    }
 });
+
 
 router.get('/backup', async (req, res, next) => {
 	try {
@@ -1823,12 +1866,11 @@ router.post('/advance-grade-level/:recordId', async (req, res) => {
 router.get('/sections', async (req, res, next) => {
     try {
         const person = req.user;
-        // Fetch all sections from the database
         const cards = await Card.find();
 
         res.render('system_admn/sections', {
             person,
-            cards, // Pass the fetched sections to the view
+            cards, 
         });
     } catch (error) {
         console.error('Error:', error);
@@ -1838,19 +1880,16 @@ router.get('/sections', async (req, res, next) => {
 
 router.post('/sections', async (req, res, next) => {
     try {
-        // Parse section details from request body
         const { name, description } = req.body;
 
-        // Create a new instance of Card model
         const newCard = new Card({
             name,
             description,
         });
 
-        // Save the new card to the database
         const savedCard = await newCard.save();
 
-        res.status(201).json(savedCard); // Respond with the saved card data
+        res.status(201).json(savedCard); 
     } catch (error) {
         console.error('Error:', error);
         next(error);
@@ -1889,6 +1928,23 @@ router.delete('/cards/:id', async (req, res, next) => {
         }
 
         res.json({ message: "Card deleted successfully" });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
+router.get('/academic-year', async (req, res, next) => {
+    try {
+        const person = req.user;
+		const archivedRecord = await Archives.find();
+        const academicYear = await ArchiveAcademicYear.find();
+
+        res.render('system_admn/archiveAcademicYear', {
+            person,
+            academicYear,
+			archivedRecord,
+        });
     } catch (error) {
         console.error('Error:', error);
         next(error);

@@ -519,6 +519,7 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
 			lrn: record.lrn,
 			lName: record.lName,
 			fName: record.fName,
+			mName: record.mName,
 			gender: record.gender,
 			transferee: record.transferee,
 			gradeLevel: record.gradeLevel,
@@ -532,6 +533,18 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
 
 		// Delete the record from the original collection
 		await Records.findByIdAndDelete(recordId);
+
+		// Create a new entry in the ArchiveAcademicYear model based on the date of archive creation
+        const archiveDate = new Date();
+        const academicYear = `${archiveDate.getFullYear() - 1}-${archiveDate.getFullYear()}`;
+        const existingYear = await ArchiveAcademicYear.findOne({ academicyear: academicYear });
+        if (!existingYear) {
+            const newYear = new ArchiveAcademicYear({
+                academicyear: academicYear,
+                description: `Academic year ${academicYear}`,
+            });
+            await newYear.save();
+        }
 
 		// Log the action in the history
 		const historyLog = new History({
@@ -570,6 +583,7 @@ router.post('/unarchive/:archivedRecordId', async (req, res, next) => {
 			lrn: archivedRecord.lrn,
 			lName: archivedRecord.lName,
 			fName: archivedRecord.fName,
+			mName: archivedRecord.mName,
 			gender: archivedRecord.gender,
 			transferee: archivedRecord.transferee,
 			gradeLevel: archivedRecord.gradeLevel,
@@ -668,6 +682,7 @@ router.post('/archive-selected', async (req, res, next) => {
                 lrn: record.lrn,
                 lName: record.lName,
                 fName: record.fName,
+                mName: record.mName,
                 gender: record.gender,
                 transferee: record.transferee,
                 gradeLevel: record.gradeLevel,
@@ -1770,7 +1785,6 @@ router.post('/advance-grade-level', async (req, res) => {
 			});
 		}
 
-		// Define a mapping of grade levels from string to numeric values
 		const gradeLevelMap = {
 			Kinder: 0,
 			'Grade 1': 1,
@@ -1779,34 +1793,27 @@ router.post('/advance-grade-level', async (req, res) => {
 			'Grade 4': 4,
 			'Grade 5': 5,
 			'Grade 6': 6,
-			// Add more grade levels as needed
 		};
 
-		// Retrieve the records with the selected IDs
 		const records = await Records.find({ _id: { $in: selectedRecordIds } });
 
-		// Increment the grade level of each selected record
 		for (const record of records) {
-			// Get the current grade level as a numeric value using the mapping
 			const currentGradeLevel = gradeLevelMap[record.gradeLevel];
 			if (currentGradeLevel === 6) {
 				return res.status(400).json({
 					error:
-						'Selected student(s) are already in Grade 6 and cannot be advanced further.',
+						'Selected student(s) are already in Grade 6 and cannot be promote higher.',
 				});
 			}
-			// Increment the grade level
+			
 			const newGradeLevel = currentGradeLevel + 1;
-			// Update the record with the new grade level
 			await Records.updateOne(
 				{ _id: record._id },
 				{ $set: { gradeLevel: `Grade ${newGradeLevel}` } }
 			);
 		}
 
-		return res
-			.status(200)
-			.json({ message: 'Grade level advanced successfully.' });
+		return res.status(200).json({ success: true, message: 'Grade level advanced successfully.' });
 	} catch (error) {
 		console.error('Error advancing grade level:', error);
 		return res
@@ -1816,49 +1823,40 @@ router.post('/advance-grade-level', async (req, res) => {
 });
 
 router.post('/advance-grade-level/:recordId', async (req, res) => {
-	try {
-		const recordId = req.params.recordId;
+    try {
+        const recordId = req.params.recordId;
 
-		// Retrieve the record by ID
-		const record = await Records.findById(recordId);
+        const record = await Records.findById(recordId);
 
-		if (!record) {
-			return res.status(404).json({ error: 'Record not found.' });
-		}
+        if (!record) {
+            return res.status(404).json({ error: 'Record not found.' });
+        }
 
-		// Define a mapping of grade levels from string to numeric values
-		const gradeLevelMap = {
-			Kinder: 0,
-			'Grade 1': 1,
-			'Grade 2': 2,
-			'Grade 3': 3,
-			'Grade 4': 4,
-			'Grade 5': 5,
-			'Grade 6': 6,
-			// Add more grade levels as needed
-		};
+        const gradeLevelMap = {
+            Kinder: 0,
+            'Grade 1': 1,
+            'Grade 2': 2,
+            'Grade 3': 3,
+            'Grade 4': 4,
+            'Grade 5': 5,
+            'Grade 6': 6,
+        };
 
-		// Get the current grade level as a numeric value using the mapping
-		const currentGradeLevel = gradeLevelMap[record.gradeLevel];
-		// Ensure the gradeLevel is parsed to an integer before incrementing
-		const newGradeLevel = currentGradeLevel + 1;
+        const currentGradeLevel = gradeLevelMap[record.gradeLevel];
+        const newGradeLevel = currentGradeLevel + 1;
 
-		// Update the record with the new grade level
-		await Records.updateOne(
-			{ _id: recordId },
-			{ $set: { gradeLevel: `Grade ${newGradeLevel}` } }
-		);
+        await Records.updateOne(
+            { _id: recordId },
+            { $set: { gradeLevel: `Grade ${newGradeLevel}` } }
+        );
 
-		return res
-			.status(200)
-			.json({ message: 'Grade level advanced successfully.' });
-	} catch (error) {
-		console.error('Error advancing grade level:', error);
-		return res
-			.status(500)
-			.json({ error: 'An error occurred while advancing grade level.' });
-	}
+        return res.status(200).json({ success: true, message: 'Grade level advanced successfully.' });
+    } catch (error) {
+        console.error('Error advancing grade level:', error);
+        return res.status(500).json({ error: 'An error occurred while advancing grade level.' });
+    }
 });
+
 
 router.get('/sections', async (req, res, next) => {
     try {
@@ -1898,14 +1896,12 @@ router.put('/cards/:id', async (req, res, next) => {
         const cardId = req.params.id;
         const { name, description } = req.body;
 
-        // Find the card by its ID and update its details
         const updatedCard = await Card.findByIdAndUpdate(cardId, { name, description }, { new: true });
 
         if (!updatedCard) {
-            return res.status(404).json({ message: "Card not found" });
+            return res.status(404).json({ message: "Section not found" });
         }
 
-        // Send the updated card as a response
         res.json(updatedCard);
     } catch (error) {
         console.error('Error:', error);
@@ -1921,10 +1917,10 @@ router.delete('/cards/:id', async (req, res, next) => {
         const deletedCard = await Card.findByIdAndDelete(cardId);
 
         if (!deletedCard) {
-            return res.status(404).json({ message: "Card not found" });
+            return res.status(404).json({ message: "Section not found" });
         }
 
-        res.json({ message: "Card deleted successfully" });
+        res.json({ message: "Section deleted successfully" });
     } catch (error) {
         console.error('Error:', error);
         next(error);
@@ -1954,7 +1950,7 @@ router.post('/unarchive-selected', async (req, res, next) => {
         const selectedRecordIds = req.body.selectedRecordIds;
 
         if (!selectedRecordIds || selectedRecordIds.length === 0) {
-            req.flash('error', 'No records selected for unarchiving');
+            req.flash('error', 'No students selected for unarchiving');
             return res.redirect('/systemAdmin/archives');
         }
 
@@ -1963,7 +1959,7 @@ router.post('/unarchive-selected', async (req, res, next) => {
         });
 
         if (archivedRecords.length !== selectedRecordIds.length) {
-            req.flash('error', 'One or more archived records not found');
+            req.flash('error', 'One or more archived students not found');
             return res.redirect('/systemAdmin/archives');
         }
 
@@ -1972,6 +1968,7 @@ router.post('/unarchive-selected', async (req, res, next) => {
                 lrn: archivedRecord.lrn,
                 lName: archivedRecord.lName,
                 fName: archivedRecord.fName,
+                mName: archivedRecord.mName,
                 gender: archivedRecord.gender,
                 transferee: archivedRecord.transferee,
                 gradeLevel: archivedRecord.gradeLevel,
@@ -1989,22 +1986,22 @@ router.post('/unarchive-selected', async (req, res, next) => {
                 userEmail: req.user.email,
                 userFirstName: req.user.fname,
                 userLastName: req.user.lname,
-                action: `${req.user.fname} ${req.user.lname} unarchived record`,
-                details: `Unarchived record with LRN ${archivedRecord.lrn}`,
+                action: `${req.user.fname} ${req.user.lname} unarchived student`,
+                details: `Unarchived student with LRN ${archivedRecord.lrn}`,
             });
             await historyLog.save();
         }
 
-        req.flash('success', 'Selected records unarchived successfully');
+        req.flash('success', 'Selected students unarchived successfully');
 		return res
 			.status(200)
-			.json({ message: 'Selected records unarchived successfully' });
+			.json({ message: 'Selected students unarchived successfully' });
     } catch (error) {
         console.error('Error:', error);
-        req.flash('error', 'Failed to unarchive selected records');
+        req.flash('error', 'Failed to unarchive selected students');
 		return res
 			.status(500)
-			.json({ message: 'Failed to unarchive selected records' });
+			.json({ message: 'Failed to unarchive selected students' });
     }
 });
 

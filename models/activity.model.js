@@ -22,6 +22,10 @@ const ActivitySchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    mName: {
+        type: String,
+        required: false,
+    },
     gender: {
         type: String,
         required: true,

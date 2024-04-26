@@ -228,7 +228,7 @@
 								class="material-symbols-outlined"
 								data-bs-toggle="tooltip"
 								data-bs-placement="right"
-								data-bs-title="Archive selected records"
+								data-bs-title="Archive all selected students"
 							>
 								archive
 							</span>
@@ -241,7 +241,7 @@
 							style="display: none"
 							data-bs-toggle="tooltip"
 							data-bs-placement="top"
-							data-bs-title="Advance all students"
+							data-bs-title="Promote all selected students"
 							onclick="advanceSelectedGradeLevel()"
 						>
 							<span class="material-symbols-outlined">move_item</span>
@@ -259,7 +259,7 @@
 						<table
 							id="example"
 							class="table table-striped hover"
-							style="width: 100%"
+							style="width: 100%; font-size: 15px;"
 						>
 							<thead class="table-info">
 								<tr>
@@ -274,6 +274,7 @@
 									<th>LRN</th>
 									<th>Last Name</th>
 									<th>First Name</th>
+									<th>Middle Name</th>
 									<th>Gender</th>
 									<th>Transferee</th>
 									<th>Grade level</th>
@@ -294,6 +295,7 @@
 									<td><%= record.lrn %></td>
 									<td><%= record.lName %></td>
 									<td><%= record.fName %></td>
+									<td><%= record.mName %></td>
 									<td><%= record.gender %></td>
 									<td><%= record.transferee %></td>
 									<td><%= record.gradeLevel %></td>
@@ -326,7 +328,7 @@
 											class="btn btn-sm"
 											data-bs-toggle="tooltip"
 											data-bs-placement="top"
-											data-bs-title="Advance grade level"
+											data-bs-title="Promote"
 											onclick="moveToHigherGrade('<%= record._id %>')"
 										>
 											<span class="material-symbols-outlined">move_item</span>
@@ -343,6 +345,7 @@
 									<th>LRN</th>
 									<th>Last Name</th>
 									<th>First Name</th>
+									<th>Middle Name</th>
 									<th>Gender</th>
 									<th>Transferee</th>
 									<th>Grade level</th>
@@ -491,7 +494,7 @@
 						<button type="button" class="btn-close btn-sm" id="cancelButton2" aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
-						Are you sure you want to archive the selected records?
+						Are you sure you want to archive the selected students?
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-sm btn-secondary" id="cancelButton2" data-bs-dismiss="modal">Cancel</button>

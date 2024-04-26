@@ -3,11 +3,11 @@ function unArchiveSelected() {
     const selectedRecordIds = Array.from(selectedRecords).map(checkbox => checkbox.value);
 
     if (selectedRecordIds.length === 0) {
-        alert("No records selected for unarchiving");
+        alert("No students selected for unarchiving");
         return;
     }
 
-    const confirmed = confirm("Are you sure you want to unarchive the selected records?");
+    const confirmed = confirm("Are you sure you want to unarchive the selected students?");
     if (!confirmed) {
         return; 
     }
@@ -21,7 +21,7 @@ function unArchiveSelected() {
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error('Failed to unarchive selected records');
+            throw new Error('Failed to unarchive selected students');
         }
         return response.json();
     })
@@ -30,8 +30,8 @@ function unArchiveSelected() {
         window.location.reload(); 
     })
     .catch(error => {
-        console.error('Error unarchiving records:', error);
-        alert('Failed to unarchive selected records'); 
+        console.error('Error unarchiving students:', error);
+        alert('Failed to unarchive selected students'); 
         window.location.reload()
     });
 }

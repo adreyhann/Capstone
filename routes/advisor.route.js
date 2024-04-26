@@ -203,7 +203,7 @@ router.post('/submit-form', async (req, res, next) => {
                 return next(err);
             }
 
-            const { lrn, lName, fName, gender, transferee, gradeLevel } = req.body;
+            const { lrn, lName, fName, mName, gender, transferee, gradeLevel } = req.body;
 
             // Validate LRN: should be a 12-digit number
             if (!/^\d{12}$/.test(lrn)) {
@@ -253,6 +253,7 @@ router.post('/submit-form', async (req, res, next) => {
                 lrn: parseInt(lrn),
                 lName: lName,
                 fName: fName,
+                mName: mName,
                 gender: gender,
                 transferee: transferee,
                 gradeLevel: gradeLevel,
@@ -275,6 +276,7 @@ router.post('/submit-form', async (req, res, next) => {
                 lrn: lrn,
                 lName: lName,
                 fName: fName,
+                mName: mName,
                 gender: gender,
                 transferee: transferee,
                 gradeLevel: gradeLevel,
@@ -574,6 +576,12 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 				`First name changed from ${record.fName} to ${req.body.editFName}`
 			);
 			record.fName = req.body.editFName;
+		}
+        if (record.mName !== req.body.editMName) {
+			changes.push(
+				`Middle name changed from ${record.mName} to ${req.body.editMName}`
+			);
+			record.mName = req.body.editMName;
 		}
 		if (record.gender !== req.body.editGender) {
 			changes.push(

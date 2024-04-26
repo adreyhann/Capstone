@@ -24,6 +24,12 @@ async function advanceSelectedGradeLevel() {
             });
 
             if (response.ok) {
+                // Parse the response JSON
+                const data = await response.json();
+
+                // Display success message
+                alert(data.message);
+
                 // Reload the records page after successful advancement
                 window.location.reload();
             } else {
@@ -33,7 +39,7 @@ async function advanceSelectedGradeLevel() {
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('An error occurred while advancing grade level of selected records.');
+            alert('An error occurred while promoting grade level of selected students.');
         }
     }
 }

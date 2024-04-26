@@ -1948,5 +1948,66 @@ router.get('/academic-year', async (req, res, next) => {
     }
 });
 
+// Route to unarchive selected records
+router.post('/unarchive-selected', async (req, res, next) => {
+    try {
+        const selectedRecordIds = req.body.selectedRecordIds;
+
+        if (!selectedRecordIds || selectedRecordIds.length === 0) {
+            req.flash('error', 'No records selected for unarchiving');
+            return res.redirect('/systemAdmin/archives');
+        }
+
+        const archivedRecords = await Archives.find({
+            _id: { $in: selectedRecordIds },
+        });
+
+        if (archivedRecords.length !== selectedRecordIds.length) {
+            req.flash('error', 'One or more archived records not found');
+            return res.redirect('/systemAdmin/archives');
+        }
+
+        const unarchivedRecords = archivedRecords.map((archivedRecord) => {
+            return new Records({
+                lrn: archivedRecord.lrn,
+                lName: archivedRecord.lName,
+                fName: archivedRecord.fName,
+                gender: archivedRecord.gender,
+                transferee: archivedRecord.transferee,
+                gradeLevel: archivedRecord.gradeLevel,
+                oldFiles: archivedRecord.oldFiles,
+                newFiles: archivedRecord.newFiles,
+            });
+        });
+
+        await Records.insertMany(unarchivedRecords);
+
+        await Archives.deleteMany({ _id: { $in: selectedRecordIds } });
+
+        for (const archivedRecord of archivedRecords) {
+            const historyLog = new History({
+                userEmail: req.user.email,
+                userFirstName: req.user.fname,
+                userLastName: req.user.lname,
+                action: `${req.user.fname} ${req.user.lname} unarchived record`,
+                details: `Unarchived record with LRN ${archivedRecord.lrn}`,
+            });
+            await historyLog.save();
+        }
+
+        req.flash('success', 'Selected records unarchived successfully');
+		return res
+			.status(200)
+			.json({ message: 'Selected records unarchived successfully' });
+    } catch (error) {
+        console.error('Error:', error);
+        req.flash('error', 'Failed to unarchive selected records');
+		return res
+			.status(500)
+			.json({ message: 'Failed to unarchive selected records' });
+    }
+});
+
+
 
 module.exports = router;

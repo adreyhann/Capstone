@@ -46,7 +46,7 @@
 		<script defer src="/js/spinner3.js"></script>
 		<script defer src="/js/previewProfilePicture.js"></script>
 		<script defer src="/js/edit.button.js"></script>
-		<link rel="icon" type="image/x-icon" href="/img/logo.png">
+		<link rel="icon" type="image/x-icon" href="/img/logo.png" />
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 
 		<title>Accounts</title>
@@ -68,7 +68,11 @@
 					<div class="container my-2">
 						<div class="row">
 							<div class="col-md-4 mx-2">
-								<img src="<%= person.profilePicture || '/img/default-img.jpg' %>" alt="Profile Picture" style="width: 70px; height: 65px; border-radius: 50%;" />
+								<img
+									src="<%= person.profilePicture || '/img/default-img.jpg' %>"
+									alt="Profile Picture"
+									style="width: 70px; height: 65px; border-radius: 50%"
+								/>
 							</div>
 							<div class="col-md-6">
 								<p class="my-0 pt-2" style="font-size: 15px">
@@ -208,13 +212,18 @@
 						<div>Error: <%= error.message %></div>
 						<% } %>
 						<a class="btn btn-success btn-sm my-2" href="/auth/register"
-							><span class="material-symbols-outlined" style="vertical-align: middle; margin-right: 5px; font-size: 20px;">
-						add_circle
-						</span>Add users</a>
-						<a
-							class="btn btn-md mt-2"
-							href="/systemAdmin/inactive"
+							><span
+								class="material-symbols-outlined"
+								style="
+									vertical-align: middle;
+									margin-right: 5px;
+									font-size: 20px;
+								"
+							>
+								add_circle </span
+							>Add users</a
 						>
+						<a class="btn btn-md mt-2" href="/systemAdmin/inactive">
 							<span
 								class="material-symbols-outlined"
 								data-bs-toggle="tooltip"
@@ -225,83 +234,84 @@
 							</span>
 						</a>
 
-						<table
-							id="example"
-							class="table table-striped hover"
-							style="width: 100%"
-						>
-							<thead class="table-info">
-								<tr>
-									<th>Last Name</th>
-									<th>First Name</th>
-									<th>Email</th>
-									<th>Role</th>
-									<th>Class Advisory</th>
-
-									<th>Status</th>
-									<th>Action</th>
-								</tr>
-							</thead>
-							<tbody>
-								<% users.forEach(user => { %> <% if (user._id.toString() !==
-								currentUser._id.toString()) { %>
-								<tr>
-									<td><%= user.lname %></td>
-									<td><%= user.fname %></td>
-									<td><%= user.email %></td>
-									<td><%= user.role %></td>
-									<td><%= user.classAdvisory %></td>
-									<td class="status-cell"><%= user.status %></td>
-									<td>
-										<button
-											type="button"
-											class="btn btn-sm"
-											data-bs-toggle="modal"
-											data-bs-target="#editUserModal"
-											onclick="populateUserForm('<%= user._id %>', '<%= user.lname %>', '<%= user.fname %>', '<%= user.role %>', '<%= user.classAdvisory %>', '<%= user.email %>')"
-										>
-											<span
-												class="material-symbols-outlined"
-												data-bs-toggle="tooltip"
-												data-bs-placement="top"
-												data-bs-title="Edit"
+						<div style="max-height: 70vh; overflow-y: auto">
+							<table
+								id="example"
+								class="table table-striped hover"
+								style="width: 100%"
+							>
+								<thead class="table-info">
+									<tr>
+										<th>Last Name</th>
+										<th>First Name</th>
+										<th>Email</th>
+										<th>Role</th>
+										<th>Class Advisory</th>
+										<th>Status</th>
+										<th>Action</th>
+									</tr>
+								</thead>
+								<tbody>
+									<% users.forEach(user => { %> <% if (user._id.toString() !==
+									currentUser._id.toString()) { %>
+									<tr>
+										<td><%= user.lname %></td>
+										<td><%= user.fname %></td>
+										<td><%= user.email %></td>
+										<td><%= user.role %></td>
+										<td><%= user.classAdvisory %></td>
+										<td class="status-cell"><%= user.status %></td>
+										<td>
+											<button
+												type="button"
+												class="btn btn-sm"
+												data-bs-toggle="modal"
+												data-bs-target="#editUserModal"
+												onclick="populateUserForm('<%= user._id %>', '<%= user.lname %>', '<%= user.fname %>', '<%= user.role %>', '<%= user.classAdvisory %>', '<%= user.email %>')"
 											>
-												person_edit
-											</span>
-										</button>
-										<button
-											type="button"
-											class="btn btn-sm"
-											data-bs-toggle="modal"
-											data-user-id="<%= user._id %>"
-											onclick="moveUserToInactive('<%= user._id %>')"
-										>
-											<span
-												class="material-symbols-outlined"
-												data-bs-toggle="tooltip"
-												data-bs-placement="top"
-												data-bs-title="Deactivate user"
+												<span
+													class="material-symbols-outlined"
+													data-bs-toggle="tooltip"
+													data-bs-placement="top"
+													data-bs-title="Edit"
+												>
+													person_edit
+												</span>
+											</button>
+											<button
+												type="button"
+												class="btn btn-sm"
+												data-bs-toggle="modal"
+												data-user-id="<%= user._id %>"
+												onclick="moveUserToInactive('<%= user._id %>')"
 											>
-												person_off
-											</span>
-										</button>
-									</td>
-								</tr>
-								<% } %> <% }); %>
-							</tbody>
+												<span
+													class="material-symbols-outlined"
+													data-bs-toggle="tooltip"
+													data-bs-placement="top"
+													data-bs-title="Deactivate user"
+												>
+													person_off
+												</span>
+											</button>
+										</td>
+									</tr>
+									<% } %> <% }); %>
+								</tbody>
 
-							<tfoot class="table-info">
-								<tr>
-									<th>Last Name</th>
-									<th>First Name</th>
-									<th>Email</th>
-									<th>Role</th>
-									<th>Class Advisory</th>
-									<th>Status</th>
-									<th>Action</th>
-								</tr>
-							</tfoot>
-						</table>
+								<tfoot class="table-info">
+									<tr>
+										<th>Last Name</th>
+										<th>First Name</th>
+										<th>Email</th>
+										<th>Role</th>
+										<th>Class Advisory</th>
+										<th>Status</th>
+										<th>Action</th>
+									</tr>
+								</tfoot>
+							</table>
+						</div>
 					</div>
 					<!-- ========== modal for edit user details ========== -->
 					<div
@@ -408,7 +418,7 @@
 												type="submit"
 												id="submitButton"
 												class="btn btn-success"
-												style="width: 100%;"
+												style="width: 100%"
 											>
 												<span
 													class="spinner-border spinner-border-sm d-none"

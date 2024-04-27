@@ -6,7 +6,7 @@ function displayEvents(events) {
 	if (events.length === 0) {
 		const noEventsMessage = document.createElement('div');
 		noEventsMessage.classList.add('alert', 'alert-info', 'text-center'); // Add text-center class
-		noEventsMessage.textContent = 'No events yet.';
+		noEventsMessage.textContent = 'No announcement yet.';
 		eventList.appendChild(noEventsMessage);
 		return; // Exit the function if no events are found
 	}

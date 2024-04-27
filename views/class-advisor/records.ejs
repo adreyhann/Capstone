@@ -162,17 +162,18 @@
 				<div class="container-lg">
 					<h2 class="my-1">Records Management</h2>
 					<hr class="mb-2" />
-					<% try { %>
-						<%- include('../credentials/flash-message.ejs') %>
-					  <% } catch (error) { %>
-						<div>Error: <%= error.message %></div>
-					  <% } %>
+					
 					<a
 							id="addRow"
 							class="btn btn-success btn-sm my-2 ms-3"
 							href="/classAdvisor/addRecords"
 							>Add new student</a
 						>
+						<% try { %>
+							<%- include('../credentials/flash-message.ejs') %>
+						  <% } catch (error) { %>
+							<div>Error: <%= error.message %></div>
+						  <% } %>
 					<div class="container w-100 position-relative" style="max-height: 466px; overflow-y: auto;"> 
 						
 						

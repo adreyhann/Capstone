@@ -218,6 +218,12 @@ router.post('/submit-form', async (req, res, next) => {
                 return res.redirect('/classAdvisor/addRecords');
             }
 
+            const existingRecordArchive = await Archives.findOne({ lrn: parseInt(lrn) });
+            if (existingRecordArchive) {
+                req.flash('error', 'LRN already exists. Please enter a different LRN.');
+                return res.redirect('/classAdvisor/addRecords');
+            }
+
             // Check if oldPdfFiles are required when transferee is not 'No'
             if (transferee !== 'No') {
                 const oldPdfFiles = req.files['oldPdf'] || [];
@@ -542,12 +548,10 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 		// Validate LRN
 		const editLrn = req.body.editLrn;
 		if (!/^\d{12}$/.test(editLrn)) {
-			// If LRN is not exactly 12 digits, throw an error
 			req.flash('error', 'LRN should be a 12-digit number.');
 			return res.redirect('/classAdvisor/records');
 		}
 
-		// Check if the LRN is already in use by another record
 		const existingRecordWithSameLRN = await Records.findOne({
 			lrn: editLrn,
 			_id: { $ne: recordId },
@@ -557,10 +561,17 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 			return res.redirect('/classAdvisor/records');
 		}
 
-		// Prepare an array to store the changes made
+        const existingArchiveRecordWithSameLRN = await Archives.findOne({
+			lrn: editLrn,
+			_id: { $ne: recordId },
+		});
+		if (existingArchiveRecordWithSameLRN) {
+			req.flash('error', 'LRN is already in use');
+			return res.redirect('/classAdvisor/records');
+		}
+
 		const changes = [];
 
-		// Check and update the record with new values
 		if (record.lrn !== req.body.editLrn) {
 			changes.push(`LRN changed from ${record.lrn} to ${req.body.editLrn}`);
 			record.lrn = req.body.editLrn;

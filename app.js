@@ -60,11 +60,11 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-	res.locals.currentUser = req.user; // authentication logic sets currentUser in the request
+	res.locals.currentUser = req.user;
 	next();
 });
 
-// this handle all the routes
+
 app.use('/', require('./routes/index.route'));
 app.use('/auth', require('./routes/auth-routes'));
 app.use(

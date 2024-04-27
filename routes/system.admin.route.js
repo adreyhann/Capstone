@@ -14,6 +14,7 @@ const cron = require('node-cron');
 const Activity = require('../models/activity.model');
 const Card = require('../models/card.model');
 const ArchiveAcademicYear = require('../models/academic.year.model');
+const RestoredRecords = require('../models/restored.records.model');
 const archiver = require('archiver');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
@@ -2005,6 +2006,22 @@ router.post('/unarchive-selected', async (req, res, next) => {
     }
 });
 
+router.get('/restored-records', async (req, res, next) => {
+    try {
+        const person = req.user;
+		const archivedRecord = await Archives.find();
+        const academicYear = await ArchiveAcademicYear.find();
+
+        res.render('system_admn/restoredRecords', {
+            person,
+            academicYear,
+			archivedRecord,
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
 
 
 module.exports = router;

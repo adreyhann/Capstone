@@ -162,7 +162,7 @@
 											placeholder="Learner Reference Number(LRN)"
 											required
 										/>
-										<label for="lrn">Learner Reference Number (LRN)</label>
+										<label for="lrn">Learner Reference Number (LRN) <span style="color: red; font-weight: bolder;">*</span></label>
 									</div>
 									<div class="form-floating mb-3">
 										<input
@@ -173,7 +173,7 @@
 											placeholder="Last Name"
 											required
 										/>
-										<label for="lName">Last Name</label>
+										<label for="lName">Last Name <span style="color: red; font-weight: bolder;">*</span></label>
 									</div>
 									<div class="form-floating mb-3">
 										<input
@@ -184,7 +184,7 @@
 											placeholder="First Name"
 											required
 										/>
-										<label for="fName">First Name</label>
+										<label for="fName">First Name <span style="color: red; font-weight: bolder;">*</span></label>
 									</div>
 
 									<div class="form-floating mb-3">
@@ -205,7 +205,7 @@
                                             <option value="Male">Male</option>
                                             <option value="Female">Female</option>
                                         </select>
-                                        <label for="gender">Gender</label>
+                                        <label for="gender">Gender <span style="color: red; font-weight: bolder;">*</span></label>
                                     </div>
 									<div class="form-floating mb-1">
                                         <select class="form-select" name="transferee" id="transferee" required onchange="toggleFileInput()">
@@ -213,7 +213,7 @@
                                             <option value="Yes">Yes</option>
                                             <option value="No">No</option>
                                         </select>
-                                        <label for="transferee">Is student transferee?</label>
+                                        <label for="transferee">Is student transferee? <span style="color: red; font-weight: bolder;">*</span></label>
                                     </div>
 									
 									<div class="input-group mb-3" id="oldFileInputSection" style="display: none;">
@@ -234,7 +234,7 @@
 											<option value="Grade 5" <%= person.classAdvisory === 'Grade 5' ? 'selected' : 'disabled' %>>Grade 5</option>
 											<option value="Grade 6" <%= person.classAdvisory === 'Grade 6' ? 'selected' : 'disabled' %>>Grade 6</option>
 										</select>
-										<label for="gradeLevel">Grade level</label>
+										<label for="gradeLevel">Grade level <span style="color: red; font-weight: bolder;">*</span></label>
 									</div>
 									
 									<div class="input-group mb-3">

@@ -199,58 +199,126 @@
 					<div class="card custom-card-2 border-0">
 						<div class="card-header border-0 d-flex justify-content-between">
 							<p class="my-0">Summary reports</p>
-							<a href="/systemAdmin/generate-pdf" target="_blank" class="btn btn-info btn-sm">
-								<span class="material-symbols-outlined" style="vertical-align: middle; margin-right: 5px;">print</span> Print report
-							</a>
-							
+							<div class="d-flex">
+								
+								<form class="d-flex me-2" role="search">
+									<input
+										class="form-control form-control-sm me-2"
+										type="search"
+										placeholder="Search"
+										aria-label="Search"
+									/>
+									<button class="btn btn-sm btn-outline-success" type="submit">
+										Search
+									</button>
+								</form>
+								<a
+									href="/systemAdmin/generate-pdf"
+									target="_blank"
+									class="btn btn-info btn-sm"
+								>
+									<span
+										class="material-symbols-outlined"
+										style="vertical-align: middle; margin-right: 5px"
+										>print</span
+									>
+									Print report
+								</a>
+							</div>
 						</div>
 						<div class="card-body">
 							<div class="row">
 								<div class="col-3">
 									<canvas id="reportsChart"></canvas>
 								</div>
-								<div class="col" style="border-left: 1px solid gray; height: 400px; overflow-y: auto;">
+								<div
+									class="col"
+									style="
+										border-left: 1px solid gray;
+										height: 400px;
+										overflow-y: auto;
+									"
+								>
 									<p>Activity logs</p>
 									<% if (activity.length === 0) { %>
-									<div class="alert alert-info d-flex align-items-center justify-content-center" role="alert">
+									<div
+										class="alert alert-info d-flex align-items-center justify-content-center"
+										role="alert"
+									>
 										No activity available.
 									</div>
-									<% } else { %> 
-									<% activity.slice().reverse().forEach(log => { %>
+									<% } else { %> <% activity.slice().reverse().forEach(log => {
+									%>
 									<div class="card my-2 custom-card-2 border-0">
 										<div class="card-body position-relative">
 											<p class="m-0 fs-5 fw-medium"><%= log.action %></p>
-											<p class="m-0" style="color: #72726e"><%= new Date(log.dateCreated).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }) %></p>
-								
-											<p class="d-inline-flex gap-1 mb-0 position-absolute top-0 end-0 translate-middle" style="padding-top: 80px">
-												<a class="btn btn-primary btn-sm" data-bs-toggle="collapse" href="#collapseExample<%= log._id %>" role="button" aria-expanded="false" aria-controls="collapseExample<%= log._id %>">
+											<p class="m-0" style="color: #72726e">
+												<%= new Date(log.dateCreated).toLocaleString('en-US', {
+												month: 'long', day: 'numeric', year: 'numeric', hour:
+												'numeric', minute: 'numeric', hour12: true }) %>
+											</p>
+
+											<p
+												class="d-inline-flex gap-1 mb-0 position-absolute top-0 end-0 translate-middle"
+												style="padding-top: 80px"
+											>
+												<a
+													class="btn btn-primary btn-sm"
+													data-bs-toggle="collapse"
+													href="#collapseExample<%= log._id %>"
+													role="button"
+													aria-expanded="false"
+													aria-controls="collapseExample<%= log._id %>"
+												>
 													View details
 												</a>
 											</p>
 											<div class="collapse" id="collapseExample<%= log._id %>">
 												<div class="card card-body">
 													<p>
-														<span style="font-weight: bold">> Added by</span> <br>
-														<span style="font-weight: bold" class="ms-4">Email:</span> <%= log.userEmail %><br>
-														<span style="font-weight: bold" class="ms-4">Adviser Name:</span> <%= log.adviserName %><br>
+														<span style="font-weight: bold">> Added by</span>
+														<br />
+														<span style="font-weight: bold" class="ms-4"
+															>Email:</span
+														>
+														<%= log.userEmail %><br />
+														<span style="font-weight: bold" class="ms-4"
+															>Adviser Name:</span
+														>
+														<%= log.adviserName %><br />
 													</p>
 													<p class="m-0">
-														<span style="font-weight: bold">> Student Details</span> <br>
-														<span style="font-weight: bold" class="ms-4">LRN:</span> <%= log.lrn %><br>
-														<span style="font-weight: bold" class="ms-4">Last Name:</span> <%= log.fName %><br>
-														<span style="font-weight: bold" class="ms-4">First Name:</span> <%= log.lName %><br>
-														<span style="font-weight: bold" class="ms-4">Gender:</span> <%= log.gender %><br>
-														<span style="font-weight: bold" class="ms-4">Grade level:</span> <%= log.gradeLevel %><br>	
+														<span style="font-weight: bold"
+															>> Student Details</span
+														>
+														<br />
+														<span style="font-weight: bold" class="ms-4"
+															>LRN:</span
+														>
+														<%= log.lrn %><br />
+														<span style="font-weight: bold" class="ms-4"
+															>Last Name:</span
+														>
+														<%= log.fName %><br />
+														<span style="font-weight: bold" class="ms-4"
+															>First Name:</span
+														>
+														<%= log.lName %><br />
+														<span style="font-weight: bold" class="ms-4"
+															>Gender:</span
+														>
+														<%= log.gender %><br />
+														<span style="font-weight: bold" class="ms-4"
+															>Grade level:</span
+														>
+														<%= log.gradeLevel %><br />
 													</p>
-													
 												</div>
 											</div>
 										</div>
 									</div>
-									<% }); %> 
-									<% } %>
+									<% }); %> <% } %>
 								</div>
-								
 							</div>
 						</div>
 					</div>

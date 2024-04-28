@@ -14,7 +14,8 @@ const cron = require('node-cron');
 const Activity = require('../models/activity.model');
 const Card = require('../models/card.model');
 const ArchiveAcademicYear = require('../models/academic.year.model');
-const RestoredRecords = require('../models/restored.records.model');
+const RestoredRecordsList = require('../models/restored.records.table.model');
+const RestoredRecordsCards = require('../models/restored.records.model');
 const archiver = require('archiver');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
@@ -507,7 +508,6 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
 	try {
 		const recordId = req.params.recordId;
 
-		// Find the record by ID
 		const record = await Records.findById(recordId);
 
 		if (!record) {
@@ -515,7 +515,6 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
 			return res.redirect('/systemAdmin/records');
 		}
 
-		// Move the record to the ArchivedRecords collection
 		const archivedRecord = new Archives({
 			lrn: record.lrn,
 			lName: record.lName,
@@ -529,13 +528,10 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
 			dateAddedToArchive: new Date(),
 		});
 
-		// Save the archived record
 		await archivedRecord.save();
 
-		// Delete the record from the original collection
 		await Records.findByIdAndDelete(recordId);
 
-		// Create a new entry in the ArchiveAcademicYear model based on the date of archive creation
         const archiveDate = new Date();
         const academicYear = `${archiveDate.getFullYear() - 1}-${archiveDate.getFullYear()}`;
         const existingYear = await ArchiveAcademicYear.findOne({ academicyear: academicYear });
@@ -547,7 +543,6 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
             await newYear.save();
         }
 
-		// Log the action in the history
 		const historyLog = new History({
 			userEmail: req.user.email,
 			userFirstName: req.user.fname,
@@ -561,13 +556,11 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
 		res.redirect('/systemAdmin/records');
 	} catch (error) {
 		console.error('Error:', error);
-		// Handle errors appropriately, e.g., flash an error message
 		req.flash('error', 'Failed to move record to archive');
 		res.redirect('/systemAdmin/records');
 	}
 });
 
-// Route to unarchive a record
 router.post('/unarchive/:archivedRecordId', async (req, res, next) => {
 	try {
 		const archivedRecordId = req.params.archivedRecordId;
@@ -2021,6 +2014,12 @@ router.get('/restored-records', async (req, res, next) => {
         console.error('Error:', error);
         next(error);
     }
+});
+
+router.get('/restored-records-list', async (req, res, next) => {
+	const person = req.user;
+
+	res.render('system_admn/restoredRecordsList', { person });
 });
 
 

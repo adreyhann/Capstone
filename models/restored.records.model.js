@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
-const RestoredRecordsSchema = new mongoose.Schema({
+const RestoredRecordsCardSchema = new mongoose.Schema({
 	academicyear: String, 
 	description: String,
 });
 
-const RestoredRecords = mongoose.model('RestoredRecords', RestoredRecordsSchema);
-module.exports = RestoredRecords;
+const RestoredRecordsCard = mongoose.model('RestoredRecordsCard', RestoredRecordsCardSchema);
+module.exports = RestoredRecordsCard;

@@ -48,7 +48,7 @@
 		<script defer src="/js/windowLoading.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<link rel="icon" type="image/x-icon" href="/img/logo.png" />
-		<title>Records</title>
+		<title>Restored Records</title>
 	</head>
 	<body>
 		<div class="wrapper">
@@ -205,17 +205,8 @@
 				<div class="container-lg">
 					<h2 class="my-1">Batch</h2>
 					<hr class="mb-0" />
-					<div class="mt-1 mb-0 d-flex justify-content-start">
-						<a class="btn btn-sm" href="/systemAdmin/records-menu">
-							<span
-								class="material-symbols-outlined"
-								data-bs-toggle="tooltip"
-								data-bs-placement="top"
-								data-bs-title="Go back"
-							>
-								arrow_back
-							</span>
-						</a>
+					<div class="mt-2 mb-0 d-flex justify-content-start">
+						
 
 						<button
 							type="button"
@@ -233,8 +224,6 @@
 								archive
 							</span>
 						</button>
-
-						
 					</div>
 					<div
 						class="container w-100 position-relative"
@@ -265,28 +254,38 @@
 									<th>First Name</th>
 									<th>Middle Name</th>
 									<th>Gender</th>
-									<th>Batch</th>
+									<th>Batch Year</th>
 									<th>Date Restored</th>
 									<th>Action</th>
 								</tr>
 							</thead>
 							<tbody>
+								<% restoredStudentsList.forEach(restoredStudentsList => { %>
 								<tr>
 									<td class="text-center" style="width: 9px">
 										<input
 											class="form-check-input"
 											type="checkbox"
 											name="selectedRecords"
-											value=""
+											value="<%= %>"
 										/>
 									</td>
-									<td></td>
-									<td></td>
-									<td></td>
-									<td></td>
-									<td></td>
-									<td></td>
-									<td></td>
+									<td><%= restoredStudentsList.lrn %></td>
+									<td><%= restoredStudentsList.lName %></td>
+									<td><%= restoredStudentsList.fName %></td>
+									<td><%= restoredStudentsList.mName %></td>
+									<td><%= restoredStudentsList.gender %></td>
+									<td>
+                                        <% const academicYear = new Date(restoredStudentsList.academicYear); %>
+                                        <% const startYear = academicYear.getFullYear() - 1; %>
+                                        <% const endYear = startYear + 1; %>
+                                        <%= `${startYear} - ${endYear}` %>
+                                    </td>
+
+									<td style="font-size: 13px;"><%= new
+										Date(restoredStudentsList.dateRestored).toLocaleString('en-US', {
+										month: 'long', day: 'numeric', year: 'numeric', hour:
+										'numeric', minute: 'numeric', hour12: true }) %></td>
 									<td>
 										<a
 											class="btn btn-sm"
@@ -312,6 +311,7 @@
 									</td>
 
 								</tr>
+								<% }); %>
 							</tbody>
 							<tfoot class="table-info">
 								<tr>
@@ -321,7 +321,7 @@
 									<th>First Name</th>
 									<th>Middle Name</th>
 									<th>Gender</th>
-									<th>Batch</th>
+									<th>Batch Year</th>
 									<th>Date Restored</th>
 									<th>Action</th>
 								</tr>
@@ -331,7 +331,7 @@
 				</div>
 			</div>
 		</div>
-		
+
 		
 	</body>
 </html>

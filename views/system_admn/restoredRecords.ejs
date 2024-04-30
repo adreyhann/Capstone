@@ -31,7 +31,7 @@
 		<script defer src="/js/create.new.card.js"></script>
 		<script defer src="/js/edit.card.js"></script>
 		<script defer src="/js/delete.card.js"></script>
-		<script defer src="/js/academic-year-filter.js"></script>
+		<script defer src="/js/restored-records-filter.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<link rel="icon" type="image/x-icon" href="/img/logo.png">
 		<title>Restored student records</title>
@@ -189,22 +189,21 @@
 					<hr />
 
 					<div id="cardContainer" class="row gap-4 ms-3 mb-3" style="max-height: 430px; overflow-y: auto;">
-						<% if (academicYear.length === 0) { %>
+						<% if (restoredStudentsCards.length === 0) { %>
 							<div class="alert alert-warning text-center" role="alert">
-								There are no archives records available.
+								There are no restored records available.
 							</div>
 						<% } else { %>
-							<% academicYear.forEach(academicYear => { %>
+							<% restoredStudentsCards.forEach(cards => { %>
 								<div class="card custom-card-2 border-0 p-0" style="width: 15rem; height: 8rem; position: relative;">
 									<div class="card-body" style="background-color: #eba37f;">
-										<h5 class="card-title" style="font-weight: bold;"><%= academicYear.academicyear %></h5>
-										<p class="card-text mb-0" style="font-size: 15px; "> <%= academicYear.description %></p>
-										
+										<h5 class="card-title" style="font-weight: bold;"><%= cards.academicyear %></h5>
+										<p class="card-text mb-0" style="font-size: 15px; "> <%= cards.description %></p>
 									</div>
-									<a href="" data-academic-year="<%= academicYear.academicyear %>" class="card-footer text-center bg-0 academic-year-link" style="font-size: 14px; border: 0; background-color: #FFF8DC;">
+									<a href="#" data-academic-year="<%= cards.academicyear %>" class="card-footer text-center bg-0 restored-records-link" style="font-size: 14px; border: 0; background-color: #FFF8DC;">
 										<p style="width: 100%;">View records</p>
 									</a>
-																		
+									
 								</div>
 							<% }); %>
 						<% } %>

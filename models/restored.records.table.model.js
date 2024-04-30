@@ -32,11 +32,11 @@ const RestoredRecordsTableSchema = new mongoose.Schema({
         required: true,
     },
     academicYear: {
-        type: Date, // the value of this should be the same as the dateAddedToArchive in the archive records
+        type: Date, 
     },
     dateRestored: {
         type: Date,
-        default: Date.now, // and the value of this should be the date it was restored
+        default: Date.now,
     },
     oldFiles: {
         type: [{

@@ -2060,8 +2060,6 @@ router.post('/unarchive-selected', async (req, res, next) => {
     }
 });
 
-
-
 router.get('/restored-records-cards', async (req, res, next) => {
     try {
         const person = req.user;

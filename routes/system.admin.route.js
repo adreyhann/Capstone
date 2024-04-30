@@ -264,28 +264,28 @@ router.get('/records-menu', async (req, res, next) => {
 });
 
 router.get('/archives', async (req, res, next) => {
-    try {
-        const person = req.user;
-        let archivedRecord;
+	try {
+		const person = req.user;
+		let archivedRecord;
 
-        if (req.query.year) {
-            const selectedYear = parseInt(req.query.year);
+		if (req.query.year) {
+			const selectedYear = parseInt(req.query.year);
 
-            archivedRecord = await Archives.find({
-                "dateAddedToArchive": {
-                    $gte: new Date(selectedYear, 0, 1),
-                    $lt: new Date(selectedYear + 1, 0, 1)
-                }
-            });
-        } else {
-            archivedRecord = await Archives.find();
-        }
+			archivedRecord = await Archives.find({
+				dateAddedToArchive: {
+					$gte: new Date(selectedYear, 0, 1),
+					$lt: new Date(selectedYear + 1, 0, 1),
+				},
+			});
+		} else {
+			archivedRecord = await Archives.find();
+		}
 
-        res.render('system_admn/archives', { person, archivedRecord });
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		res.render('system_admn/archives', { person, archivedRecord });
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 router.get('/reports', async (req, res, next) => {
@@ -527,16 +527,20 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
 		await Records.findByIdAndDelete(recordId);
 
 		// logic for creating new card
-        const archiveDate = new Date();
-        const academicYear = `${archiveDate.getFullYear() - 1}-${archiveDate.getFullYear()}`;
-        const existingYear = await ArchiveAcademicYear.findOne({ academicyear: academicYear });
-        if (!existingYear) {
-            const newYear = new ArchiveAcademicYear({
-                academicyear: academicYear,
-                description: `Academic year ${academicYear}`,
-            });
-            await newYear.save();
-        }
+		const archiveDate = new Date();
+		const academicYear = `${
+			archiveDate.getFullYear() - 1
+		}-${archiveDate.getFullYear()}`;
+		const existingYear = await ArchiveAcademicYear.findOne({
+			academicyear: academicYear,
+		});
+		if (!existingYear) {
+			const newYear = new ArchiveAcademicYear({
+				academicyear: academicYear,
+				description: `Academic year ${academicYear}`,
+			});
+			await newYear.save();
+		}
 
 		const historyLog = new History({
 			userEmail: req.user.email,
@@ -557,83 +561,83 @@ router.post('/move-to-archive/:recordId', async (req, res, next) => {
 });
 
 router.post('/unarchive/:archivedRecordId', async (req, res, next) => {
-    try {
-        const archivedRecordId = req.params.archivedRecordId;
+	try {
+		const archivedRecordId = req.params.archivedRecordId;
 
-        // Find the archived record by ID
-        const archivedRecord = await Archives.findById(archivedRecordId);
+		// Find the archived record by ID
+		const archivedRecord = await Archives.findById(archivedRecordId);
 
-        if (!archivedRecord) {
-            req.flash('error', 'Archived Record not found');
-            return res.redirect('/systemAdmin/archives');
-        }
+		if (!archivedRecord) {
+			req.flash('error', 'Archived Record not found');
+			return res.redirect('/systemAdmin/archives');
+		}
 
-        const recordData = {
-            lrn: archivedRecord.lrn,
-            lName: archivedRecord.lName,
-            fName: archivedRecord.fName,
-            mName: archivedRecord.mName,
-            gender: archivedRecord.gender,
-            transferee: archivedRecord.transferee,
-            gradeLevel: archivedRecord.gradeLevel,
-            oldFiles: archivedRecord.oldFiles,
-            newFiles: archivedRecord.newFiles,
-        };
+		const recordData = {
+			lrn: archivedRecord.lrn,
+			lName: archivedRecord.lName,
+			fName: archivedRecord.fName,
+			mName: archivedRecord.mName,
+			gender: archivedRecord.gender,
+			transferee: archivedRecord.transferee,
+			gradeLevel: archivedRecord.gradeLevel,
+			oldFiles: archivedRecord.oldFiles,
+			newFiles: archivedRecord.newFiles,
+		};
 
-        const currentYear = new Date().getFullYear();
-        const archiveYear = archivedRecord.dateAddedToArchive.getFullYear();
-        const academicYearStart = archiveYear - 1;
-        const academicYearEnd = archiveYear;
+		const currentYear = new Date().getFullYear();
+		const archiveYear = archivedRecord.dateAddedToArchive.getFullYear();
+		const academicYearStart = archiveYear - 1;
+		const academicYearEnd = archiveYear;
 
-        if (currentYear === archiveYear) {
-            // Move to Records model
-            const record = new Records(recordData);
-            await record.save();
-        } else {
-            // Move to RestoredRecordsList model
-            const restoredRecord = new RestoredRecordsList({
-                ...recordData,
-                academicYear: archivedRecord.dateAddedToArchive,
-                dateRestored: new Date(),
-            });
-            await restoredRecord.save();
+		if (currentYear === archiveYear) {
+			// Move to Records model
+			const record = new Records(recordData);
+			await record.save();
+		} else {
+			// Move to RestoredRecordsList model
+			const restoredRecord = new RestoredRecordsList({
+				...recordData,
+				academicYear: archivedRecord.dateAddedToArchive,
+				dateRestored: new Date(),
+			});
+			await restoredRecord.save();
 
-            // Check if a card for the previous academic year exists
-            const existingCard = await RestoredRecordsCards.findOne({ academicyear: `${academicYearStart} - ${academicYearEnd}` });
+			// Check if a card for the previous academic year exists
+			const existingCard = await RestoredRecordsCards.findOne({
+				academicyear: `${academicYearStart} - ${academicYearEnd}`,
+			});
 
-            if (!existingCard) {
-                // Create a new entry in the RestoredRecordsCard model for the previous academic year
-                const restoredCard = new RestoredRecordsCards({
-                    academicyear: `${academicYearStart} - ${academicYearEnd}`,
-                    description: `Batch of year ${academicYearStart} - ${academicYearEnd}`,
-                });
-                await restoredCard.save();
-            }
-        }
+			if (!existingCard) {
+				// Create a new entry in the RestoredRecordsCard model for the previous academic year
+				const restoredCard = new RestoredRecordsCards({
+					academicyear: `${academicYearStart} - ${academicYearEnd}`,
+					description: `Batch of year ${academicYearStart} - ${academicYearEnd}`,
+				});
+				await restoredCard.save();
+			}
+		}
 
-        // Delete the archived record
-        await Archives.findByIdAndDelete(archivedRecordId);
+		// Delete the archived record
+		await Archives.findByIdAndDelete(archivedRecordId);
 
-        // Log the action
-        const historyLog = new History({
-            userEmail: req.user.email,
-            userFirstName: req.user.fname,
-            userLastName: req.user.lname,
-            action: `${req.user.fname} ${req.user.lname} unarchived record`,
-            details: `Unarchived record with LRN ${archivedRecord.lrn}`,
-        });
-        await historyLog.save();
+		// Log the action
+		const historyLog = new History({
+			userEmail: req.user.email,
+			userFirstName: req.user.fname,
+			userLastName: req.user.lname,
+			action: `${req.user.fname} ${req.user.lname} unarchived record`,
+			details: `Unarchived record with LRN ${archivedRecord.lrn}`,
+		});
+		await historyLog.save();
 
-        req.flash('success', 'Record unarchived successfully');
-        res.redirect('/systemAdmin/archives');
-    } catch (error) {
-        console.error('Error:', error);
-        req.flash('error', 'Failed to unarchive record');
-        res.redirect('/systemAdmin/archives');
-    }
+		req.flash('success', 'Record unarchived successfully');
+		res.redirect('/systemAdmin/archives');
+	} catch (error) {
+		console.error('Error:', error);
+		req.flash('error', 'Failed to unarchive record');
+		res.redirect('/systemAdmin/archives');
+	}
 });
-
-
 
 router.get('/archived-files/:recordId', async (req, res, next) => {
 	try {
@@ -687,76 +691,94 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
 
 // stop here
 router.post('/archive-selected', async (req, res, next) => {
-    try {
-        const selectedRecordIds = req.body.selectedRecords;
+	try {
+		const selectedRecordIds = req.body.selectedRecords;
 
-        if (!selectedRecordIds || selectedRecordIds.length === 0) {
-            req.flash('error', 'No records selected for archiving');
-            return res.status(400).json({ error: 'No records selected for archiving', message: 'No records selected for archiving' });
-        }
+		if (!selectedRecordIds || selectedRecordIds.length === 0) {
+			req.flash('error', 'No records selected for archiving');
+			return res
+				.status(400)
+				.json({
+					error: 'No records selected for archiving',
+					message: 'No records selected for archiving',
+				});
+		}
 
-        const selectedRecords = await Records.find({
-            _id: { $in: selectedRecordIds },
-        });
+		const selectedRecords = await Records.find({
+			_id: { $in: selectedRecordIds },
+		});
 
-        const archivedRecords = selectedRecords.map((record) => {
-            return {
-                lrn: record.lrn,
-                lName: record.lName,
-                fName: record.fName,
-                mName: record.mName,
-                gender: record.gender,
-                transferee: record.transferee,
-                gradeLevel: record.gradeLevel,
-                oldFiles: record.oldFiles,
-                newFiles: record.newFiles,
-                dateAddedToArchive: new Date(),
-            };
-        });
+		const archivedRecords = selectedRecords.map((record) => {
+			return {
+				lrn: record.lrn,
+				lName: record.lName,
+				fName: record.fName,
+				mName: record.mName,
+				gender: record.gender,
+				transferee: record.transferee,
+				gradeLevel: record.gradeLevel,
+				oldFiles: record.oldFiles,
+				newFiles: record.newFiles,
+				dateAddedToArchive: new Date(),
+			};
+		});
 
-        // Save the archived records
-        await Archives.insertMany(archivedRecords);
+		// Save the archived records
+		await Archives.insertMany(archivedRecords);
 
-        // Delete the selected records from the original collection
-        await Records.deleteMany({ _id: { $in: selectedRecordIds } });
+		// Delete the selected records from the original collection
+		await Records.deleteMany({ _id: { $in: selectedRecordIds } });
 
 		// Create a new entry in the ArchiveAcademicYear model based on the date of archive creation
-        const archiveDate = new Date();
-        const academicYear = `${archiveDate.getFullYear() - 1}-${archiveDate.getFullYear()}`;
-        const existingYear = await ArchiveAcademicYear.findOne({ academicyear: academicYear });
-        if (!existingYear) {
-            const newYear = new ArchiveAcademicYear({
-                academicyear: academicYear,
-                description: `Academic year ${academicYear}`,
-            });
-            await newYear.save();
-        }
+		const archiveDate = new Date();
+		const academicYear = `${
+			archiveDate.getFullYear() - 1
+		}-${archiveDate.getFullYear()}`;
+		const existingYear = await ArchiveAcademicYear.findOne({
+			academicyear: academicYear,
+		});
+		if (!existingYear) {
+			const newYear = new ArchiveAcademicYear({
+				academicyear: academicYear,
+				description: `Academic year ${academicYear}`,
+			});
+			await newYear.save();
+		}
 
-        const gradeLevels = [
-            ...new Set(selectedRecords.map((record) => record.gradeLevel)),
-        ];
-        const gradeLevelsMessage = gradeLevels.join(', ');
+		const gradeLevels = [
+			...new Set(selectedRecords.map((record) => record.gradeLevel)),
+		];
+		const gradeLevelsMessage = gradeLevels.join(', ');
 
-        const lrns = selectedRecords.map((record) => record.lrn).join('\n');
+		const lrns = selectedRecords.map((record) => record.lrn).join('\n');
 
-        const historyLog = new History({
-            userEmail: req.user.email,
-            userFirstName: req.user.fname,
-            userLastName: req.user.lname,
-            action: `${req.user.fname} ${req.user.lname} archived multiple records`,
-            details: `Archived ${selectedRecordIds.length} records from ${gradeLevelsMessage}:\n LRN: ${lrns}`,
-        });
-        await historyLog.save();
+		const historyLog = new History({
+			userEmail: req.user.email,
+			userFirstName: req.user.fname,
+			userLastName: req.user.lname,
+			action: `${req.user.fname} ${req.user.lname} archived multiple records`,
+			details: `Archived ${selectedRecordIds.length} records from ${gradeLevelsMessage}:\n LRN: ${lrns}`,
+		});
+		await historyLog.save();
 
-        req.flash('success', 'Selected records archived successfully');
-        res.status(200).json({ success: true, message: 'Selected records archived successfully' });
-    } catch (error) {
-        console.error('Error:', error);
-        req.flash('error', 'Failed to archive selected records');
-        res.status(500).json({ error: 'Failed to archive selected records', message: 'Failed to archive selected records' });
-    }
+		req.flash('success', 'Selected records archived successfully');
+		res
+			.status(200)
+			.json({
+				success: true,
+				message: 'Selected records archived successfully',
+			});
+	} catch (error) {
+		console.error('Error:', error);
+		req.flash('error', 'Failed to archive selected records');
+		res
+			.status(500)
+			.json({
+				error: 'Failed to archive selected records',
+				message: 'Failed to archive selected records',
+			});
+	}
 });
-
 
 router.get('/backup', async (req, res, next) => {
 	try {
@@ -1503,37 +1525,42 @@ router.get('/calendar', async (req, res, next) => {
 });
 
 router.post('/events', async (req, res) => {
-    try {
-        const { date, eventName } = req.body;
+	try {
+		const { date, eventName } = req.body;
 
-        // Check if there's already an event with the same date and time
-        const existingEvent = await Event.findOne({ date });
+		// Check if there's already an event with the same date and time
+		const existingEvent = await Event.findOne({ date });
 
-        if (existingEvent) {
-            return res.status(400).json({ error: 'An event already exists at this date and time. Please choose a different date or time for your event.' });
-        }
+		if (existingEvent) {
+			return res
+				.status(400)
+				.json({
+					error:
+						'An event already exists at this date and time. Please choose a different date or time for your event.',
+				});
+		}
 
-        // If no existing event, create and save the new event
-        const event = new Event({ date, eventName });
-        const savedEvent = await event.save();
+		// If no existing event, create and save the new event
+		const event = new Event({ date, eventName });
+		const savedEvent = await event.save();
 
-        res.status(201).json(savedEvent);
-    } catch (error) {
-        console.error('Error adding event:', error);
-        res.status(500).json({ error: 'Failed to add event' });
-    }
+		res.status(201).json(savedEvent);
+	} catch (error) {
+		console.error('Error adding event:', error);
+		res.status(500).json({ error: 'Failed to add event' });
+	}
 });
 
 // Schedule a task to run daily at midnight (00:00)
 cron.schedule('0 0 * * *', async () => {
-    try {
-        // Find and delete events that have already passed
-        const currentDate = new Date();
-        await Event.deleteMany({ date: { $lt: currentDate } });
-        console.log('Expired events deleted successfully.');
-    } catch (error) {
-        console.error('Error deleting expired events:', error);
-    }
+	try {
+		// Find and delete events that have already passed
+		const currentDate = new Date();
+		await Event.deleteMany({ date: { $lt: currentDate } });
+		console.log('Expired events deleted successfully.');
+	} catch (error) {
+		console.error('Error deleting expired events:', error);
+	}
 });
 
 router.put('/events/:date/:eventName', async (req, res) => {
@@ -1827,7 +1854,7 @@ router.post('/advance-grade-level', async (req, res) => {
 						'Selected student(s) are already in Grade 6 and cannot be promote higher.',
 				});
 			}
-			
+
 			const newGradeLevel = currentGradeLevel + 1;
 			await Records.updateOne(
 				{ _id: record._id },
@@ -1835,7 +1862,9 @@ router.post('/advance-grade-level', async (req, res) => {
 			);
 		}
 
-		return res.status(200).json({ success: true, message: 'Grade level advanced successfully.' });
+		return res
+			.status(200)
+			.json({ success: true, message: 'Grade level advanced successfully.' });
 	} catch (error) {
 		console.error('Error advancing grade level:', error);
 		return res
@@ -1845,265 +1874,279 @@ router.post('/advance-grade-level', async (req, res) => {
 });
 
 router.post('/advance-grade-level/:recordId', async (req, res) => {
-    try {
-        const recordId = req.params.recordId;
+	try {
+		const recordId = req.params.recordId;
 
-        const record = await Records.findById(recordId);
+		const record = await Records.findById(recordId);
 
-        if (!record) {
-            return res.status(404).json({ error: 'Record not found.' });
-        }
+		if (!record) {
+			return res.status(404).json({ error: 'Record not found.' });
+		}
 
-        const gradeLevelMap = {
-            Kinder: 0,
-            'Grade 1': 1,
-            'Grade 2': 2,
-            'Grade 3': 3,
-            'Grade 4': 4,
-            'Grade 5': 5,
-            'Grade 6': 6,
-        };
+		const gradeLevelMap = {
+			Kinder: 0,
+			'Grade 1': 1,
+			'Grade 2': 2,
+			'Grade 3': 3,
+			'Grade 4': 4,
+			'Grade 5': 5,
+			'Grade 6': 6,
+		};
 
-        const currentGradeLevel = gradeLevelMap[record.gradeLevel];
-        const newGradeLevel = currentGradeLevel + 1;
+		const currentGradeLevel = gradeLevelMap[record.gradeLevel];
+		const newGradeLevel = currentGradeLevel + 1;
 
-        await Records.updateOne(
-            { _id: recordId },
-            { $set: { gradeLevel: `Grade ${newGradeLevel}` } }
-        );
+		await Records.updateOne(
+			{ _id: recordId },
+			{ $set: { gradeLevel: `Grade ${newGradeLevel}` } }
+		);
 
-        return res.status(200).json({ success: true, message: 'Grade level advanced successfully.' });
-    } catch (error) {
-        console.error('Error advancing grade level:', error);
-        return res.status(500).json({ error: 'An error occurred while advancing grade level.' });
-    }
+		return res
+			.status(200)
+			.json({ success: true, message: 'Grade level advanced successfully.' });
+	} catch (error) {
+		console.error('Error advancing grade level:', error);
+		return res
+			.status(500)
+			.json({ error: 'An error occurred while advancing grade level.' });
+	}
 });
 
-
 router.get('/sections', async (req, res, next) => {
-    try {
-        const person = req.user;
-        const cards = await Card.find();
+	try {
+		const person = req.user;
+		const cards = await Card.find();
 
-        res.render('system_admn/sections', {
-            person,
-            cards, 
-        });
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		res.render('system_admn/sections', {
+			person,
+			cards,
+		});
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 router.post('/sections', async (req, res, next) => {
-    try {
-        const { name, description } = req.body;
+	try {
+		const { name, description } = req.body;
 
-        const newCard = new Card({
-            name,
-            description,
-        });
+		const newCard = new Card({
+			name,
+			description,
+		});
 
-        const savedCard = await newCard.save();
+		const savedCard = await newCard.save();
 
-        res.status(201).json(savedCard); 
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		res.status(201).json(savedCard);
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 router.put('/cards/:id', async (req, res, next) => {
-    try {
-        const cardId = req.params.id;
-        const { name, description } = req.body;
+	try {
+		const cardId = req.params.id;
+		const { name, description } = req.body;
 
-        const updatedCard = await Card.findByIdAndUpdate(cardId, { name, description }, { new: true });
+		const updatedCard = await Card.findByIdAndUpdate(
+			cardId,
+			{ name, description },
+			{ new: true }
+		);
 
-        if (!updatedCard) {
-            return res.status(404).json({ message: "Section not found" });
-        }
+		if (!updatedCard) {
+			return res.status(404).json({ message: 'Section not found' });
+		}
 
-        res.json(updatedCard);
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		res.json(updatedCard);
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 router.delete('/cards/:id', async (req, res, next) => {
-    try {
-        const cardId = req.params.id;
+	try {
+		const cardId = req.params.id;
 
-        // Find the card by its ID and delete it
-        const deletedCard = await Card.findByIdAndDelete(cardId);
+		// Find the card by its ID and delete it
+		const deletedCard = await Card.findByIdAndDelete(cardId);
 
-        if (!deletedCard) {
-            return res.status(404).json({ message: "Section not found" });
-        }
+		if (!deletedCard) {
+			return res.status(404).json({ message: 'Section not found' });
+		}
 
-        res.json({ message: "Section deleted successfully" });
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		res.json({ message: 'Section deleted successfully' });
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 router.get('/academic-year', async (req, res, next) => {
-    try {
-        const person = req.user;
+	try {
+		const person = req.user;
 		const archivedRecord = await Archives.find();
-        const academicYear = await ArchiveAcademicYear.find();
+		const academicYear = await ArchiveAcademicYear.find();
 
-        res.render('system_admn/archiveAcademicYear', {
-            person,
-            academicYear,
+		res.render('system_admn/archiveAcademicYear', {
+			person,
+			academicYear,
 			archivedRecord,
-        });
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		});
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 router.post('/unarchive-selected', async (req, res, next) => {
-    try {
-        const selectedRecordIds = req.body.selectedRecordIds;
+	try {
+		const selectedRecordIds = req.body.selectedRecordIds;
 
-        if (!selectedRecordIds || selectedRecordIds.length === 0) {
-            req.flash('error', 'No students selected for unarchiving');
-            return res.redirect('/systemAdmin/archives');
-        }
+		if (!selectedRecordIds || selectedRecordIds.length === 0) {
+			req.flash('error', 'No students selected for unarchiving');
+			return res.redirect('/systemAdmin/archives');
+		}
 
-        const archivedRecords = await Archives.find({
-            _id: { $in: selectedRecordIds },
-        });
+		const archivedRecords = await Archives.find({
+			_id: { $in: selectedRecordIds },
+		});
 
-        if (archivedRecords.length !== selectedRecordIds.length) {
-            req.flash('error', 'One or more archived students not found');
-            return res.redirect('/systemAdmin/archives');
-        }
+		if (archivedRecords.length !== selectedRecordIds.length) {
+			req.flash('error', 'One or more archived students not found');
+			return res.redirect('/systemAdmin/archives');
+		}
 
-        const currentYear = new Date().getFullYear();
+		const currentYear = new Date().getFullYear();
 
-        for (const archivedRecord of archivedRecords) {
-            const archiveYear = archivedRecord.dateAddedToArchive.getFullYear();
-            const academicYearStart = archiveYear - 1;
-            const academicYearEnd = archiveYear;
+		for (const archivedRecord of archivedRecords) {
+			const archiveYear = archivedRecord.dateAddedToArchive.getFullYear();
+			const academicYearStart = archiveYear - 1;
+			const academicYearEnd = archiveYear;
 
-            const recordData = {
-                lrn: archivedRecord.lrn,
-                lName: archivedRecord.lName,
-                fName: archivedRecord.fName,
-                mName: archivedRecord.mName,
-                gender: archivedRecord.gender,
-                transferee: archivedRecord.transferee,
-                gradeLevel: archivedRecord.gradeLevel,
-                oldFiles: archivedRecord.oldFiles,
-                newFiles: archivedRecord.newFiles,
-            };
+			const recordData = {
+				lrn: archivedRecord.lrn,
+				lName: archivedRecord.lName,
+				fName: archivedRecord.fName,
+				mName: archivedRecord.mName,
+				gender: archivedRecord.gender,
+				transferee: archivedRecord.transferee,
+				gradeLevel: archivedRecord.gradeLevel,
+				oldFiles: archivedRecord.oldFiles,
+				newFiles: archivedRecord.newFiles,
+			};
 
-            if (currentYear === archiveYear) {
-                // Move to Records model
-                const record = new Records(recordData);
-                await record.save();
-            } else {
-                // Check if a card already exists for the academic year
-                const existingCard = await RestoredRecordsCards.findOne({ academicyear: `${academicYearStart} - ${academicYearEnd}` });
+			if (currentYear === archiveYear) {
+				// Move to Records model
+				const record = new Records(recordData);
+				await record.save();
+			} else {
+				// Check if a card already exists for the academic year
+				const existingCard = await RestoredRecordsCards.findOne({
+					academicyear: `${academicYearStart} - ${academicYearEnd}`,
+				});
 
-                if (!existingCard) {
-                    // Move to RestoredRecordsList model
-                    const restoredRecord = new RestoredRecordsList({
-                        ...recordData,
-                        academicYear: archivedRecord.dateAddedToArchive,
-                        dateRestored: new Date(),
-                    });
-                    await restoredRecord.save();
+				if (!existingCard) {
+					// Move to RestoredRecordsList model
+					const restoredRecord = new RestoredRecordsList({
+						...recordData,
+						academicYear: archivedRecord.dateAddedToArchive,
+						dateRestored: new Date(),
+					});
+					await restoredRecord.save();
 
-                    // Create a new entry in the RestoredRecordsCard model
-                    const restoredCard = new RestoredRecordsCards({
-                        academicyear: `${academicYearStart} - ${academicYearEnd}`,
-                        description: `Batch of year ${academicYearStart} - ${academicYearEnd}`,
-                    });
-                    await restoredCard.save();
-                } else {
-                    // Move to RestoredRecordsList model without creating a new card
-                    const restoredRecord = new RestoredRecordsList({
-                        ...recordData,
-                        academicYear: archivedRecord.dateAddedToArchive,
-                        dateRestored: new Date(),
-                    });
-                    await restoredRecord.save();
-                }
-            }
-        }
+					// Create a new entry in the RestoredRecordsCard model
+					const restoredCard = new RestoredRecordsCards({
+						academicyear: `${academicYearStart} - ${academicYearEnd}`,
+						description: `Batch of year ${academicYearStart} - ${academicYearEnd}`,
+					});
+					await restoredCard.save();
+				} else {
+					// Move to RestoredRecordsList model without creating a new card
+					const restoredRecord = new RestoredRecordsList({
+						...recordData,
+						academicYear: archivedRecord.dateAddedToArchive,
+						dateRestored: new Date(),
+					});
+					await restoredRecord.save();
+				}
+			}
+		}
 
-        await Archives.deleteMany({ _id: { $in: selectedRecordIds } });
+		await Archives.deleteMany({ _id: { $in: selectedRecordIds } });
 
-        for (const archivedRecord of archivedRecords) {
-            const historyLog = new History({
-                userEmail: req.user.email,
-                userFirstName: req.user.fname,
-                userLastName: req.user.lname,
-                action: `${req.user.fname} ${req.user.lname} unarchived student`,
-                details: `Unarchived student with LRN ${archivedRecord.lrn}`,
-            });
-            await historyLog.save();
-        }
+		for (const archivedRecord of archivedRecords) {
+			const historyLog = new History({
+				userEmail: req.user.email,
+				userFirstName: req.user.fname,
+				userLastName: req.user.lname,
+				action: `${req.user.fname} ${req.user.lname} unarchived student`,
+				details: `Unarchived student with LRN ${archivedRecord.lrn}`,
+			});
+			await historyLog.save();
+		}
 
-        req.flash('success', 'Selected students unarchived successfully');
-        return res.status(200).json({ message: 'Selected students unarchived successfully' });
-    } catch (error) {
-        console.error('Error:', error);
-        req.flash('error', 'Failed to unarchive selected students');
-        return res.status(500).json({ message: 'Failed to unarchive selected students' });
-    }
+		req.flash('success', 'Selected students unarchived successfully');
+		return res
+			.status(200)
+			.json({ message: 'Selected students unarchived successfully' });
+	} catch (error) {
+		console.error('Error:', error);
+		req.flash('error', 'Failed to unarchive selected students');
+		return res
+			.status(500)
+			.json({ message: 'Failed to unarchive selected students' });
+	}
 });
 
 router.get('/restored-records-cards', async (req, res, next) => {
-    try {
-        const person = req.user;
+	try {
+		const person = req.user;
 		const restoredStudentsCards = await RestoredRecordsCards.find();
 
-        res.render('system_admn/restoredRecords', {
-            person,
-            restoredStudentsCards,
-        });
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		res.render('system_admn/restoredRecords', {
+			person,
+			restoredStudentsCards,
+		});
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 // stop here
 router.get('/restored-records-list', async (req, res, next) => {
-    try {
-        const person = req.user;
-        let restoredStudentsList;
+	try {
+		const person = req.user;
+		let restoredStudentsList;
 
-        if (req.query.academicYear) {
-            const academicYear = parseInt(req.query.academicYear);
+		if (req.query.academicYear) {
+			const academicYear = parseInt(req.query.academicYear);
 
-            const startDate = new Date(academicYear, 0, 1);
-            const endDate = new Date(academicYear + 1, 0, 1); 
+			const startDate = new Date(academicYear, 0, 1);
+			const endDate = new Date(academicYear + 1, 0, 1);
 
-            restoredStudentsList = await RestoredRecordsList.find({
-                "academicYear": {
-                    $gte: startDate,
-                    $lt: endDate
-                }
-            });
-        } else {
-            restoredStudentsList = await RestoredRecordsList.find();
-        }
+			restoredStudentsList = await RestoredRecordsList.find({
+				academicYear: {
+					$gte: startDate,
+					$lt: endDate,
+				},
+			});
+		} else {
+			restoredStudentsList = await RestoredRecordsList.find();
+		}
 
-        res.render('system_admn/restoredRecordsList', { person, restoredStudentsList });
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		res.render('system_admn/restoredRecordsList', {
+			person,
+			restoredStudentsList,
+		});
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
-
-
 
 module.exports = router;

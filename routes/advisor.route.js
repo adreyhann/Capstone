@@ -6,6 +6,7 @@ const { PDFDocument: PDFLibDocument } = require('pdf-lib');
 const Event = require('../models/events.model');
 const User = require('../models/user.model');
 const { Records, Archives } = require('../models/records.model');
+const RestoredRecordsList = require('../models/restored.records.table.model');
 const History = require('../models/history.model');
 const Activity = require('../models/activity.model')
 
@@ -220,6 +221,12 @@ router.post('/submit-form', async (req, res, next) => {
 
             const existingRecordArchive = await Archives.findOne({ lrn: parseInt(lrn) });
             if (existingRecordArchive) {
+                req.flash('error', 'LRN already exists. Please enter a different LRN.');
+                return res.redirect('/classAdvisor/addRecords');
+            }
+
+            const existingRecordRestored = await RestoredRecordsList.findOne({ lrn: parseInt(lrn) });
+            if (existingRecordRestored) {
                 req.flash('error', 'LRN already exists. Please enter a different LRN.');
                 return res.redirect('/classAdvisor/addRecords');
             }
@@ -566,6 +573,15 @@ router.post('/edit-record/:recordId', async (req, res, next) => {
 			_id: { $ne: recordId },
 		});
 		if (existingArchiveRecordWithSameLRN) {
+			req.flash('error', 'LRN is already in use');
+			return res.redirect('/classAdvisor/records');
+		}
+
+        const existingRestoredRecordWithSameLRN = await RestoredRecordsList.findOne({
+			lrn: editLrn,
+			_id: { $ne: recordId },
+		});
+		if (existingRestoredRecordWithSameLRN) {
 			req.flash('error', 'LRN is already in use');
 			return res.redirect('/classAdvisor/records');
 		}

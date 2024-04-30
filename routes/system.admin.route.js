@@ -2008,20 +2008,33 @@ router.post('/unarchive-selected', async (req, res, next) => {
                 const record = new Records(recordData);
                 await record.save();
             } else {
-                // Move to RestoredRecordsList model
-                const restoredRecord = new RestoredRecordsList({
-                    ...recordData,
-                    academicYear: archivedRecord.dateAddedToArchive,
-                    dateRestored: new Date(),
-                });
-                await restoredRecord.save();
+                // Check if a card already exists for the academic year
+                const existingCard = await RestoredRecordsCards.findOne({ academicyear: `${academicYearStart} - ${academicYearEnd}` });
 
-                // Create a new entry in the RestoredRecordsCard model for the previous academic year
-                const restoredCard = new RestoredRecordsCards({
-                    academicyear: `${academicYearStart} - ${academicYearEnd}`,
-                    description: `Batch of year ${academicYearStart} - ${academicYearEnd}`,
-                });
-                await restoredCard.save();
+                if (!existingCard) {
+                    // Move to RestoredRecordsList model
+                    const restoredRecord = new RestoredRecordsList({
+                        ...recordData,
+                        academicYear: archivedRecord.dateAddedToArchive,
+                        dateRestored: new Date(),
+                    });
+                    await restoredRecord.save();
+
+                    // Create a new entry in the RestoredRecordsCard model
+                    const restoredCard = new RestoredRecordsCards({
+                        academicyear: `${academicYearStart} - ${academicYearEnd}`,
+                        description: `Batch of year ${academicYearStart} - ${academicYearEnd}`,
+                    });
+                    await restoredCard.save();
+                } else {
+                    // Move to RestoredRecordsList model without creating a new card
+                    const restoredRecord = new RestoredRecordsList({
+                        ...recordData,
+                        academicYear: archivedRecord.dateAddedToArchive,
+                        dateRestored: new Date(),
+                    });
+                    await restoredRecord.save();
+                }
             }
         }
 
@@ -2039,17 +2052,14 @@ router.post('/unarchive-selected', async (req, res, next) => {
         }
 
         req.flash('success', 'Selected students unarchived successfully');
-        return res
-            .status(200)
-            .json({ message: 'Selected students unarchived successfully' });
+        return res.status(200).json({ message: 'Selected students unarchived successfully' });
     } catch (error) {
         console.error('Error:', error);
         req.flash('error', 'Failed to unarchive selected students');
-        return res
-            .status(500)
-            .json({ message: 'Failed to unarchive selected students' });
+        return res.status(500).json({ message: 'Failed to unarchive selected students' });
     }
 });
+
 
 
 router.get('/restored-records-cards', async (req, res, next) => {
@@ -2076,8 +2086,8 @@ router.get('/restored-records-list', async (req, res, next) => {
         if (req.query.academicYear) {
             const academicYear = parseInt(req.query.academicYear);
 
-            const startDate = new Date(academicYear, 0, 1); // January 1st of the academic year
-            const endDate = new Date(academicYear + 1, 0, 1); // January 1st of the next year
+            const startDate = new Date(academicYear, 0, 1);
+            const endDate = new Date(academicYear + 1, 0, 1); 
 
             restoredStudentsList = await RestoredRecordsList.find({
                 "academicYear": {

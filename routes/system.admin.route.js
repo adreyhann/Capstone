@@ -1577,30 +1577,38 @@ router.get('/calendar', async (req, res, next) => {
 });
 
 router.post('/events', async (req, res) => {
-	try {
-		const { date, eventName } = req.body;
+    try {
+        const { date, eventName } = req.body;
 
-		// Check if there's already an event with the same date and time
-		const existingEvent = await Event.findOne({ date });
+        // Convert date string to a Date object
+        const eventDate = new Date(date);
 
-		if (existingEvent) {
-			return res
-				.status(400)
-				.json({
-					error:
-						'An event already exists at this date and time. Please choose a different date or time for your event.',
-				});
-		}
+        // Check if the event time is between 9 PM and 5 AM
+        const eventHour = eventDate.getHours();
+        if (eventHour >= 21 || eventHour < 5) {
+            return res.status(400).json({
+                error: 'Events / Announcement cannot be created between 9 PM and 5 AM.'
+            });
+        }
 
-		// If no existing event, create and save the new event
-		const event = new Event({ date, eventName });
-		const savedEvent = await event.save();
+        // Check if there's already an event with the same date and time
+        const existingEvent = await Event.findOne({ date });
 
-		res.status(201).json(savedEvent);
-	} catch (error) {
-		console.error('Error adding event:', error);
-		res.status(500).json({ error: 'Failed to add event' });
-	}
+        if (existingEvent) {
+            return res.status(400).json({
+                error: 'An event already exists at this date and time. Please choose a different date or time for your event.'
+            });
+        }
+
+        // If no existing event and event time is valid, create and save the new event
+        const event = new Event({ date, eventName });
+        const savedEvent = await event.save();
+
+        res.status(201).json(savedEvent);
+    } catch (error) {
+        console.error('Error adding event:', error);
+        res.status(500).json({ error: 'Failed to add event' });
+    }
 });
 
 // Schedule a task to run daily at midnight (00:00)
@@ -1641,7 +1649,6 @@ router.delete('/events/:date/:eventName', async (req, res) => {
 		res.status(500).json({ error: 'Failed to delete event' });
 	}
 });
-
 
 // stop here
 router.get('/generate-pdf', async (req, res, next) => {
@@ -2318,7 +2325,6 @@ router.get('/records-pdf', async (req, res, next) => {
     }
 });
 
-
 router.get('/records-pdf/:gradeLevel', async (req, res, next) => {
     try {
         const gradeLevel = req.params.gradeLevel;
@@ -2434,6 +2440,68 @@ router.get('/records-pdf/:gradeLevel', async (req, res, next) => {
     }
 });
 
+router.get('/calendar2', async (req, res, next) => {
+    try {
+        const person = req.user;
+        const events = await Event.find();
+
+        // Convert events to the format expected by FullCalendar
+        const eventData = events.map(event => ({
+            title: event.eventName,
+            start: event.date,
+            // You can add more properties here if needed
+        }));
+
+        res.render('system_admn/calendar2', { person, eventData });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
+// Delete an event
+// router.delete('/events/:id', async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         await Event.findByIdAndDelete(id);
+//         res.json({ message: 'Event deleted' });
+//     } catch (error) {
+//         res.status(400).json({ message: error.message });
+//     }
+// });
+// // Create a new event
+// router.post('/events', async (req, res) => {
+//     try {
+//         const { date, eventName } = req.body;
+//         const event = new Event({ date, eventName });
+//         await event.save();
+//         res.status(201).json(event);
+//     } catch (error) {
+//         res.status(400).json({ message: error.message });
+//     }
+// });
+
+// // Get all events
+// router.get('/events', async (req, res) => {
+//     try {
+//         const events = await Event.find();
+//         res.json(events);
+//     } catch (error) {
+//         res.status(500).json({ message: error.message });
+//     }
+// });
+
+// // Update an event
+// router.put('/events/:id', async (req, res) => {
+//     try {
+//         const { id } = req.params;
+//         const { date, eventName } = req.body;
+//         const updatedEvent = await Event.findByIdAndUpdate(id, { date, eventName }, { new: true });
+//         res.json(updatedEvent);
+//     } catch (error) {
+//         res.status(400).json({ message: error.message });
+//     }
+// });
 
 
 

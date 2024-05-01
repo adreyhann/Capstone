@@ -1657,7 +1657,7 @@ router.get('/generate-pdf', async (req, res, next) => {
         res.setHeader('Content-Type', 'application/pdf');
 
         // Set custom file name
-        const fileName = 'Summary Report.pdf';
+        const fileName = 'Activity logs Report.pdf';
         res.setHeader('Content-Disposition', `inline; filename=${fileName}`);
 
         // Load the logo images
@@ -1738,7 +1738,7 @@ router.get('/generate-pdf', async (req, res, next) => {
 
         // Set table data
         doc.table({
-            title: 'Activity Logs',
+            title: 'Activity Logs report',
 			titleAlign: 'center',
             headers,
             rows,

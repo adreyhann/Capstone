@@ -689,6 +689,56 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
 	}
 });
 
+router.get('/restored-files/:recordId', async (req, res, next) => {
+	try {
+		const recordId = req.params.recordId;
+
+		// Find the archived record by ID
+		const restoredRecord = await RestoredRecordsList.findById(recordId);
+
+		if (!restoredRecord) {
+			res.status(404).send('Archived Record not found');
+			return;
+		}
+
+		const base64OldPDF = await Promise.all(
+			restoredRecord.oldFiles.map(async (file) => {
+				const pdfData = await fs.promises.readFile(file.filePath);
+				return Buffer.from(pdfData).toString('base64');
+			})
+		);
+
+		const filenameOld = restoredRecord.oldFiles.map((file) =>
+			path.basename(file.filePath)
+		);
+
+		const base64NewPDF = await Promise.all(
+			restoredRecord.newFiles.map(async (file) => {
+				const pdfData = await fs.promises.readFile(file.filePath);
+				return Buffer.from(pdfData).toString('base64');
+			})
+		);
+
+		const filenameNew = restoredRecord.newFiles.map((file) =>
+			path.basename(file.filePath)
+		);
+
+		const person = req.user;
+
+		res.render('system_admn/restored-files', {
+			restoredRecord,
+			person,
+			base64OldPDF,
+			filenameOld,
+			base64NewPDF,
+			filenameNew,
+		});
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
+});
+
 // stop here
 router.post('/archive-selected', async (req, res, next) => {
 	try {

@@ -2151,18 +2151,14 @@ router.get('/restored-records-list', async (req, res, next) => {
 
 router.post('/restored-to-archive/:id', async (req, res, next) => {
     try {
-        // Retrieve the ID from the request parameters
         const restoredRecordId = req.params.id;
 
-        // Find the restored record by its ID
         const restoredRecord = await RestoredRecordsList.findById(restoredRecordId);
 
-        // If the restored record is not found, return a 404 error
         if (!restoredRecord) {
             return res.status(404).json({ error: 'Restored record not found' });
         }
 
-        // Move the record to the archived records collection
         const archivedRecord = new Archives({
             lrn: restoredRecord.lrn,
             lName: restoredRecord.lName,
@@ -2171,25 +2167,65 @@ router.post('/restored-to-archive/:id', async (req, res, next) => {
             gender: restoredRecord.gender,
             transferee: restoredRecord.transferee,
             gradeLevel: restoredRecord.gradeLevel,
-            academicYear: restoredRecord.academicYear, // Set academicYear to the value of academicYear
-            dateAddedToArchive: restoredRecord.academicYear, // Set dateAddedToArchive to the value of academicYear
+            academicYear: restoredRecord.academicYear, 
+            dateAddedToArchive: restoredRecord.academicYear,
             oldFiles: restoredRecord.oldFiles,
             newFiles: restoredRecord.newFiles,
         });
         await archivedRecord.save();
 
-        // Delete the restored record from the RestoredRecordsTable collection
         await RestoredRecordsList.findByIdAndDelete(restoredRecordId);
 
-        // Return a success message
         res.status(200).json({ message: 'Record moved to Archive successfully' });
     } catch (error) {
-        // Handle errors
         console.error('Error:', error);
         res.status(500).json({ error: 'Failed to move record to Archive' });
     }
 });
 
+router.post('/selected-restored', async (req, res, next) => {
+    try {
+        const { recordIds } = req.body;
 
+        // Find and retrieve all restored records based on the provided IDs
+        const restoredRecords = await RestoredRecordsList.find({ _id: { $in: recordIds } });
+
+        // If no records are found, return a 404 error
+        if (!restoredRecords || restoredRecords.length === 0) {
+            return res.status(404).json({ error: 'No restored records found' });
+        }
+
+        // Move each restored record to the archived records collection
+        const archivedRecordsPromises = restoredRecords.map(async (record) => {
+            const archivedRecord = new Archives({
+                lrn: record.lrn,
+                lName: record.lName,
+                fName: record.fName,
+                mName: record.mName,
+                gender: record.gender,
+                transferee: record.transferee,
+                gradeLevel: record.gradeLevel,
+                academicYear: record.academicYear, // Set academicYear to the value of academicYear
+                dateAddedToArchive: record.academicYear, // Set dateAddedToArchive to the value of academicYear
+                oldFiles: record.oldFiles,
+                newFiles: record.newFiles,
+            });
+            await archivedRecord.save();
+        });
+
+        // Wait for all archived records to be saved
+        await Promise.all(archivedRecordsPromises);
+
+        // Delete the restored records from the RestoredRecordsTable collection
+        await RestoredRecordsList.deleteMany({ _id: { $in: recordIds } });
+
+        // Return a success message
+        res.status(200).json({ message: 'Records moved to Archive successfully' });
+    } catch (error) {
+        // Handle errors
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Failed to move records to Archive' });
+    }
+});
 
 module.exports = router;

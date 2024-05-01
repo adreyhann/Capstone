@@ -19,6 +19,7 @@ const RestoredRecordsList = require('../models/restored.records.table.model');
 const RestoredRecordsCards = require('../models/restored.records.model');
 const archiver = require('archiver');
 const nodemailer = require('nodemailer');
+const { title } = require('process');
 require('dotenv').config();
 
 function countVisibleUsersInTable(users, currentUser) {
@@ -2168,6 +2169,283 @@ router.get('/reports2', async (req, res, next) => {
 		next(error);
 	}
 });
+
+router.get('/records-pdf', async (req, res, next) => {
+    try {
+        // Fetch records from the database
+        const records = await Records.find();
+
+        const PDFDocument = require('pdfkit-table'); // Import pdfkit-table module
+        const fs = require('fs'); // Import fs module
+
+        const doc = new PDFDocument({ margin: 30, size: 'A4' }); // Initialize PDFDocument
+
+        // Set response header for content type
+        res.setHeader('Content-Type', 'application/pdf');
+
+        // Set custom file name
+        const fileName = 'Records Report.pdf';
+        res.setHeader('Content-Disposition', `inline; filename=${fileName}`);
+
+        // Load the logo images
+        const leftLogoData = fs.readFileSync('public/img/logo.png');
+        const rightLogoData = fs.readFileSync('public/img/depedlogo.png');
+
+        doc.pipe(res); // Pipe the PDF directly to the response
+
+        // Add left logo
+        doc.image(leftLogoData, { x: 50, y: 28, width: 50, height: 50 });
+
+        // Add right logo
+        doc.image(rightLogoData, { x: doc.page.width - 100, y: 30, width: 50, height: 50 });
+
+        // Add text lines in the middle
+        const headerText1 = 'Bethany Christian Academy';
+        const headerText2 = 'Maitim 2nd East, Tagaytay City';
+        const headerText3 = 'bethaychristian2002@yahoo.com';
+        const headerText4 = '09338557850';
+
+        const textWidth = doc.widthOfString(headerText1);
+        const textYPosition1 = 50;
+        const textYPosition2 = textYPosition1 + 20;
+        const textYPosition3 = textYPosition2 + 20;
+        const textYPosition4 = textYPosition3 + 20;
+
+        doc
+            .fontSize(14)
+            .fillColor('black')
+            .text(headerText1, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition1,
+                align: 'center',
+            });
+        doc
+            .fontSize(11)
+            .fillColor('black')
+            .text(headerText2, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition2,
+                align: 'center',
+            });
+        doc
+            .fontSize(10)
+            .fillColor('black')
+            .text(headerText3, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition3,
+                align: 'center',
+            });
+
+        doc
+            .fontSize(9)
+            .fillColor('black')
+            .text(headerText4, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition4,
+                align: 'center',
+            });
+		
+		
+        doc.moveDown();
+        doc.moveDown();
+        doc.moveDown();
+        doc.moveDown();
+		
+		
+
+        let startY = doc.y + 20; // Set the starting y-coordinate for the tables
+
+        // Define numerical values for grade levels
+        const gradeLevels = {
+            Kinder: 1,
+            'Grade 1': 2,
+            'Grade 2': 3,
+            'Grade 3': 4,
+            'Grade 4': 5,
+            'Grade 5': 6,
+            'Grade 6': 7,
+        };
+
+        // Sort records by grade level
+        records.sort((a, b) => {
+            return gradeLevels[a.gradeLevel] - gradeLevels[b.gradeLevel];
+        });
+
+        // Group records by grade level
+        const recordsByGradeLevel = {};
+        records.forEach(record => {
+            if (!recordsByGradeLevel[record.gradeLevel]) {
+                recordsByGradeLevel[record.gradeLevel] = [];
+            }
+            recordsByGradeLevel[record.gradeLevel].push(record);
+        });
+
+        // Iterate over each grade level and create a table for it
+        Object.keys(recordsByGradeLevel).forEach(gradeLevel => {
+            // Move to the next page if the current table doesn't fit on the current page
+            if (doc.y > doc.page.height - 100) {
+                doc.addPage();
+                startY = 50;
+            }
+
+			doc.moveDown()
+
+			
+            // Add title for the grade level
+            doc.fontSize(16).text(`${gradeLevel}`, { align: 'center' });
+
+			doc.moveDown()
+
+            // Define table headers
+            const headers = ['LRN', 'Last Name', 'First Name', 'Middle Name', 'Gender', 'Transferee', 'Grade level'];
+
+            // Map records to table rows
+            const rows = recordsByGradeLevel[gradeLevel].map(record => [
+                record.lrn,
+                record.lName,
+                record.fName,
+                record.mName,
+                record.gender,
+                record.transferee,
+				record.gradeLevel,
+            ]);
+
+            // Set table data
+            doc.table({
+                headers,
+                rows,
+                startY,
+                margin: { top: 20 },
+            });
+
+            startY = doc.y + 20; // Update the starting y-coordinate for the next table
+        });
+
+        doc.end(); // Finalize the PDF document
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
+router.get('/records-pdf/:gradeLevel', async (req, res, next) => {
+    try {
+        const gradeLevel = req.params.gradeLevel;
+        
+        // Fetch records from the database based on the provided grade level
+        const records = await Records.find({ gradeLevel }).sort({ gradeLevel: 1 });
+
+		
+        const PDFDocument = require('pdfkit-table'); // Import pdfkit-table module
+        const fs = require('fs'); // Import fs module
+        // Create a new PDF document
+        const doc = new PDFDocument({ margin: 30, size: 'A4' });
+
+        // Set response header for content type
+        res.setHeader('Content-Type', 'application/pdf');
+
+        // Set custom file name
+        const fileName = `Records_${gradeLevel}.pdf`;
+        res.setHeader('Content-Disposition', `inline; filename=${fileName}`);
+
+        doc.pipe(res); // Pipe the PDF directly to the response
+
+        // Add left logo
+        const leftLogoData = fs.readFileSync('public/img/logo.png');
+        doc.image(leftLogoData, { x: 50, y: 28, width: 50, height: 50 });
+
+        // Add right logo
+        const rightLogoData = fs.readFileSync('public/img/depedlogo.png');
+        doc.image(rightLogoData, { x: doc.page.width - 100, y: 30, width: 50, height: 50 });
+
+        // Add text lines in the middle
+        const headerText1 = 'Bethany Christian Academy';
+        const headerText2 = 'Maitim 2nd East, Tagaytay City';
+        const headerText3 = 'bethaychristian2002@yahoo.com';
+        const headerText4 = '09338557850';
+
+        const textWidth = doc.widthOfString(headerText1);
+        const textYPosition1 = 50;
+        const textYPosition2 = textYPosition1 + 20;
+        const textYPosition3 = textYPosition2 + 20;
+        const textYPosition4 = textYPosition3 + 20;
+
+        doc
+            .fontSize(14)
+            .fillColor('black')
+            .text(headerText1, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition1,
+                align: 'center',
+            });
+        doc
+            .fontSize(11)
+            .fillColor('black')
+            .text(headerText2, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition2,
+                align: 'center',
+            });
+        doc
+            .fontSize(10)
+            .fillColor('black')
+            .text(headerText3, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition3,
+                align: 'center',
+            });
+
+        doc
+            .fontSize(9)
+            .fillColor('black')
+            .text(headerText4, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition4,
+                align: 'center',
+            });
+        
+        // Move to the next page if the header doesn't fit on the current page
+        if (doc.y > doc.page.height - 100) {
+            doc.addPage();
+        }
+
+		doc.moveDown(5)
+        // Add title for the grade level
+        doc.fontSize(16).text(`${gradeLevel}`, { align: 'center' });
+
+		doc.moveDown()
+		
+        // Define table headers
+        const headers = ['LRN', 'Last Name', 'First Name', 'Middle Name', 'Gender', 'Transferee'];
+
+        // Map records to table rows
+        const rows = records.map(record => [
+            record.lrn,
+            record.lName,
+            record.fName,
+            record.mName,
+            record.gender,
+            record.transferee
+        ]);
+
+        // Set table data
+        doc.table({
+            headers,
+            rows,
+            startY: doc.y + 20,
+            margin: { top: 10 },
+        });
+
+        doc.end(); // Finalize the PDF document
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
+
+
+
 
 
 module.exports = router;

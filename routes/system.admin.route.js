@@ -4,13 +4,14 @@ const path = require('path');
 const fs = require('fs');
 const { PDFDocument: PDFLibDocument, rgb } = require('pdf-lib');
 const PDFDocument = require('pdfkit');
+const { PDFTable, PDFTableText } = require('pdfkit-table');
 const User = require('../models/user.model');
 const InactiveUser = require('../models/inactive.model');
 const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
 const Event = require('../models/events.model');
 const moment = require('moment');
-const cron = require('node-cron');
+const cron = require('node-cron');  
 const Activity = require('../models/activity.model');
 const Card = require('../models/card.model');
 const ArchiveAcademicYear = require('../models/academic.year.model');
@@ -1640,239 +1641,116 @@ router.delete('/events/:date/:eventName', async (req, res) => {
 	}
 });
 
+
+// stop here
 router.get('/generate-pdf', async (req, res, next) => {
-	try {
-		// Fetch activity logs from the database
-		const activityLogs = await Activity.find();
+    try {
+        // Fetch activity logs from the database
+        const activityLogs = await Activity.find();
 
-		// Fetch counts of active and archived records
-		const activeCount = await Records.countDocuments();
-		const archivedCount = await Archives.countDocuments();
+        const PDFDocument = require('pdfkit-table'); // Import pdfkit-table module
+        const fs = require('fs'); // Import fs module
 
-		// Load the logo images
-		const leftLogoData = fs.readFileSync('public/img/logo.png');
-		const rightLogoData = fs.readFileSync('public/img/depedlogo.png');
+        const doc = new PDFDocument({ margin: 30, size: 'A4' }); // Initialize PDFDocument
 
-		const doc = new PDFDocument();
+        // Set response header for content type
+        res.setHeader('Content-Type', 'application/pdf');
 
-		// Set response header for content type
-		res.setHeader('Content-Type', 'application/pdf');
+        // Set custom file name
+        const fileName = 'Summary Report.pdf';
+        res.setHeader('Content-Disposition', `inline; filename=${fileName}`);
 
-		// Set custom file name
-		const fileName = 'Summary Report.pdf';
-		res.setHeader('Content-Disposition', `inline; filename=${fileName}`);
+        // Load the logo images
+        const leftLogoData = fs.readFileSync('public/img/logo.png');
+        const rightLogoData = fs.readFileSync('public/img/depedlogo.png');
 
-		const { width, height } = doc.page;
-		const headerHeight = 100;
+        doc.pipe(res); // Pipe the PDF directly to the response
 
-		// Add left logo
-		doc.image(leftLogoData, { x: 50, y: 50, width: 50, height: 50 });
+        // Add left logo
+        doc.image(leftLogoData, { x: 50, y: 29, width: 50, height: 50 });
 
-		// Add right logo
-		doc.image(rightLogoData, { x: width - 100, y: 50, width: 50, height: 50 });
+        // Add right logo
+        doc.image(rightLogoData, { x: doc.page.width - 100, y: 30, width: 50, height: 50 });
 
-		// Add text lines in the middle
-		const headerText1 = 'Bethany Christian Academy';
-		const headerText2 = 'Maitim 2nd East, Tagaytay City';
-		const headerText3 = 'bethaychristian2002@yahoo.com';
-		const headerText4 = '09338557850';
+        // Add text lines in the middle
+        const headerText1 = 'Bethany Christian Academy';
+        const headerText2 = 'Maitim 2nd East, Tagaytay City';
+        const headerText3 = 'bethaychristian2002@yahoo.com';
+        const headerText4 = '09338557850';
 
-		const textWidth = doc.widthOfString(headerText1);
-		const textYPosition1 = 50;
-		const textYPosition2 = textYPosition1 + 20;
-		const textYPosition3 = textYPosition2 + 20;
-		const textYPosition4 = textYPosition3 + 20;
+        const textWidth = doc.widthOfString(headerText1);
+        const textYPosition1 = 50;
+        const textYPosition2 = textYPosition1 + 20;
+        const textYPosition3 = textYPosition2 + 20;
+        const textYPosition4 = textYPosition3 + 20;
 
-		doc
-			.fontSize(14)
-			.fillColor('black')
-			.text(headerText1, {
-				x: (width - textWidth) / 2,
-				y: textYPosition1,
-				align: 'center',
-			});
-		doc
-			.fontSize(11)
-			.fillColor('black')
-			.text(headerText2, {
-				x: (width - textWidth) / 2,
-				y: textYPosition2,
-				align: 'center',
-			});
-		doc
-			.fontSize(10)
-			.fillColor('black')
-			.text(headerText3, {
-				x: (width - textWidth) / 2,
-				y: textYPosition3,
-				align: 'center',
-			});
+        doc
+            .fontSize(14)
+            .fillColor('black')
+            .text(headerText1, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition1,
+                align: 'center',
+            });
+        doc
+            .fontSize(11)
+            .fillColor('black')
+            .text(headerText2, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition2,
+                align: 'center',
+            });
+        doc
+            .fontSize(10)
+            .fillColor('black')
+            .text(headerText3, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition3,
+                align: 'center',
+            });
 
-		doc
-			.fontSize(9)
-			.fillColor('black')
-			.text(headerText4, {
-				// Add the new text line
-				x: (width - textWidth) / 2,
-				y: textYPosition4,
-				align: 'center',
-			});
+        doc
+            .fontSize(9)
+            .fillColor('black')
+            .text(headerText4, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition4,
+                align: 'center',
+            });
 
-		function checkRemainingSpace(height) {
-			return height > 100;
-		}
+        doc.moveDown(4); // Move down to leave space for the header
 
-		// Add current date and time at the left top corner of the summary reports
-		const currentDate = new Date().toLocaleString('en-US', {
-			month: 'long',
-			day: 'numeric',
-			year: 'numeric',
-		});
-		const dateTextWidth = doc.widthOfString(currentDate);
-		const dateTextX = 50; // Adjust as needed
-		const dateTextY = headerHeight + 60; // Adjust as needed
+        // Define table headers
+        const headers = ['Action', 'Email', 'Adviser Name', 'LRN', 'Last Name', 'First Name', 'Gender', 'Grade Level', 'Date Created'];
 
-		doc.fontSize(12).fillColor('black').text(currentDate, dateTextX, dateTextY);
+        // Map activity logs to table rows
+        const rows = activityLogs.map(log => [
+            log.action,
+            log.userEmail,
+            log.adviserName,
+            log.lrn,
+            log.lName,
+            log.fName,
+            log.gender,
+            log.gradeLevel,
+            new Date(log.dateCreated).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }),
+        ]);
 
-		doc.moveDown();
-		doc.moveDown();
-		doc.moveDown();
-		doc.moveDown();
+        // Set table data
+        doc.table({
+            title: 'Activity Logs',
+			titleAlign: 'center',
+            headers,
+            rows,
+        });
 
-		const summaryReportsText = 'Summary reports';
-		const summaryReportsHeight = doc.heightOfString(summaryReportsText, {
-			width: width - 100,
-			align: 'center',
-		});
-		if (!checkRemainingSpace(height - headerHeight - summaryReportsHeight)) {
-			doc.addPage();
-		}
-
-		doc.fontSize(16).text(summaryReportsText, { align: 'center' });
-		doc.moveDown();
-		doc
-			.fontSize(12)
-			.text(`Number of Active Records: ${activeCount}`, { align: 'left' });
-		doc.text(`Number of Archives: ${archivedCount}`, { align: 'left' });
-		doc.moveDown();
-		doc.moveDown();
-		doc.moveDown();
-
-		const activityLogsText = 'Activity logs';
-		const activityLogsHeight = doc.heightOfString(activityLogsText, {
-			width: width - 100,
-			align: 'center',
-		});
-		if (!checkRemainingSpace(height - headerHeight - activityLogsHeight)) {
-			doc.addPage();
-		}
-
-		doc.fontSize(16).text(activityLogsText, { align: 'center' });
-		doc.moveDown();
-
-		// Calculate the horizontal and vertical spacing for each activity log
-		const logWidth = 200;
-		const logHeight = 220;
-		const horizontalSpacing = 250;
-		const verticalSpacing = 200;
-		let currentX = 50; // Initial X position for the first log
-		let currentY = headerHeight + 60; // Initial Y position for the first row
-
-		const maxLogsPerRow = 3; // Adjust this to fit the desired number of logs per row
-
-		activityLogs.forEach((log, index) => {
-			// Calculate the row and column based on index
-			const rowIndex = Math.floor(index / maxLogsPerRow);
-			const columnIndex = index % maxLogsPerRow;
-
-			// Calculate starting positions for each log in a row
-			const startX =
-				(width -
-					(maxLogsPerRow * logWidth +
-						(maxLogsPerRow - 1) * horizontalSpacing)) /
-					2 +
-				columnIndex * (logWidth + horizontalSpacing);
-			const startY =
-				headerHeight + 60 + rowIndex * (logHeight + verticalSpacing);
-
-			// Add activity log details
-			doc.fontSize(10);
-			doc.text(`${index + 1}.`, { align: 'left', x: startX, y: startY }); // Numbering
-			doc.text(`Action: ${log.action}`, {
-				align: 'left',
-				x: startX + 20,
-				y: startY,
-			});
-			doc.text(
-				`Date: ${log.dateCreated.toLocaleString('en-US', {
-					month: 'long',
-					day: 'numeric',
-					year: 'numeric',
-					hour: 'numeric',
-					minute: 'numeric',
-					hour12: true,
-				})}`,
-				{ align: 'left', x: startX + 20, y: startY + 20 }
-			);
-
-			// Add details in separate lines
-			doc.moveDown();
-			doc.text('Added by', { align: 'left', x: startX + 20, y: startY + 40 });
-			doc.text(`Email: ${log.userEmail}`, {
-				align: 'left',
-				x: startX + 20,
-				y: startY + 60,
-			}); // Adjust horizontal spacing
-			doc.text(`Class Adviser: ${log.adviserName}`, {
-				align: 'left',
-				x: startX + 20,
-				y: startY + 80,
-			}); // Adjust horizontal spacing
-
-			doc.text('Student Details', {
-				align: 'left',
-				x: startX + 20,
-				y: startY + 100,
-			});
-			doc.text(`LRN: ${log.lrn}`, {
-				align: 'left',
-				x: startX + 20,
-				y: startY + 120,
-			}); // Adjust horizontal spacing
-			doc.text(`Last Name: ${log.lName}`, {
-				align: 'left',
-				x: startX + 20,
-				y: startY + 140,
-			}); // Adjust horizontal spacing
-			doc.text(`First Name: ${log.fName}`, {
-				align: 'left',
-				x: startX + 20,
-				y: startY + 160,
-			}); // Adjust horizontal spacing
-			doc.text(`Gender: ${log.gender}`, {
-				align: 'left',
-				x: startX + 20,
-				y: startY + 180,
-			}); // Adjust horizontal spacing
-			doc.text(`Grade level: ${log.gradeLevel}`, {
-				align: 'left',
-				x: startX + 20,
-				y: startY + 200,
-			}); // Adjust horizontal spacing
-
-			// Add some space after each log entry
-			doc.moveDown();
-			doc.moveDown();
-		});
-
-		doc.pipe(res); // Pipe the PDF directly to the response
-
-		doc.end();
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
+        doc.end(); // Finalize the PDF document
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
+
 
 router.post('/advance-grade-level', async (req, res) => {
 	try {

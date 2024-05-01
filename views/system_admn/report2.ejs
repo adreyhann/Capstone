@@ -17,7 +17,7 @@
 			rel="stylesheet"
 			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
 		/>
-        <link
+		<link
 			rel="stylesheet"
 			href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css"
 		/>
@@ -38,10 +38,12 @@
 			defer
 			src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"
 		></script>
+
 		<script defer src="/js/tables.js"></script>
 		<script defer src="/js/sa.report.chart.js"></script>
 		<script defer src="/js/toggler.js"></script>
 		<script defer src="/js/search.report.js"></script>
+		<script defer src="/js/printReport.js"></script>
 		<script src="https://cdn.jsdelivr.net/npm/chart.js@latest"></script>
 		<link rel="icon" type="image/x-icon" href="/img/logo.png" />
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
@@ -144,7 +146,7 @@
 							style="border-right: 2px solid #007bff; background: #e3edf0"
 						>
 							<a
-								href="/systemAdmin/reports"
+								href="/systemAdmin/reports2"
 								class="sidebar-link"
 								data-bs-target="#dashboard"
 								aria-expanded="false"
@@ -202,58 +204,75 @@
 					<h2 class="my-1">Advisers activity report</h2>
 					<hr />
 					<div class="container w-100">
-                        <div class="mb-2">
-                            <a
-									href="/systemAdmin/generate-pdf"
-									target="_blank"
-									class="btn btn-info btn-sm"
+						<div class="mb-2">
+							<a
+								href="/systemAdmin/generate-pdf"
+								target="_blank"
+								class="btn btn-info btn-sm"
+							>
+								<span
+									class="material-symbols-outlined"
+									style="vertical-align: middle; margin-right: 5px"
+									>print</span
 								>
-									<span
-										class="material-symbols-outlined"
-										style="vertical-align: middle; margin-right: 5px"
-										>print</span
-									>
-									Print report
-								</a>
-                        </div>
-						<div style="max-height: 490px; overflow-y: auto;">
-							<table id="activityTable" class="table table-striped hover" style="width: 100%; font-size: 14px;">
-                                <thead class="table-info">
-                                    <tr>
-                                        <th class="table-warning text-center" style="border-right: 1px solid gray;" colspan="3">Added by</th>
-                                        <th class="table-warning text-center" colspan="6">Student Details</th>
-                                    </tr>
-                                    <tr>
-                                        <th>Action</th>
-                                        <th>Email</th>
-                                        <th style="border-right: 1px solid gray;">Adviser Name</th>
-                                        <th>LRN</th>
-                                        <th>Last Name</th>
-                                        <th>First Name</th>
-                                        <th>Gender</th>
-                                        <th>Grade Level</th>
-                                        <th>Date Created</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <% activity.forEach(log => { %>
-                                    <tr>
-                                        <td><%= log.action %></td>
-                                        <td><%= log.userEmail %></td>
-                                        <td style="border-right: 1px solid gray;"><%= log.adviserName %></td>
-                                        <td><%= log.lrn %></td>
-                                        <td><%= log.lName %></td>
-                                        <td><%= log.fName %></td>
-                                        <td><%= log.gender %></td>
-                                        <td><%= log.gradeLevel %></td>
-                                        <td><%= new Date(log.dateCreated).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }) %></td>
-                                    </tr>
-                                    <% }); %>
-                                </tbody>
-                            </table>
+								Print report
+							</a>
+						</div>
+						<div style="max-height: 490px; overflow-y: auto">
+							<table
+								id="activityTable"
+								class="table table-striped hover"
+								style="width: 100%; font-size: 13px"
+							>
+								<thead class="table-info">
+									<tr>
+										<th
+											class="table-warning text-center"
+											style="border-right: 1px solid gray;"
+											colspan="3"
+										>
+											Added by
+										</th>
+										<th class="table-warning text-center" colspan="6">
+											Student Details
+										</th>
+									</tr>
+									<tr>
+										<th>Action</th>
+										<th>Email</th>
+										<th style="border-right: 1px solid gray">Adviser Name</th>
+										<th>LRN</th>
+										<th>Last Name</th>
+										<th>First Name</th>
+										<th>Gender</th>
+										<th>Grade Level</th>
+										<th>Date Created</th>
+									</tr>
+								</thead>
+								<tbody>
+									<% activity.forEach(log => { %>
+									<tr>
+										<td><%= log.action %></td>
+										<td><%= log.userEmail %></td>
+										<td style="border-right: 1px solid gray">
+											<%= log.adviserName %>
+										</td>
+										<td><%= log.lrn %></td>
+										<td><%= log.lName %></td>
+										<td><%= log.fName %></td>
+										<td><%= log.gender %></td>
+										<td><%= log.gradeLevel %></td>
+										<td>
+											<%= new Date(log.dateCreated).toLocaleString('en-US', {
+											month: 'long', day: 'numeric', year: 'numeric', hour:
+											'numeric', minute: 'numeric', hour12: true }) %>
+										</td>
+									</tr>
+									<% }); %>
+								</tbody>
+							</table>
 						</div>
 						<!-- stop here -->
-						
 					</div>
 				</div>
 			</div>

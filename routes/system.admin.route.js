@@ -289,19 +289,19 @@ router.get('/archives', async (req, res, next) => {
 	}
 });
 
-router.get('/reports', async (req, res, next) => {
-	try {
-		const person = req.user;
+// router.get('/reports', async (req, res, next) => {
+// 	try {
+// 		const person = req.user;
 
-		// Fetch history logs from the database
-		const activity = await Activity.find({}).populate(); // Assuming 'User' model has 'name' field
+// 		// Fetch history logs from the database
+// 		const activity = await Activity.find({}).populate(); // Assuming 'User' model has 'name' field
 
-		res.render('system_admn/reports', { person, activity });
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
-});
+// 		res.render('system_admn/reports', { person, activity });
+// 	} catch (error) {
+// 		console.error('Error:', error);
+// 		next(error);
+// 	}
+// });
 
 router.get('/profile', async (req, res, next) => {
 	const person = req.user;

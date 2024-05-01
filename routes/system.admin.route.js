@@ -2149,4 +2149,51 @@ router.get('/restored-records-list', async (req, res, next) => {
 	}
 });
 
+router.post('/restored-to-archive/:id', async (req, res, next) => {
+    try {
+        // Retrieve the ID from the request parameters
+        const restoredRecordsListId = req.params.id;
+
+        // Retrieve the RestoredRecordsList entry
+        const restoredRecordsList = await RestoredRecordsList.findById(restoredRecordsListId);
+
+        if (!restoredRecordsList) {
+            return res.status(404).json({ error: 'RestoredRecordsList not found' });
+        }
+
+        // Extract data from RestoredRecordsList to create a new Archive entry
+        const { lrn, lName, fName, mName, gender, transferee, gradeLevel, oldFiles, newFiles } = restoredRecordsList;
+        const { academicyear, dateRestored } = restoredRecordsList;
+
+        // Extract academic year from academicyear field (assuming it's in the format 'YYYY - YYYY')
+        const academicYear = academicyear.split(' - ')[0];
+
+        // Create a new Archive entry
+        const archiveEntry = new Archive({
+            lrn,
+            lName,
+            fName,
+            mName,
+            gender,
+            transferee,
+            gradeLevel,
+            oldFiles,
+            newFiles,
+            dateAddedToArchive: academicYear, // Set the dateAddedToArchive to the academic year extracted from academicyear
+            academicYear: academicyear, // Set the academicYear to the academicyear of RestoredRecordsList
+        });
+
+        // Save the new entry in the Archive
+        await archiveEntry.save();
+
+        // Delete the RestoredRecordsList entry
+        await RestoredRecordsList.findByIdAndDelete(restoredRecordsListId);
+
+        res.status(200).json({ message: 'RestoredRecordsList moved to Archive successfully' });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Failed to move RestoredRecordsList to Archive' });
+    }
+});
+
 module.exports = router;

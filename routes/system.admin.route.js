@@ -2278,4 +2278,18 @@ router.post('/selected-restored', async (req, res, next) => {
     }
 });
 
+router.get('/reports2', async (req, res, next) => {
+	try {
+		const person = req.user;
+
+		const activity = await Activity.find({}).populate(); 
+
+		res.render('system_admn/report2', { person, activity });
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
+});
+
+
 module.exports = router;

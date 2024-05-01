@@ -2152,48 +2152,44 @@ router.get('/restored-records-list', async (req, res, next) => {
 router.post('/restored-to-archive/:id', async (req, res, next) => {
     try {
         // Retrieve the ID from the request parameters
-        const restoredRecordsListId = req.params.id;
+        const restoredRecordId = req.params.id;
 
-        // Retrieve the RestoredRecordsList entry
-        const restoredRecordsList = await RestoredRecordsList.findById(restoredRecordsListId);
+        // Find the restored record by its ID
+        const restoredRecord = await RestoredRecordsList.findById(restoredRecordId);
 
-        if (!restoredRecordsList) {
-            return res.status(404).json({ error: 'RestoredRecordsList not found' });
+        // If the restored record is not found, return a 404 error
+        if (!restoredRecord) {
+            return res.status(404).json({ error: 'Restored record not found' });
         }
 
-        // Extract data from RestoredRecordsList to create a new Archive entry
-        const { lrn, lName, fName, mName, gender, transferee, gradeLevel, oldFiles, newFiles } = restoredRecordsList;
-        const { academicyear, dateRestored } = restoredRecordsList;
-
-        // Extract academic year from academicyear field (assuming it's in the format 'YYYY - YYYY')
-        const academicYear = academicyear.split(' - ')[0];
-
-        // Create a new Archive entry
-        const archiveEntry = new Archive({
-            lrn,
-            lName,
-            fName,
-            mName,
-            gender,
-            transferee,
-            gradeLevel,
-            oldFiles,
-            newFiles,
-            dateAddedToArchive: academicYear, // Set the dateAddedToArchive to the academic year extracted from academicyear
-            academicYear: academicyear, // Set the academicYear to the academicyear of RestoredRecordsList
+        // Move the record to the archived records collection
+        const archivedRecord = new Archives({
+            lrn: restoredRecord.lrn,
+            lName: restoredRecord.lName,
+            fName: restoredRecord.fName,
+            mName: restoredRecord.mName,
+            gender: restoredRecord.gender,
+            transferee: restoredRecord.transferee,
+            gradeLevel: restoredRecord.gradeLevel,
+            academicYear: restoredRecord.academicYear, // Set academicYear to the value of academicYear
+            dateAddedToArchive: restoredRecord.academicYear, // Set dateAddedToArchive to the value of academicYear
+            oldFiles: restoredRecord.oldFiles,
+            newFiles: restoredRecord.newFiles,
         });
+        await archivedRecord.save();
 
-        // Save the new entry in the Archive
-        await archiveEntry.save();
+        // Delete the restored record from the RestoredRecordsTable collection
+        await RestoredRecordsList.findByIdAndDelete(restoredRecordId);
 
-        // Delete the RestoredRecordsList entry
-        await RestoredRecordsList.findByIdAndDelete(restoredRecordsListId);
-
-        res.status(200).json({ message: 'RestoredRecordsList moved to Archive successfully' });
+        // Return a success message
+        res.status(200).json({ message: 'Record moved to Archive successfully' });
     } catch (error) {
+        // Handle errors
         console.error('Error:', error);
-        res.status(500).json({ error: 'Failed to move RestoredRecordsList to Archive' });
+        res.status(500).json({ error: 'Failed to move record to Archive' });
     }
 });
+
+
 
 module.exports = router;

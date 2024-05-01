@@ -1647,7 +1647,7 @@ router.delete('/events/:date/:eventName', async (req, res) => {
 router.get('/generate-pdf', async (req, res, next) => {
     try {
         // Fetch activity logs from the database
-        const activityLogs = await Activity.find();
+        const activityLogs = await Activity.find().sort({ lName: 1 });
 
         const PDFDocument = require('pdfkit-table'); // Import pdfkit-table module
         const fs = require('fs'); // Import fs module
@@ -2173,7 +2173,7 @@ router.get('/reports2', async (req, res, next) => {
 router.get('/records-pdf', async (req, res, next) => {
     try {
         // Fetch records from the database
-        const records = await Records.find();
+        const records = await Records.find().sort({ lName: 1 });
 
         const PDFDocument = require('pdfkit-table'); // Import pdfkit-table module
         const fs = require('fs'); // Import fs module
@@ -2244,14 +2244,8 @@ router.get('/records-pdf', async (req, res, next) => {
                 y: textYPosition4,
                 align: 'center',
             });
-		
-		
-        doc.moveDown();
-        doc.moveDown();
-        doc.moveDown();
-        doc.moveDown();
-		
-		
+
+        doc.moveDown(4); // Move down to leave space for the header
 
         let startY = doc.y + 20; // Set the starting y-coordinate for the tables
 
@@ -2288,13 +2282,9 @@ router.get('/records-pdf', async (req, res, next) => {
                 startY = 50;
             }
 
-			doc.moveDown()
-
-			
             // Add title for the grade level
             doc.fontSize(16).text(`${gradeLevel}`, { align: 'center' });
-
-			doc.moveDown()
+            doc.moveDown(); // Move down to leave space for the title
 
             // Define table headers
             const headers = ['LRN', 'Last Name', 'First Name', 'Middle Name', 'Gender', 'Transferee', 'Grade level'];
@@ -2307,7 +2297,7 @@ router.get('/records-pdf', async (req, res, next) => {
                 record.mName,
                 record.gender,
                 record.transferee,
-				record.gradeLevel,
+                record.gradeLevel,
             ]);
 
             // Set table data
@@ -2328,12 +2318,13 @@ router.get('/records-pdf', async (req, res, next) => {
     }
 });
 
+
 router.get('/records-pdf/:gradeLevel', async (req, res, next) => {
     try {
         const gradeLevel = req.params.gradeLevel;
         
         // Fetch records from the database based on the provided grade level
-        const records = await Records.find({ gradeLevel }).sort({ gradeLevel: 1 });
+        const records = await Records.find({ gradeLevel }).sort({ gradeLevel: 1, lName: 1 });
 
 		
         const PDFDocument = require('pdfkit-table'); // Import pdfkit-table module

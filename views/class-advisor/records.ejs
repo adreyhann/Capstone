@@ -163,11 +163,19 @@
 					<h2 class="my-1">Records Management</h2>
 					<hr class="mb-2" />
 					
-					<a
+						<a
 							id="addRow"
 							class="btn btn-success btn-sm my-2 ms-3"
 							href="/classAdvisor/addRecords"
 							>Add new student</a
+						>
+
+						<a
+							id="print"
+							target="_blank"
+							class="btn btn-info btn-sm my-2"
+							href="/classAdvisor/records-pdf"
+							>Print</a
 						>
 						<% try { %>
 							<%- include('../credentials/flash-message.ejs') %>

@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { PDFDocument: PDFLibDocument } = require('pdf-lib');
+const { PDFTable, PDFTableText } = require('pdfkit-table');
 const Event = require('../models/events.model');
 const User = require('../models/user.model');
 const { Records, Archives } = require('../models/records.model');
@@ -684,6 +685,112 @@ router.get('/downloadFile2', (req, res) => {
             console.log('File sent successfully');
         }
     });
+});
+
+router.get('/records-pdf', async (req, res, next) => {
+    try {
+        // Fetch activity logs from the database
+        const currentUserClassAdvisory = req.user.classAdvisory;
+        const records = await Records.find({ gradeLevel: currentUserClassAdvisory }).sort({ lName: 1 });
+
+        const PDFDocument = require('pdfkit-table');
+        const fs = require('fs');
+
+        const doc = new PDFDocument({ margin: 30, size: 'A4' }); // Initialize PDFDocument
+
+        // Set response header for content type
+        res.setHeader('Content-Type', 'application/pdf');
+
+        // Set custom file name
+        const fileName = 'Records Report.pdf';
+        res.setHeader('Content-Disposition', `inline; filename=${fileName}`);
+
+        // Load the logo images
+        const leftLogoData = fs.readFileSync('public/img/logo.png');
+        const rightLogoData = fs.readFileSync('public/img/depedlogo.png');
+
+        doc.pipe(res); // Pipe the PDF directly to the response
+
+        // Add left logo
+        doc.image(leftLogoData, { x: 50, y: 28, width: 50, height: 50 });
+
+        // Add right logo
+        doc.image(rightLogoData, { x: doc.page.width - 100, y: 30, width: 50, height: 50 });
+
+        // Add text lines in the middle
+        const headerText1 = 'Bethany Christian Academy';
+        const headerText2 = 'Maitim 2nd East, Tagaytay City';
+        const headerText3 = 'bethaychristian2002@yahoo.com';
+        const headerText4 = '09338557850';
+
+        const textWidth = doc.widthOfString(headerText1);
+        const textYPosition1 = 50;
+        const textYPosition2 = textYPosition1 + 20;
+        const textYPosition3 = textYPosition2 + 20;
+        const textYPosition4 = textYPosition3 + 20;
+
+        doc
+            .fontSize(14)
+            .fillColor('black')
+            .text(headerText1, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition1,
+                align: 'center',
+            });
+        doc
+            .fontSize(11)
+            .fillColor('black')
+            .text(headerText2, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition2,
+                align: 'center',
+            });
+        doc
+            .fontSize(10)
+            .fillColor('black')
+            .text(headerText3, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition3,
+                align: 'center',
+            });
+
+        doc
+            .fontSize(9)
+            .fillColor('black')
+            .text(headerText4, {
+                x: (doc.page.width - textWidth) / 2,
+                y: textYPosition4,
+                align: 'center',
+            });
+
+        doc.moveDown(4); // Move down to leave space for the header
+        
+        doc.fontSize(16).text(`${currentUserClassAdvisory}`, { align: 'center' });
+        doc.moveDown();
+        // Define table headers
+        const headers = ['LRN', 'Last Name', 'First Name', 'Middle Name', 'Gender', 'Transferee'];
+
+        // Map records to table rows
+        const rows = records.map(record => [
+            record.lrn,
+            record.lName,
+            record.fName,
+            record.mName,
+            record.gender,
+            record.transferee
+        ]);
+
+        // Set table data
+        doc.table({
+            headers,
+            rows,
+        });
+
+        doc.end(); // Finalize the PDF document
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
 
 module.exports = router;

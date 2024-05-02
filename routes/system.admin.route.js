@@ -72,11 +72,13 @@ router.get('/accounts', async (req, res, next) => {
 	const currentUserRole = req.user.role;
 	const users = await User.find();
 	const currentUser = req.user;
+	const profilePictureUrl = req.user.profilePicture;
 	res.render('system_admn/accounts', {
 		person,
 		users,
 		currentUserRole,
 		currentUser,
+		profilePictureUrl,
 	});
 });
 
@@ -923,10 +925,43 @@ router.get('/backup-archive', async (req, res, next) => {
 	}
 });
 
-router.post('/edit-users/:_id', async (req, res, next) => {
+const storage = multer.diskStorage({
+	destination: function (req, file, cb) {
+		cb(null, 'public/uploads/profile-picture'); 
+	},
+	filename: function (req, file, cb) {
+		cb(null, Date.now() + '-' + file.originalname);
+	},
+});
+
+const upload = multer({
+	storage: storage,
+	limits: {
+		fileSize: 1024 * 1024 * 2, 
+	},
+	fileFilter: function (req, file, cb) {
+		// Accept only image files
+		const filetypes = /jpeg|jpg|png/;
+		const mimetype = filetypes.test(file.mimetype);
+		const extname = filetypes.test(
+			path.extname(file.originalname).toLowerCase()
+		);
+
+		if (mimetype && extname) {
+			cb(null, true);
+		} else {
+			req.flash('error', 'Only JPEG, JPG, or PNG files are allowed');
+			cb(null, false);
+		}
+		
+	},
+}).single('profilePicture');
+
+router.post('/edit-users/:_id', upload, async (req, res, next) => {
 	try {
 		const userId = req.params._id;
 
+		const profilePicturePath = req.file ? req.file.path.replace('public', '') : req.user.profilePicture;
 		// Find the record by ID
 		const user = await User.findById(userId);
 
@@ -1052,6 +1087,7 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 		user.email = req.body.editEmail;
 		user.role = req.body.editRole;
 		user.classAdvisory = req.body.editClassAdvisory;
+		user.profilePicture = profilePicturePath
 
 		// Save the updated record
 		await user.save();
@@ -1065,6 +1101,7 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 		});
 		await historyLog.save();
 
+		const profilePicture = user.profilePicture;
 		// Redirect back to the records page
 		req.flash('success', 'Record updated successfully');
 		res.redirect('/systemAdmin/accounts');
@@ -1074,37 +1111,7 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 	}
 });
 
-const storage = multer.diskStorage({
-	destination: function (req, file, cb) {
-		cb(null, 'public/uploads/profile-picture'); 
-	},
-	filename: function (req, file, cb) {
-		cb(null, Date.now() + '-' + file.originalname);
-	},
-});
 
-const upload = multer({
-	storage: storage,
-	limits: {
-		fileSize: 1024 * 1024 * 2, 
-	},
-	fileFilter: function (req, file, cb) {
-		// Accept only image files
-		const filetypes = /jpeg|jpg|png/;
-		const mimetype = filetypes.test(file.mimetype);
-		const extname = filetypes.test(
-			path.extname(file.originalname).toLowerCase()
-		);
-
-		if (mimetype && extname) {
-			cb(null, true);
-		} else {
-			req.flash('error', 'Only JPEG, JPG, or PNG files are allowed');
-			cb(null, false);
-		}
-		
-	},
-}).single('profilePicture');
 
 router.post('/edit-profile/:id', upload, async (req, res) => {
 	try {

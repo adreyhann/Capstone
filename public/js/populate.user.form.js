@@ -1,12 +1,15 @@
-function populateUserForm(_id, lname, fname, role, classAdvisory, email) {
+function populateUserForm(_id, lname, fname, role, classAdvisory, email, profilePicture) {
     // Set the form action
     document.getElementById('editUserForm').setAttribute('action', `/systemAdmin/edit-users/${_id}`);
 
     // Set basic fields
+    
     document.getElementById('editLName').value = lname;
     document.getElementById('editFName').value = fname;
     document.getElementById('editEmail').value = email;
-
+    if (profilePicture) {
+        document.getElementById('profilePicturePreview').src = profilePicture; // Set profile picture preview
+    }
     
     var editRoleSelect = document.getElementById('editRole');
     var editClassAdvisorySelect = document.getElementById('editClassAdvisory');
@@ -27,6 +30,8 @@ function populateUserForm(_id, lname, fname, role, classAdvisory, email) {
         
     }
 }
+
+
 
 function disableOptions(selectElement, optionsToDisable) {
     for (var i = 0; i < selectElement.options.length; i++) {

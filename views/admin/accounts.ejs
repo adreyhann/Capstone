@@ -40,6 +40,7 @@
 		<script defer src="/js/tooltip.js"></script>
 		<script defer src="/js/spinner3.js"></script>
 		<script defer src="/js/disable.button.js"></script>
+		<script defer src="/js/previewProfilePicture.js"></script>
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 		<link rel="icon" type="image/x-icon" href="/img/logo.png" />
 		<title>Accounts</title>
@@ -212,10 +213,11 @@
 							<table
 								id="example"
 								class="table table-striped hover"
-								style="width: 100%; font-size: 15px;"
+								style="width: 100%; font-size: 14px;"
 							>
 								<thead class="table-info">
 									<tr>
+										<th>Photo</th>
 										<th>Last Name</th>
 										<th>First Name</th>
 										<th>Email</th>
@@ -230,6 +232,7 @@
 									currentUser._id.toString() && user.role !== 'System Admin') {
 									%>
 									<tr>
+										<td><img src="<%= user.profilePicture %>" alt="Profile Picture" style="width: 50px; height: 50px; border-radius: 50%; margin: 0;"></td>
 										<td><%= user.lname %></td>
 										<td><%= user.fname %></td>
 										<td><%= user.email %></td>
@@ -259,6 +262,7 @@
 
 								<tfoot class="table-info">
 									<tr>
+										<th>Photo</th>
 										<th>Last Name</th>
 										<th>First Name</th>
 										<th>Email</th>
@@ -292,7 +296,14 @@
 									></button>
 								</div>
 								<div class="modal-body">
-									<form id="editUserForm" method="post">
+									<form id="editUserForm" method="post" enctype="multipart/form-data">
+										<div class="col-md-2" style="position: relative;">
+											<label for="profilePicture" class="mb-3" style="cursor: pointer; position: relative;">
+												<img id="profilePicturePreview" src="<%= user.profilePicture %>/<%= user._id %>"style="width: 100px; height: 100px; margin-bottom: 10px; border-radius: 50%;" />
+												<input type="file" class="form-control" name="profilePicture" id="profilePicture" accept="image/*" onchange="previewProfilePicture(event)" style="display: none;" />
+												<span class="material-symbols-outlined edit-icon" style="position: absolute; top: 0; right: 0; background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 50%;">edit</span>
+											</label>
+										</div>
 										<div class="form-floating mb-3">
 											<input
 												type="text"
@@ -368,6 +379,7 @@
 												type="submit"
 												id="submitButton"
 												class="btn btn-success"
+												style="width: 100%"
 											>
 												<span
 													class="spinner-border spinner-border-sm d-none"
@@ -387,7 +399,7 @@
 		</div>
 		<script>
 			// JavaScript function to populate the edit form
-			function populateUserForm(_id, lname, fname, role, classAdvisory, email) {
+			function populateUserForm(_id, lname, fname, role, classAdvisory, email, profilePicture) {
 				document
 					.getElementById('editUserForm')
 					.setAttribute('action', `/admin/edit-users/${_id}`);
@@ -396,6 +408,7 @@
 				document.getElementById('editEmail').value = email;
 				document.getElementById('editRole').value = role;
 				document.getElementById('editClassAdvisory').value = classAdvisory;
+				document.getElementById('profilePicturePreview').src = profilePicture;
 			}
 		</script>
 	</body>

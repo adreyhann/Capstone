@@ -389,124 +389,103 @@ router.get('/addRecords', async (req, res, next) => {
 	res.render('admin/addRecords', { person });
 });
 
-const storage = multer.diskStorage({
-	destination: function (req, file, cb) {
-		cb(null, 'public/uploads');
-	},
-	filename: function (req, file, cb) {
-		cb(null, file.originalname);
-	},
-});
 
-const upload = multer({
-	storage: storage,
-	limits: { fileSize: 5 * 1024 * 1024 },
-	fileFilter: function (req, file, cb) {
-		if (file.mimetype === 'application/pdf') {
-			cb(null, true);
-		} else {
-			cb(new Error('Only PDF files are allowed!'), false);
-		}
-	},
-});
+// router.post('/submit-form', upload.array('pdfFile'), async (req, res, next) => {
+// 	try {
+// 		const { lrn, name, gender, transferee, gradeLevel } = req.body;
 
+// 		const files = req.files;
 
-router.post('/submit-form', upload.array('pdfFile'), async (req, res, next) => {
-	try {
-		const { lrn, name, gender, transferee, gradeLevel } = req.body;
+// 		if (files.length > 2) {
+// 			// Display a flash message for exceeding the maximum allowed files
+// 			req.flash('error', 'You can only upload up to 2 files.');
+// 			return res.redirect('/admin/addRecords'); // Redirect to the upload page or handle it as needed
+// 		}
 
-		const files = req.files;
+// 		const filePaths = files.map((file) => file.path);
 
-		if (files.length > 2) {
-			// Display a flash message for exceeding the maximum allowed files
-			req.flash('error', 'You can only upload up to 2 files.');
-			return res.redirect('/admin/addRecords'); // Redirect to the upload page or handle it as needed
-		}
+// 		if (!filePaths || filePaths.length === 0) {
+// 			req.flash(
+// 				'error',
+// 				'Uploading at least one file is required. Please select PDF files to upload.'
+// 			);
+// 			res.redirect('/admin/addRecords');
+// 			return;
+// 		}
 
-		const filePaths = files.map((file) => file.path);
+// 		console.log('Attempting to serve file:', filePaths);
 
-		if (!filePaths || filePaths.length === 0) {
-			req.flash(
-				'error',
-				'Uploading at least one file is required. Please select PDF files to upload.'
-			);
-			res.redirect('/admin/addRecords');
-			return;
-		}
+// 		const newRecord = new Records({
+// 			lrn: parseInt(lrn),
+// 			studentName: name,
+// 			gender: gender,
+// 			transferee: transferee,
+// 			gradeLevel: gradeLevel,
+// 			pdfFilePath: filePaths,
+// 		});
 
-		console.log('Attempting to serve file:', filePaths);
+// 		const savedRecord = await newRecord.save();
 
-		const newRecord = new Records({
-			lrn: parseInt(lrn),
-			studentName: name,
-			gender: gender,
-			transferee: transferee,
-			gradeLevel: gradeLevel,
-			pdfFilePath: filePaths,
-		});
+// 		req.flash('success', `${savedRecord.studentName} is succesfully saved`);
+// 		res.redirect('/admin/addRecords');
+// 		res.redirect(`/admin/view-files/${savedRecord._id}`);
+// 	} catch (error) {
+// 		if (
+// 			error.code === 11000 &&
+// 			error.keyPattern &&
+// 			error.keyPattern.lrn === 1
+// 		) {
+// 			req.flash('error', 'LRN already exists. Please enter a different LRN.');
+// 			res.redirect('/admin/addRecords');
+// 		} else {
+// 			next(error);
+// 		}
+// 	}
+// });
 
-		const savedRecord = await newRecord.save();
+// router.post(
+// 	'/addFile/:recordId',
+// 	upload.single('pdfFile'),
+// 	async (req, res, next) => {
+// 		try {
+// 			const recordId = req.params.recordId;
 
-		req.flash('success', `${savedRecord.studentName} is succesfully saved`);
-		res.redirect('/admin/addRecords');
-		res.redirect(`/admin/view-files/${savedRecord._id}`);
-	} catch (error) {
-		if (
-			error.code === 11000 &&
-			error.keyPattern &&
-			error.keyPattern.lrn === 1
-		) {
-			req.flash('error', 'LRN already exists. Please enter a different LRN.');
-			res.redirect('/admin/addRecords');
-		} else {
-			next(error);
-		}
-	}
-});
+// 			// Find the record by ID
+// 			const record = await Records.findById(recordId);
 
-router.post(
-	'/addFile/:recordId',
-	upload.single('pdfFile'),
-	async (req, res, next) => {
-		try {
-			const recordId = req.params.recordId;
+// 			if (!record) {
+// 				res.status(404).send('Record not found');
+// 				return;
+// 			}
 
-			// Find the record by ID
-			const record = await Records.findById(recordId);
+// 			// Check if a file was uploaded
+// 			if (req.file) {
+// 				// Check if the number of files is less than 2
+// 				if (record.pdfFilePath.length < 2) {
+// 					const newPdfPath = req.file.path;
 
-			if (!record) {
-				res.status(404).send('Record not found');
-				return;
-			}
+// 					// Update the existing record with the new file path
+// 					record.pdfFilePath.push(newPdfPath);
+// 					await record.save();
 
-			// Check if a file was uploaded
-			if (req.file) {
-				// Check if the number of files is less than 2
-				if (record.pdfFilePath.length < 2) {
-					const newPdfPath = req.file.path;
-
-					// Update the existing record with the new file path
-					record.pdfFilePath.push(newPdfPath);
-					await record.save();
-
-					// Redirect back to the view-files page
-					req.flash('success', 'Successfully uploaded');
-					res.redirect(`/admin/view-files/${recordId}`);
-				} else {
-					// Display a flash message for exceeding the maximum allowed files
-					req.flash('error', 'You can only upload up to 2 files.');
-					res.redirect(`/admin/view-files/${recordId}`);
-				}
-			} else {
-				req.flash('error', 'No file uploaded');
-				res.status(400).send('No file uploaded');
-			}
-		} catch (error) {
-			console.error('Error:', error);
-			next(error);
-		}
-	}
-);
+// 					// Redirect back to the view-files page
+// 					req.flash('success', 'Successfully uploaded');
+// 					res.redirect(`/admin/view-files/${recordId}`);
+// 				} else {
+// 					// Display a flash message for exceeding the maximum allowed files
+// 					req.flash('error', 'You can only upload up to 2 files.');
+// 					res.redirect(`/admin/view-files/${recordId}`);
+// 				}
+// 			} else {
+// 				req.flash('error', 'No file uploaded');
+// 				res.status(400).send('No file uploaded');
+// 			}
+// 		} catch (error) {
+// 			console.error('Error:', error);
+// 			next(error);
+// 		}
+// 	}
+// );
 
 router.post('/deleteFile/:recordId/:index', async (req, res, next) => {
 	try {
@@ -672,10 +651,43 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
     }
 });
 
-router.post('/edit-users/:_id', async (req, res, next) => {
+const storage = multer.diskStorage({
+	destination: function (req, file, cb) {
+		cb(null, 'public/uploads/profile-picture'); 
+	},
+	filename: function (req, file, cb) {
+		cb(null, Date.now() + '-' + file.originalname);
+	},
+});
+
+const upload = multer({
+	storage: storage,
+	limits: {
+		fileSize: 1024 * 1024 * 2, 
+	},
+	fileFilter: function (req, file, cb) {
+		// Accept only image files
+		const filetypes = /jpeg|jpg|png/;
+		const mimetype = filetypes.test(file.mimetype);
+		const extname = filetypes.test(
+			path.extname(file.originalname).toLowerCase()
+		);
+
+		if (mimetype && extname) {
+			cb(null, true);
+		} else {
+			req.flash('error', 'Only JPEG, JPG, or PNG files are allowed');
+			cb(null, false);
+		}
+		
+	},
+}).single('profilePicture');
+
+router.post('/edit-users/:_id', upload, async (req, res, next) => {
 	try {
 		const userId = req.params._id;
 
+		const profilePicturePath = req.file ? req.file.path.replace('public', '') : req.user.profilePicture;
 		// Find the record by ID
 		const user = await User.findById(userId);
 
@@ -754,6 +766,7 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 		user.role = req.body.editRole;
 		user.classAdvisory = req.body.editClassAdvisory;
 		user.email = req.body.editEmail;
+		user.profilePicture = profilePicturePath
 
 		// Save the updated record
 		await user.save();

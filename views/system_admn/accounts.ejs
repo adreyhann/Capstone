@@ -238,10 +238,11 @@
 							<table
 								id="example"
 								class="table table-striped hover"
-								style="width: 100%"
+								style="width: 100%; font-size: 14px;"
 							>
 								<thead class="table-info">
 									<tr>
+										<th>Picture</th>
 										<th>Last Name</th>
 										<th>First Name</th>
 										<th>Email</th>
@@ -255,6 +256,7 @@
 									<% users.forEach(user => { %> <% if (user._id.toString() !==
 									currentUser._id.toString()) { %>
 									<tr>
+										<td><img src="<%= user.profilePicture %>" alt="Profile Picture" style="width: 50px; height: 50px; border-radius: 50%; margin: 0;"></td>
 										<td><%= user.lname %></td>
 										<td><%= user.fname %></td>
 										<td><%= user.email %></td>
@@ -301,6 +303,7 @@
 
 								<tfoot class="table-info">
 									<tr>
+										<th>Picture</th>
 										<th>Last Name</th>
 										<th>First Name</th>
 										<th>Email</th>
@@ -341,7 +344,16 @@
 										id="editUserForm"
 										action="/systemAdmin/edit-users/<%= user._id %>"
 										method="post"
+										enctype="multipart/form-data"
 									>
+										<div class="col-md-2" style="position: relative;">
+											<label for="profilePicture" class="mb-3" style="cursor: pointer; position: relative;">
+												<img id="profilePicturePreview" src="<%= user.profilePicture %>/<%= user._id %>"style="width: 100px; height: 100px; margin-bottom: 10px; border-radius: 50%;" />
+												<input type="file" class="form-control" name="profilePicture" id="profilePicture" accept="image/*" onchange="previewProfilePicture(event)" style="display: none;" />
+												<span class="material-symbols-outlined edit-icon" style="position: absolute; top: 0; right: 0; background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 50%;">edit</span>
+											</label>
+										</div>
+
 										<div class="form-floating mb-3">
 											<input
 												type="text"

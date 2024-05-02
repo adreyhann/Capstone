@@ -344,36 +344,7 @@ router.get('/addRecords', async (req, res, next) => {
 	res.render('system_admn/addRecords', { person });
 });
 
-const storage = multer.diskStorage({
-	destination: function (req, file, cb) {
-		cb(null, 'public/uploads/profile-picture');
-	},
-	filename: function (req, file, cb) {
-		cb(null, Date.now() + '-' + file.originalname);
-	},
-});
 
-const upload = multer({
-	storage: storage,
-	limits: {
-		fileSize: 1024 * 1024 * 2,
-	},
-	fileFilter: function (req, file, cb) {
-		// Accept only image files
-		const filetypes = /jpeg|jpg|png/;
-		const mimetype = filetypes.test(file.mimetype);
-		const extname = filetypes.test(
-			path.extname(file.originalname).toLowerCase()
-		);
-
-		if (mimetype && extname) {
-			cb(null, true);
-		} else {
-			req.flash('error', 'Only JPEG, JPG, or PNG files are allowed');
-			cb(null, false);
-		}
-	},
-}).single('profilePicture');
 
 // router.post(
 // 	'/addFile/:recordId',
@@ -1103,11 +1074,46 @@ router.post('/edit-users/:_id', async (req, res, next) => {
 	}
 });
 
-router.post('/edit-profile/:id', async (req, res) => {
+const storage = multer.diskStorage({
+	destination: function (req, file, cb) {
+		cb(null, 'public/uploads/profile-picture'); 
+	},
+	filename: function (req, file, cb) {
+		cb(null, Date.now() + '-' + file.originalname);
+	},
+});
+
+const upload = multer({
+	storage: storage,
+	limits: {
+		fileSize: 1024 * 1024 * 2, 
+	},
+	fileFilter: function (req, file, cb) {
+		// Accept only image files
+		const filetypes = /jpeg|jpg|png/;
+		const mimetype = filetypes.test(file.mimetype);
+		const extname = filetypes.test(
+			path.extname(file.originalname).toLowerCase()
+		);
+
+		if (mimetype && extname) {
+			cb(null, true);
+		} else {
+			req.flash('error', 'Only JPEG, JPG, or PNG files are allowed');
+			cb(null, false);
+		}
+		
+	},
+}).single('profilePicture');
+
+router.post('/edit-profile/:id', upload, async (req, res) => {
 	try {
 		const userId = req.params.id;
 		const { editLName, editFName, editEmail, editRole, editClassAdvisory } =
 			req.body;
+
+		 // Check if the user uploaded a new profile picture
+		const profilePicturePath = req.file ? req.file.path.replace('public', '') : req.user.profilePicture;
 
 		// editRole is the new role being set for the user
 		const currentRole = req.user.role; // current user's role in req.user.role
@@ -1175,7 +1181,8 @@ router.post('/edit-profile/:id', async (req, res) => {
 				}
 			} catch (validationError) {
 				console.error(validationError);
-				return res.status(500).send('Error validating email');
+				req.flash('error', 'Error validating email.');
+				return res.redirect('/systemAdmin/profile');
 			}
 		}
 
@@ -1203,6 +1210,7 @@ router.post('/edit-profile/:id', async (req, res) => {
 			email: editEmail,
 			role: editRole,
 			classAdvisory: editClassAdvisory,
+            profilePicture: profilePicturePath,
 		});
 
 		req.flash('success', 'Profile updated successfully');

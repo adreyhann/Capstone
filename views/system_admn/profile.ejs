@@ -187,7 +187,7 @@
 					<hr />
 					<div class="card custom-card-2 border-0">
 						<div class="card-header bg-info border-0"></div>
-						<div class="card-body">
+						<div class="card-body" style="height: 464px; overflow-y: auto;">
 							<div class="container">
 								<div class="col m-0">
 									<div class="container">
@@ -200,6 +200,11 @@
 										<% } %>
 										<form action="">
 											<div class="mt-4 mb-2">
+												<div class="col-md-2" style="position: relative;">
+													<label class="mb-3" style="position: relative;">
+														<img src="<%= person.profilePicture %>" alt="Preview" style="width: 100px; height: 100px; margin-bottom: 10px; border-radius: 50%;" />
+													</label>
+												</div>
 												<label for="exampleInputEmail1" class="form-label"
 													>Email address</label
 												>
@@ -307,14 +312,14 @@
 									></button>
 								</div>
 								<div class="modal-body">
-									<form id="editUserForm" action="" method="post">
-										<!-- <div class="col-md-2" style="position: relative;">
+									<form id="editUserForm" action="" method="post" enctype="multipart/form-data">
+										<div class="col-md-2" style="position: relative;">
 											<label for="profilePicture" class="mb-3" style="cursor: pointer; position: relative;">
 												<img id="profilePicturePreview" src="<%= person.profilePicture %>" alt="Preview" style="width: 100px; height: 100px; margin-bottom: 10px; border-radius: 50%;" />
 												<input type="file" class="form-control" name="profilePicture" id="profilePicture" accept="image/*" onchange="previewProfilePicture(event)" style="display: none;" />
 												<span class="material-symbols-outlined edit-icon" style="position: absolute; top: 0; right: 0; background-color: rgba(255, 255, 255, 0.8); padding: 5px; border-radius: 50%;">edit</span>
 											</label>
-										</div> -->
+										</div>
 										<div class="form-floating mb-3">
 											<input
 												type="text"
@@ -462,7 +467,7 @@
 		</div>
 		<script>
 			// JavaScript function to populate the edit form
-			function populateUserForm(_id, lname, fname, role, classAdvisory, email) {
+			function populateUserForm(_id, lname, fname, role, classAdvisory, email, profilePicture) {
 				document
 					.getElementById('editUserForm')
 					.setAttribute('action', `/systemAdmin/edit-profile/${_id}`);
@@ -471,6 +476,9 @@
 				document.getElementById('editEmail').value = email;
 				document.getElementById('editRole').value = role;
 				document.getElementById('editClassAdvisory').value = classAdvisory;
+        		if (profilePicture) {
+					document.getElementById('profilePicturePreview').src = profilePicture; // Set profile picture preview
+				}
 			}
 		</script>
 	</body>

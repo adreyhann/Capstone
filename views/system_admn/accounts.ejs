@@ -46,6 +46,7 @@
 		<script defer src="/js/spinner3.js"></script>
 		<script defer src="/js/previewProfilePicture.js"></script>
 		<script defer src="/js/edit.button.js"></script>
+		<script defer src="/js/img.preview.js"></script>
 		<link rel="icon" type="image/x-icon" href="/img/logo.png" />
 		<link rel="stylesheet" type="text/css" href="/css/styles.css" />
 
@@ -209,7 +210,7 @@
 					<div class="container w-100 position-relative">
 						<% try { %> <%- include('../credentials/flash-message.ejs') %> <% }
 						catch (error) { %>
-						<div>Error: <%= error.message %></div>
+						<div style="font-size: 13px; margin-bottom: 0;">Error: <%= error.message %></div>
 						<% } %>
 						<a class="btn btn-success btn-sm my-2" href="/auth/register"
 							><span
@@ -238,11 +239,11 @@
 							<table
 								id="example"
 								class="table table-striped hover"
-								style="width: 100%; font-size: 14px;"
+								style="width: 100%; font-size: 13px;"
 							>
 								<thead class="table-info">
 									<tr>
-										<th>Picture</th>
+										<th>Photo</th>
 										<th>Last Name</th>
 										<th>First Name</th>
 										<th>Email</th>
@@ -256,7 +257,12 @@
 									<% users.forEach(user => { %> <% if (user._id.toString() !==
 									currentUser._id.toString()) { %>
 									<tr>
-										<td><img src="<%= user.profilePicture %>" alt="Profile Picture" style="width: 50px; height: 50px; border-radius: 50%; margin: 0;"></td>
+										<td>
+											<img src="<%= user.profilePicture %>" alt="Profile Picture" class="clickable-image" 
+												style="width: 50px; height: 50px; border-radius: 50%; margin: 0; cursor: pointer;"
+												data-profile-picture="<%= user.profilePicture %>"
+												onclick="openImagePreview(this)">
+										</td>
 										<td><%= user.lname %></td>
 										<td><%= user.fname %></td>
 										<td><%= user.email %></td>
@@ -273,6 +279,7 @@
 											>
 												<span
 													class="material-symbols-outlined"
+													style="font-size: 21px;"
 													data-bs-toggle="tooltip"
 													data-bs-placement="top"
 													data-bs-title="Edit"
@@ -289,6 +296,7 @@
 											>
 												<span
 													class="material-symbols-outlined"
+													style="font-size: 21px;"
 													data-bs-toggle="tooltip"
 													data-bs-placement="top"
 													data-bs-title="Deactivate user"
@@ -303,7 +311,7 @@
 
 								<tfoot class="table-info">
 									<tr>
-										<th>Picture</th>
+										<th>Photo</th>
 										<th>Last Name</th>
 										<th>First Name</th>
 										<th>Email</th>
@@ -447,6 +455,10 @@
 					</div>
 				</div>
 			</div>
+		</div>
+		<div id="imagePreviewCard" class="image-preview-card">
+			<span class="close" onclick="closeImagePreview()">&times;</span>
+			<img src="" id="previewedImage" class="preview-image">
 		</div>
 	</body>
 </html>

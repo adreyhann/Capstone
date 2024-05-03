@@ -23,6 +23,7 @@
         <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script defer src="/js/charts.js"></script>
         <script defer src="/js/toggler.js"></script>
+		<script defer src="/js/img.preview.js"></script>
         <link rel="stylesheet" type="text/css" href="/css/styles.css">
 		<link rel="icon" type="image/x-icon" href="/img/logo.png">
 		<title>Profile</title>
@@ -162,7 +163,10 @@
 											<div class="mt-4 mb-2">
 												<div class="col-md-2" style="position: relative;">
 													<label class="mb-3" style="position: relative;">
-														<img src="<%= person.profilePicture %>" alt="Preview" style="width: 100px; height: 100px; margin-bottom: 10px; border-radius: 50%;" />
+														<img src="<%= user.profilePicture %>" alt="Profile Picture" class="clickable-image" 
+														style="width: 100px; height: 100px; border-radius: 50%; margin: 0; cursor: pointer;"
+														data-profile-picture="<%= user.profilePicture %>"
+														onclick="openImagePreview(this)">
 													</label>
 												</div>
 												<label for="exampleInputEmail1" class="form-label"
@@ -236,6 +240,11 @@
 					</div>
 				</div>
 			</div>
+		</div>
+		
+		<div id="imagePreviewCard" class="image-preview-card">
+			<span class="close" onclick="closeImagePreview()">&times;</span>
+			<img src="" id="previewedImage" class="preview-image">
 		</div>
 	</body>
 </html>

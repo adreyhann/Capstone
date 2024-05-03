@@ -115,7 +115,7 @@ mongoose
 	})
 	.catch((err) => console.log(err.message));
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 function ensureAuthenticated(req, res, next) {
 	if (req.isAuthenticated()) {

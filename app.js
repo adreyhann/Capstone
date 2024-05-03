@@ -11,7 +11,6 @@ const MongoClient = require('mongodb').MongoClient;
 const path = require('path');
 const cors = require('cors');
 
-
 const app = express();
 
 app.use(cors());
@@ -25,8 +24,6 @@ app.use('/css', express.static(__dirname + '/public/css'));
 app.use('/img', express.static(__dirname + '/public/img'));
 app.use('/js', express.static(__dirname + '/public/js'));
 app.use('/uploads', express.static(__dirname + '/public/uploads'));
-
-
 
 const client = new MongoClient(process.env.MONGO_URI);
 const mongoStore = new MongoStore({ client });
@@ -64,7 +61,6 @@ app.use((req, res, next) => {
 	next();
 });
 
-
 app.use('/', require('./routes/index.route'));
 app.use('/auth', require('./routes/auth-routes'));
 app.use(
@@ -91,24 +87,23 @@ app.use((req, res, next) => {
 	next(createHttpError.NotFound());
 });
 
-// app.use((error, req, res, next) => {
-// 	error.status = error.status || 500;
-	
-//     if (error.status === 404) {
-//         res.status(404).render('error_404', { error: error.message });
-//     } else if (error.status === 500) {
-//         res.status(500).render('error_500', { error: 'Internal Server Error' });
-//     } else {
-//         res.status(error.status).render('error_40x', { error: error.message });
-//     }
-// });
+app.use((error, req, res, next) => {
+	error.status = error.status || 500;
+
+    if (error.status === 404) {
+        res.status(404).render('error_404', { error: error.message });
+    } else if (error.status === 500) {
+        res.status(500).render('error_500', { error: 'Internal Server Error' });
+    } else {
+        res.status(error.status).render('error_40x', { error: error.message });
+    }
+});
 
 app.use((error, req, res, next) => {
 	error.status = error.status || 500;
 	res.status(error.status);
 	res.json({ error: error.message }); // Send the error message as JSON
-  });
-  
+});
 
 mongoose
 	.connect(process.env.MONGO_URI, {

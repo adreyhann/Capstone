@@ -123,7 +123,7 @@ function ensureAuthenticated(req, res, next) {
 	} else {
 		res.redirect('/auth/login');
 	}
-}
+} 
 
 function ensureSystemAdmin(req, res, next) {
 	if (req.user && req.user.role === 'System Admin') {

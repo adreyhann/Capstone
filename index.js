@@ -148,3 +148,5 @@ function ensureClassAdvisor(req, res, next) {
 		res.status(403).render('error_403');
 	}
 }
+
+module.exports = app;

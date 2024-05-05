@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const session = require('express-session');
 const connectFlash = require('connect-flash');
-const passport = require('passport');
+const passport = require('passport'); 
 const MongoStore = require('connect-mongo');
 const MongoClient = require('mongodb').MongoClient;
 const path = require('path');
@@ -17,7 +17,7 @@ app.use(cors());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(morgan('dev'));
-app.set('view engine', 'ejs');
+app.set('view engine', 'ejs'); 
 
 app.use(express.static('public'));
 app.use('/css', express.static(__dirname + '/public/css'));

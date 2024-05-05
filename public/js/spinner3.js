@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	form.addEventListener('submit', function () {
 		submitButton.innerHTML =
-			'<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+			'<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Updating...';
 		submitButton.disabled = true;
 	});
 });

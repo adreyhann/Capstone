@@ -2194,80 +2194,61 @@ router.get('/reports2', async (req, res, next) => {
 
 router.get('/records-pdf', async (req, res, next) => {
     try {
-        // Fetch records from the database
         const records = await Records.find().sort({ lName: 1 });
+        const PDFDocument = require('pdfkit-table');
+        const fs = require('fs');
 
-        const PDFDocument = require('pdfkit-table'); // Import pdfkit-table module
-        const fs = require('fs'); // Import fs module
-
-        const doc = new PDFDocument({ margin: 30, size: 'A4' }); // Initialize PDFDocument
-
-        // Set response header for content type
+        const doc = new PDFDocument({ margin: 30, size: 'A4' });
         res.setHeader('Content-Type', 'application/pdf');
-
-        // Set custom file name
         const fileName = 'Records Report.pdf';
         res.setHeader('Content-Disposition', `inline; filename=${fileName}`);
+        doc.pipe(res);
 
         // Load the logo images
         const leftLogoData = fs.readFileSync('public/img/logo.png');
         const rightLogoData = fs.readFileSync('public/img/depedlogo.png');
 
-        doc.pipe(res); // Pipe the PDF directly to the response
+        // Function to add header
+        function addHeader() {
+            doc.image(leftLogoData, { x: 50, y: 28, width: 50, height: 50 });
+            doc.image(rightLogoData, { x: doc.page.width - 100, y: 30, width: 50, height: 50 });
 
-        // Add left logo
-        doc.image(leftLogoData, { x: 50, y: 28, width: 50, height: 50 });
+            const headerText1 = 'Bethany Christian Academy';
+            const headerText2 = 'Maitim 2nd East, Tagaytay City';
+            const headerText3 = 'bethaychristian2002@yahoo.com';
+            const headerText4 = '09338557850';
 
-        // Add right logo
-        doc.image(rightLogoData, { x: doc.page.width - 100, y: 30, width: 50, height: 50 });
+            const textWidth = doc.widthOfString(headerText1);
+            const textYPosition1 = 50;
+            const textYPosition2 = textYPosition1 + 20;
+            const textYPosition3 = textYPosition2 + 20;
+            const textYPosition4 = textYPosition3 + 20;
 
-        // Add text lines in the middle
-        const headerText1 = 'Bethany Christian Academy';
-        const headerText2 = 'Maitim 2nd East, Tagaytay City';
-        const headerText3 = 'bethaychristian2002@yahoo.com';
-        const headerText4 = '09338557850';
-
-        const textWidth = doc.widthOfString(headerText1);
-        const textYPosition1 = 50;
-        const textYPosition2 = textYPosition1 + 20;
-        const textYPosition3 = textYPosition2 + 20;
-        const textYPosition4 = textYPosition3 + 20;
-
-        doc
-            .fontSize(14)
-            .fillColor('black')
-            .text(headerText1, {
+            doc.fontSize(14).fillColor('black').text(headerText1, {
                 x: (doc.page.width - textWidth) / 2,
                 y: textYPosition1,
                 align: 'center',
             });
-        doc
-            .fontSize(11)
-            .fillColor('black')
-            .text(headerText2, {
+            doc.fontSize(11).fillColor('black').text(headerText2, {
                 x: (doc.page.width - textWidth) / 2,
                 y: textYPosition2,
                 align: 'center',
             });
-        doc
-            .fontSize(10)
-            .fillColor('black')
-            .text(headerText3, {
+            doc.fontSize(10).fillColor('black').text(headerText3, {
                 x: (doc.page.width - textWidth) / 2,
                 y: textYPosition3,
                 align: 'center',
             });
-
-        doc
-            .fontSize(9)
-            .fillColor('black')
-            .text(headerText4, {
+            doc.fontSize(9).fillColor('black').text(headerText4, {
                 x: (doc.page.width - textWidth) / 2,
                 y: textYPosition4,
                 align: 'center',
             });
 
-        doc.moveDown(4); // Move down to leave space for the header
+            doc.moveDown(6); // Move down to leave space for the header
+        }
+
+        addHeader(); // Call the function to add the header
 
         let startY = doc.y + 20; // Set the starting y-coordinate for the tables
 
@@ -2283,9 +2264,7 @@ router.get('/records-pdf', async (req, res, next) => {
         };
 
         // Sort records by grade level
-        records.sort((a, b) => {
-            return gradeLevels[a.gradeLevel] - gradeLevels[b.gradeLevel];
-        });
+        records.sort((a, b) => gradeLevels[a.gradeLevel] - gradeLevels[b.gradeLevel]);
 
         // Group records by grade level
         const recordsByGradeLevel = {};
@@ -2301,7 +2280,8 @@ router.get('/records-pdf', async (req, res, next) => {
             // Move to the next page if the current table doesn't fit on the current page
             if (doc.y > doc.page.height - 100) {
                 doc.addPage();
-                startY = 50;
+                addHeader(); // Add header on the new page
+                startY = 50; // Reset startY for the new page
             }
 
             // Add title for the grade level
@@ -2339,6 +2319,7 @@ router.get('/records-pdf', async (req, res, next) => {
         next(error);
     }
 });
+
 
 router.get('/records-pdf/:gradeLevel', async (req, res, next) => {
     try {

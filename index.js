@@ -117,7 +117,7 @@ mongoose
 
 const PORT = process.env.PORT || 4000;
 
-
+module.exports = app;
 
 function ensureAuthenticated(req, res, next) {
 	if (req.isAuthenticated()) {

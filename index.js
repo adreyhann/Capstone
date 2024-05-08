@@ -35,7 +35,7 @@ app.use(
 		store: mongoStore,
 		saveUninitialized: false,
 		cookie: {
-			// secure: true ->only in https server
+			// secure: true ->only in https server 
 			httpOnly: true,
 		},
 	})

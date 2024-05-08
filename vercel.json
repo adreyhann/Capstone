@@ -1,7 +1,7 @@
 {
     "headers": [
       {
-        "source": "index.js",
+        "source": "./index.js",
         "headers": [
           {
             "key": "Cache-Control",

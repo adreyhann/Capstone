@@ -17,7 +17,7 @@ router.get('/dashboard', async (req, res, next) => {
 	const records = await Records.find();
 	const archives = await Archives.find();
 	const events = await Event.find().sort({ date: 1 });
-	res.render('class-advisor/dashboard', { person, records, archives, events });
+	res.render('class-advisor/Dashboard', { person, records, archives, events });
 });
 
 // Endpoint to get events

@@ -365,7 +365,7 @@ router.post(
 
 		switch (userRole) {
 			case 'System Admin':
-				res.redirect('/systemAdmin/dashboard');
+				res.redirect('/systemAdmin/Dashboard');
 				break;
 			case 'Class Advisor':
 				res.redirect('/classAdvisor/dashboard');

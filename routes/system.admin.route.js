@@ -57,7 +57,7 @@ router.get('/dashboard', async (req, res, next) => {
 	const users = await User.find();
 	const records = await Records.find();
 	const archives = await Archives.find();
-	res.render('system_admn/dashboard', {
+	res.render('system_admn/Dashboard', {
 		person,
 		users,
 		records,

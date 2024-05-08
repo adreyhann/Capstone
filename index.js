@@ -18,6 +18,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(morgan('dev'));
 app.set('views', path.join(__dirname, 'views'));
+app.engine('ejs', require('ejs').renderFile);
 app.set('view engine', 'ejs'); 
 
 app.use(express.static('public'));

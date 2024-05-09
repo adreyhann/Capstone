@@ -25,7 +25,7 @@ function generateRandomColors(count) {
     return colors;
 }
 
-// Function to update the chart with record counts
+// Function to update the chart with record counts ---- stop here
 async function updateChart() {
     try {
         const recordCounts = await fetchRecordCounts();

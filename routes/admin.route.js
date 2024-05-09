@@ -341,19 +341,19 @@ router.delete('/events/:date/:eventName', async (req, res) => {
 	}
 });
 
-router.get('/reports', async (req, res, next) => {
-	try {
-		const person = req.user;
+// router.get('/reports', async (req, res, next) => {
+// 	try {
+// 		const person = req.user;
 
-		// Fetch history logs from the database
-		const activity = await Activity.find({}).populate();
+// 		// Fetch history logs from the database
+// 		const activity = await Activity.find({}).populate();
 
-		res.render('admin/reports', { person, activity });
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
-});
+// 		res.render('admin/reports', { person, activity });
+// 	} catch (error) {
+// 		console.error('Error:', error);
+// 		next(error);
+// 	}
+// });
 
 router.get('/profile', async (req, res, next) => {
 	const person = req.user;

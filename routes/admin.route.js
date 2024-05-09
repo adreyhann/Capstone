@@ -360,19 +360,19 @@ router.get('/profile', async (req, res, next) => {
 	res.render('admin/profile', { person });
 });
 
-router.get('/historyLogs', async (req, res, next) => {
-	try {
-		const person = req.user;
+// router.get('/historyLogs', async (req, res, next) => {
+// 	try {
+// 		const person = req.user;
 
-		// Fetch history logs from the database
-		const historyLogs = await History.find().populate();
+// 		// Fetch history logs from the database
+// 		const historyLogs = await History.find().populate();
 
-		res.render('admin/history-logs', { person, historyLogs });
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
-});
+// 		res.render('admin/history-logs', { person, historyLogs });
+// 	} catch (error) {
+// 		console.error('Error:', error);
+// 		next(error);
+// 	}
+// });
 
 router.get('/users', async (req, res, next) => {
 	try {

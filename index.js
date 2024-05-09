@@ -37,7 +37,7 @@ app.use(
 		store: mongoStore,
 		saveUninitialized: false,
 		cookie: {
-			secure: true, 
+			// secure: true, 
 			httpOnly: true,
 		},
 	})
@@ -89,18 +89,18 @@ app.use((req, res, next) => {
 	next(createHttpError.NotFound());
 });
 
-// app.use((error, req, res, next) => {
-// 	error.status = error.status || 500;
+app.use((error, req, res, next) => {
+	error.status = error.status || 500;
 
-//     if (error.status === 404) {
-//         res.status(404).render('error_404', { error: error.message });
-//     } else if (error.status === 500) {
-//         res.status(500).render('error_500', { error: 'Internal Server Error' });
-//     } else {
-//         res.status(error.status).render('error_40x', { error: error.message });
-//     }
-// });
-
+    if (error.status === 404) {
+        res.status(404).render('error_404', { error: error.message });
+    } else if (error.status === 500) {
+        res.status(500).render('error_500', { error: 'Internal Server Error' });
+    } else {
+        res.status(error.status).render('error_40x', { error: error.message });
+    }
+});
+ 
 app.use((error, req, res, next) => {
 	error.status = error.status || 500;
 	res.status(error.status);

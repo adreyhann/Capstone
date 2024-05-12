@@ -19,6 +19,7 @@ const RestoredRecordsList = require('../models/restored.records.table.model');
 const RestoredRecordsCards = require('../models/restored.records.model');
 const archiver = require('archiver');
 const nodemailer = require('nodemailer');
+const { getStorage, ref, uploadBytes, getDownloadURL } = require("firebase/storage");
 const { title } = require('process');
 require('dotenv').config();
 
@@ -925,45 +926,50 @@ router.get('/backup-archive', async (req, res, next) => {
 	}
 });
 
-const storage = multer.diskStorage({
-	destination: function (req, file, cb) {
-		cb(null, 'public/uploads/profile-picture'); 
-	},
-	filename: function (req, file, cb) {
-		cb(null, Date.now() + '-' + file.originalname);
-	},
-});
+const storage = getStorage();
+const storageConfig = multer.memoryStorage();
 
 const upload = multer({
-	storage: storage,
+	storage: storageConfig,
 	limits: {
-		fileSize: 1024 * 1024 * 2, 
+	  fileSize: 1024 * 1024 * 2, // 2MB file size limit
 	},
 	fileFilter: function (req, file, cb) {
-		// Accept only image files
-		const filetypes = /jpeg|jpg|png/;
-		const mimetype = filetypes.test(file.mimetype);
-		const extname = filetypes.test(
-			path.extname(file.originalname).toLowerCase()
-		);
-
-		if (mimetype && extname) {
-			cb(null, true);
-		} else {
-			req.flash('error', 'Only JPEG, JPG, or PNG files are allowed');
-			cb(null, false);
-		}
-		
+	  // Accept only image files
+	  const filetypes = /jpeg|jpg|png/;
+	  const mimetype = filetypes.test(file.mimetype);
+	  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  
+	  if (mimetype && extname) {
+		cb(null, true);
+	  } else {
+		req.flash('error', 'Only JPEG, JPG, or PNG files are allowed');
+		cb(null, false);
+	  }
 	},
-}).single('profilePicture');
+  }).single('profilePicture');
+
+  // Function to upload profile picture to Firebase Storage
+  async function uploadProfilePicture(file) {
+    const storageRef = ref(storage, `profile-picture/${file.originalname}`);
+    const snapshot = await uploadBytes(storageRef, file.buffer);
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    return downloadURL;
+}
 
 router.post('/edit-users/:_id', upload, async (req, res, next) => {
 	try {
 		const userId = req.params._id;
 
-		const profilePicturePath = req.file ? req.file.path.replace('public', '') : req.user.profilePicture;
+		
 		// Find the record by ID
 		const user = await User.findById(userId);
+		let profilePicturePath;
+        if (req.file) {
+            profilePicturePath = await uploadProfilePicture(req.file);
+        } else {
+            profilePicturePath = user.profilePicture; // Use existing profile picture if no new one uploaded
+        }
 
 		if (!user) {
 			res.status(404).send('Record not found');
@@ -1119,15 +1125,11 @@ router.post('/edit-profile/:id', upload, async (req, res) => {
 		const { editLName, editFName, editEmail, editRole, editClassAdvisory } =
 			req.body;
 
-		 // Check if the user uploaded a new profile picture
-		const profilePicturePath = req.file ? req.file.path.replace('public', '') : req.user.profilePicture;
+		const profilePicturePath = req.file ? await uploadProfilePicture(req.file) : user.profilePicture;
 
-		// editRole is the new role being set for the user
-		const currentRole = req.user.role; // current user's role in req.user.role
+		const currentRole = req.user.role; 
 
-		// Check if the user is changing the role to something other than the current role
 		if (editRole !== currentRole) {
-			// If the current role is "System Admin" and you are the only one, prevent the role change
 			if (currentRole === 'System Admin') {
 				const systemAdminCount = await User.countDocuments({
 					role: 'System Admin',
@@ -1142,14 +1144,11 @@ router.post('/edit-profile/:id', upload, async (req, res) => {
 				}
 			}
 
-			// Check if the user is changing the role to "Admin"
 			if (editRole === 'Admin') {
-				// Count the number of users with the role "Admin"
 				const adminCount = await User.countDocuments({
 					role: 'Admin',
 				});
 
-				// If there is already a user with the "Admin" role, prevent the role change
 				if (adminCount > 0) {
 					req.flash(
 						'error',

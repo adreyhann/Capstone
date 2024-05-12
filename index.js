@@ -10,7 +10,7 @@ const MongoStore = require('connect-mongo');
 const MongoClient = require('mongodb').MongoClient;
 const path = require('path');
 const cors = require('cors');
-
+require("./firebaseConfig");
 const app = express();
 
 app.use(cors());

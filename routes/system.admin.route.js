@@ -957,41 +957,22 @@ async function uploadProfilePicture(file) {
 }
 
 router.post('/edit-users/:_id', upload, async (req, res, next) => {
-	try {
-		const userId = req.params._id;
-
-		const user = await User.findById(userId);
-		if (!user) {
-			return redirectWithError(
-				res,
-				'/systemAdmin/accounts',
-				'Record not found'
-			);
-		}
-
-		const profilePicturePath = req.file
-			? await uploadProfilePicture(req.file)
-			: user.profilePicture;
-
-		const error = await validateEdit(req, user);
-		if (error) {
-			return redirectWithError(res, '/systemAdmin/accounts', error);
-		}
-
-		const changes = generateChanges(user, req.body);
-
-		updateUser(user, req.body, profilePicturePath);
-
-		await user.save();
-
-		await logHistory(req.user, user, changes);
-
-		req.flash('success', 'Record updated successfully');
-		res.redirect('/systemAdmin/accounts');
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
+    try {
+        const userId = req.params._id;
+        const user = await User.findById(userId);
+        if (!user) return redirectWithError(res, '/systemAdmin/accounts', 'Record not found');
+        const profilePicturePath = req.file ? await uploadProfilePicture(req.file) : user.profilePicture;
+        const error = await validateEdit(req, user);
+        if (error) return redirectWithError(res, '/systemAdmin/accounts', error);
+        updateUser(user, req.body, profilePicturePath);
+        await user.save();
+        await logHistory(req.user, user, generateChanges(user, req.body));
+        req.flash('success', 'Record updated successfully');
+        res.redirect('/systemAdmin/accounts');
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
 
 function redirectWithError(res, url, errorMessage) {

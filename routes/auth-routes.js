@@ -10,6 +10,12 @@ const nodemailer = require('nodemailer');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const {
+	getStorage,
+	ref,
+	uploadBytes,
+	getDownloadURL,
+} = require('firebase/storage');
 require('dotenv').config();
 const crypto = require('crypto');
 
@@ -40,20 +46,13 @@ const transporter = nodemailer.createTransport({
 	},
 });
 
-// Define storage for the uploaded files
-const storage = multer.diskStorage({
-	destination: function (req, file, cb) {
-		cb(null, 'public/uploads/profile-picture'); 
-	},
-	filename: function (req, file, cb) {
-		cb(null, Date.now() + '-' + file.originalname);
-	},
-});
+const storage = getStorage();
+const storageConfig = multer.memoryStorage();
 
 const upload = multer({
-	storage: storage,
+	storage: storageConfig,
 	limits: {
-		fileSize: 1024 * 1024 * 2, 
+		fileSize: 1024 * 1024 * 2, // 2MB file size limit
 	},
 	fileFilter: function (req, file, cb) {
 		// Accept only image files
@@ -69,9 +68,15 @@ const upload = multer({
 			req.flash('error', 'Only JPEG, JPG, or PNG files are allowed');
 			cb(null, false);
 		}
-		
 	},
 }).single('profilePicture');
+
+async function uploadProfilePicture(file) {
+	const storageRef = ref(storage, `profile-picture/${file.originalname}`);
+	const snapshot = await uploadBytes(storageRef, file.buffer);
+	const downloadURL = await getDownloadURL(snapshot.ref);
+	return downloadURL;
+}
 
 router.post(
 	'/register',
@@ -261,8 +266,9 @@ router.post(
 				return res.redirect('/auth/register');
 			}
 
-			const profilePicturePath = req.file ? req.file.path.replace('public', '') : '/img/default-img.jpg';
-
+			const profilePicturePath = req.file
+			? await uploadProfilePicture(req.file)
+			: user.profilePicture;
 
 			const user = new User({
 				...req.body,

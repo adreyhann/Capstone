@@ -2498,48 +2498,5 @@ router.get('/calendar2', async (req, res, next) => {
 	}
 });
 
-// Delete an event
-// router.delete('/events/:id', async (req, res) => {
-//     try {
-//         const { id } = req.params;
-//         await Event.findByIdAndDelete(id);
-//         res.json({ message: 'Event deleted' });
-//     } catch (error) {
-//         res.status(400).json({ message: error.message });
-//     }
-// });
-// // Create a new event
-// router.post('/events', async (req, res) => {
-//     try {
-//         const { date, eventName } = req.body;
-//         const event = new Event({ date, eventName });
-//         await event.save();
-//         res.status(201).json(event);
-//     } catch (error) {
-//         res.status(400).json({ message: error.message });
-//     }
-// });
-
-// // Get all events
-// router.get('/events', async (req, res) => {
-//     try {
-//         const events = await Event.find();
-//         res.json(events);
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// });
-
-// // Update an event
-// router.put('/events/:id', async (req, res) => {
-//     try {
-//         const { id } = req.params;
-//         const { date, eventName } = req.body;
-//         const updatedEvent = await Event.findByIdAndUpdate(id, { date, eventName }, { new: true });
-//         res.json(updatedEvent);
-//     } catch (error) {
-//         res.status(400).json({ message: error.message });
-//     }
-// });
 
 module.exports = router;

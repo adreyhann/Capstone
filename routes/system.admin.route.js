@@ -957,163 +957,144 @@ async function uploadProfilePicture(file) {
 }
 
 router.post('/edit-users/:_id', upload, async (req, res, next) => {
-	try {
-		const userId = req.params._id;
+    try {
+        const userId = req.params._id;
 
-		// Find the record by ID
-		const user = await User.findById(userId);
-		let profilePicturePath;
-		if (req.file) {
-			profilePicturePath = await uploadProfilePicture(req.file);
-		} else {
-			profilePicturePath = user.profilePicture; // Use existing profile picture if no new one uploaded
-		}
+        const user = await User.findById(userId);
+        if (!user) {
+            return redirectWithError(res, '/systemAdmin/accounts', 'Record not found');
+        }
 
-		if (!user) {
-			res.status(404).send('Record not found');
-			return;
-		}
+        const profilePicturePath = req.file ? await uploadProfilePicture(req.file) : user.profilePicture;
 
-		const existingUserWithSameEmail = await User.findOne({
-			email: req.body.editEmail,
-			_id: { $ne: userId },
-		});
+        const error = await validateEdit(req, user);
+        if (error) {
+            return redirectWithError(res, '/systemAdmin/accounts', error);
+        }
 
-		if (existingUserWithSameEmail) {
-			req.flash('error', 'Another user with the same email already exists.');
-			return res.redirect('/systemAdmin/accounts');
-		}
+        const changes = generateChanges(user, req.body);
 
-		const inactiveUserWithEmail = await InactiveUser.findOne({
-			email: req.body.editEmail,
-		});
+        updateUser(user, req.body, profilePicturePath);
 
-		if (inactiveUserWithEmail) {
-			req.flash(
-				'error',
-				'Cannot use a deactivated email. Please choose another one.'
-			);
-			return res.redirect('/systemAdmin/accounts');
-		}
+        await user.save();
 
-		try {
-			const isEmailValid = await validateEmail(req.body.editEmail);
+        await logHistory(req.user, user, changes);
 
-			if (!isEmailValid) {
-				req.flash('error', 'Invalid email! Please enter a valid email.');
-				return res.redirect('/systemAdmin/accounts');
-			}
-		} catch (validationError) {
-			console.error(validationError);
-			req.flash('error', 'Error validating email. Please try again later.');
-			return res.redirect('/systemAdmin/accounts');
-		}
-
-		if (req.body.editRole === 'System Admin') {
-			const systemAdminCount = await User.countDocuments({
-				role: 'System Admin',
-				_id: { $ne: userId },
-			});
-
-			if (systemAdminCount >= 2) {
-				req.flash('error', 'Only two users can have the role "System Admin".');
-				return res.redirect('/systemAdmin/accounts');
-			}
-		}
-
-		if (req.body.editRole === 'Admin') {
-			const existingAdmin = await User.findOne({
-				role: 'Admin',
-				_id: { $ne: userId },
-			});
-
-			if (existingAdmin) {
-				req.flash('error', 'Only one user can have the role "Admin".');
-				return res.redirect('/systemAdmin/accounts');
-			}
-		}
-
-		if (
-			req.body.editRole === 'Class Advisor' &&
-			req.body.editClassAdvisory === 'None'
-		) {
-			req.flash('error', 'Invalid selection! Please choose a class advisory.');
-			return res.redirect('/systemAdmin/accounts');
-		}
-
-		if (req.body.editClassAdvisory !== 'None') {
-			const existingUserWithSameClassAdvisory = await User.findOne({
-				classAdvisory: req.body.editClassAdvisory,
-				_id: { $ne: userId },
-			});
-
-			if (existingUserWithSameClassAdvisory) {
-				req.flash(
-					'error',
-					'Another user with the same class advisory already exists.'
-				);
-				return res.redirect('/systemAdmin/accounts');
-			}
-		}
-
-		if (req.body.editRole === 'System Admin' || req.body.editRole === 'Admin') {
-			if (req.body.editClassAdvisory !== 'None') {
-				req.flash('error', 'Invalid Selection');
-				return res.redirect('/systemAdmin/accounts');
-			}
-		}
-
-		const changes = [];
-		if (user.lname !== req.body.editLName) {
-			changes.push(
-				`Last name changed from ${user.lname} to ${req.body.editLName}`
-			);
-		}
-		if (user.fname !== req.body.editFName) {
-			changes.push(
-				`First name changed from ${user.fname} to ${req.body.editFName}`
-			);
-		}
-		if (user.email !== req.body.editEmail) {
-			changes.push(`Email changed from ${user.email} to ${req.body.editEmail}`);
-		}
-		if (user.role !== req.body.editRole) {
-			changes.push(`Role changed from ${user.role} to ${req.body.editRole}`);
-		}
-		if (user.classAdvisory !== req.body.editClassAdvisory) {
-			changes.push(
-				`Class advisory changed from ${user.classAdvisory} to ${req.body.editClassAdvisory}`
-			);
-		}
-
-		user.lname = req.body.editLName;
-		user.fname = req.body.editFName;
-		user.email = req.body.editEmail;
-		user.role = req.body.editRole;
-		user.classAdvisory = req.body.editClassAdvisory;
-		user.profilePicture = profilePicturePath;
-
-		// Save the updated record
-		await user.save();
-
-		const historyLog = new History({
-			userEmail: req.user.email,
-			userFirstName: req.user.fname,
-			userLastName: req.user.lname,
-			action: `${req.user.fname} ${req.user.lname} edited user details for ${user.email}`,
-			details: changes.join(', '),
-		});
-		await historyLog.save();
-
-		const profilePicture = user.profilePicture;
-		// Redirect back to the records page
-		req.flash('success', 'Record updated successfully');
-		res.redirect('/systemAdmin/accounts');
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
+        req.flash('success', 'Record updated successfully');
+        res.redirect('/systemAdmin/accounts');
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
+
+function redirectWithError(res, url, errorMessage) {
+    req.flash('error', errorMessage);
+    return res.redirect(url);
+}
+
+async function validateEdit(req, user) {
+    if (await findUserWithSameEmail(req.body.editEmail, user._id)) {
+        return 'Another user with the same email already exists.';
+    }
+
+    if (await findInactiveUserWithEmail(req.body.editEmail)) {
+        return 'Cannot use a deactivated email. Please choose another one.';
+    }
+
+    if (!(await validateEmail(req.body.editEmail))) {
+        return 'Invalid email! Please enter a valid email.';
+    }
+
+    if (req.body.editRole === 'System Admin' && (await countSystemAdmins(user._id)) >= 2) {
+        return 'Only two users can have the role "System Admin".';
+    }
+
+    if (req.body.editRole === 'Admin' && (await findExistingAdmin(user._id))) {
+        return 'Only one user can have the role "Admin".';
+    }
+
+    if (req.body.editRole === 'Class Advisor' && req.body.editClassAdvisory === 'None') {
+        return 'Invalid selection! Please choose a class advisory.';
+    }
+
+    if ((req.body.editRole === 'System Admin' || req.body.editRole === 'Admin') && req.body.editClassAdvisory !== 'None') {
+        return 'Invalid Selection';
+    }
+
+    if (req.body.editClassAdvisory !== 'None' && (await findUserWithSameClassAdvisory(req.body.editClassAdvisory, user._id))) {
+        return 'Another user with the same class advisory already exists.';
+    }
+
+    return null;
+}
+
+async function findUserWithSameEmail(email, userId) {
+    return await User.findOne({ email, _id: { $ne: userId } });
+}
+
+async function findInactiveUserWithEmail(email) {
+    return await InactiveUser.findOne({ email });
+}
+
+async function countSystemAdmins(userId) {
+    return await User.countDocuments({ role: 'System Admin', _id: { $ne: userId } });
+}
+
+async function findExistingAdmin(userId) {
+    return await User.findOne({ role: 'Admin', _id: { $ne: userId } });
+}
+
+async function findUserWithSameClassAdvisory(classAdvisory, userId) {
+    return await User.findOne({ classAdvisory, _id: { $ne: userId } });
+}
+
+function generateChanges(user, formData) {
+    const changes = [];
+
+    if (user.lname !== formData.editLName) {
+        changes.push(`Last name changed from ${user.lname} to ${formData.editLName}`);
+    }
+
+    if (user.fname !== formData.editFName) {
+        changes.push(`First name changed from ${user.fname} to ${formData.editFName}`);
+    }
+
+    if (user.email !== formData.editEmail) {
+        changes.push(`Email changed from ${user.email} to ${formData.editEmail}`);
+    }
+
+    if (user.role !== formData.editRole) {
+        changes.push(`Role changed from ${user.role} to ${formData.editRole}`);
+    }
+
+    if (user.classAdvisory !== formData.editClassAdvisory) {
+        changes.push(`Class advisory changed from ${user.classAdvisory} to ${formData.editClassAdvisory}`);
+    }
+
+    return changes;
+}
+
+function updateUser(user, formData, profilePicturePath) {
+    user.lname = formData.editLName;
+    user.fname = formData.editFName;
+    user.email = formData.editEmail;
+    user.role = formData.editRole;
+    user.classAdvisory = formData.editClassAdvisory;
+    user.profilePicture = profilePicturePath;
+}
+
+async function logHistory(user, editedUser, changes) {
+    const historyLog = new History({
+        userEmail: user.email,
+        userFirstName: user.fname,
+        userLastName: user.lname,
+        action: `${user.fname} ${user.lname} edited user details for ${editedUser.email}`,
+        details: changes.join(', '),
+    });
+    await historyLog.save();
+}
+
 
 router.post('/edit-profile/:id', upload, async (req, res) => {
 	try {

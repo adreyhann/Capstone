@@ -11,7 +11,7 @@ const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
 const Event = require('../models/events.model');
 const moment = require('moment');
-const cron = require('node-cron');  
+const cron = require('node-cron');
 const Activity = require('../models/activity.model');
 const Card = require('../models/card.model');
 const ArchiveAcademicYear = require('../models/academic.year.model');
@@ -19,7 +19,12 @@ const RestoredRecordsList = require('../models/restored.records.table.model');
 const RestoredRecordsCards = require('../models/restored.records.model');
 const archiver = require('archiver');
 const nodemailer = require('nodemailer');
-const { getStorage, ref, uploadBytes, getDownloadURL } = require("firebase/storage");
+const {
+	getStorage,
+	ref,
+	uploadBytes,
+	getDownloadURL,
+} = require('firebase/storage');
 const { title } = require('process');
 require('dotenv').config();
 
@@ -346,8 +351,6 @@ router.get('/addRecords', async (req, res, next) => {
 	const person = req.user;
 	res.render('system_admn/addRecords', { person });
 });
-
-
 
 // router.post(
 // 	'/addFile/:recordId',
@@ -722,12 +725,10 @@ router.post('/archive-selected', async (req, res, next) => {
 
 		if (!selectedRecordIds || selectedRecordIds.length === 0) {
 			req.flash('error', 'No records selected for archiving');
-			return res
-				.status(400)
-				.json({
-					error: 'No records selected for archiving',
-					message: 'No records selected for archiving',
-				});
+			return res.status(400).json({
+				error: 'No records selected for archiving',
+				message: 'No records selected for archiving',
+			});
 		}
 
 		const selectedRecords = await Records.find({
@@ -788,21 +789,17 @@ router.post('/archive-selected', async (req, res, next) => {
 		await historyLog.save();
 
 		req.flash('success', 'Selected records archived successfully');
-		res
-			.status(200)
-			.json({
-				success: true,
-				message: 'Selected records archived successfully',
-			});
+		res.status(200).json({
+			success: true,
+			message: 'Selected records archived successfully',
+		});
 	} catch (error) {
 		console.error('Error:', error);
 		req.flash('error', 'Failed to archive selected records');
-		res
-			.status(500)
-			.json({
-				error: 'Failed to archive selected records',
-				message: 'Failed to archive selected records',
-			});
+		res.status(500).json({
+			error: 'Failed to archive selected records',
+			message: 'Failed to archive selected records',
+		});
 	}
 });
 
@@ -932,44 +929,45 @@ const storageConfig = multer.memoryStorage();
 const upload = multer({
 	storage: storageConfig,
 	limits: {
-	  fileSize: 1024 * 1024 * 2, // 2MB file size limit
+		fileSize: 1024 * 1024 * 2, // 2MB file size limit
 	},
 	fileFilter: function (req, file, cb) {
-	  // Accept only image files
-	  const filetypes = /jpeg|jpg|png/;
-	  const mimetype = filetypes.test(file.mimetype);
-	  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  
-	  if (mimetype && extname) {
-		cb(null, true);
-	  } else {
-		req.flash('error', 'Only JPEG, JPG, or PNG files are allowed');
-		cb(null, false);
-	  }
-	},
-  }).single('profilePicture');
+		// Accept only image files
+		const filetypes = /jpeg|jpg|png/;
+		const mimetype = filetypes.test(file.mimetype);
+		const extname = filetypes.test(
+			path.extname(file.originalname).toLowerCase()
+		);
 
-  // Function to upload profile picture to Firebase Storage
-  async function uploadProfilePicture(file) {
-    const storageRef = ref(storage, `profile-picture/${file.originalname}`);
-    const snapshot = await uploadBytes(storageRef, file.buffer);
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    return downloadURL;
+		if (mimetype && extname) {
+			cb(null, true);
+		} else {
+			req.flash('error', 'Only JPEG, JPG, or PNG files are allowed');
+			cb(null, false);
+		}
+	},
+}).single('profilePicture');
+
+// Function to upload profile picture to Firebase Storage
+async function uploadProfilePicture(file) {
+	const storageRef = ref(storage, `profile-picture/${file.originalname}`);
+	const snapshot = await uploadBytes(storageRef, file.buffer);
+	const downloadURL = await getDownloadURL(snapshot.ref);
+	return downloadURL;
 }
 
 router.post('/edit-users/:_id', upload, async (req, res, next) => {
 	try {
 		const userId = req.params._id;
 
-		
 		// Find the record by ID
 		const user = await User.findById(userId);
 		let profilePicturePath;
-        if (req.file) {
-            profilePicturePath = await uploadProfilePicture(req.file);
-        } else {
-            profilePicturePath = user.profilePicture; // Use existing profile picture if no new one uploaded
-        }
+		if (req.file) {
+			profilePicturePath = await uploadProfilePicture(req.file);
+		} else {
+			profilePicturePath = user.profilePicture; // Use existing profile picture if no new one uploaded
+		}
 
 		if (!user) {
 			res.status(404).send('Record not found');
@@ -1093,7 +1091,7 @@ router.post('/edit-users/:_id', upload, async (req, res, next) => {
 		user.email = req.body.editEmail;
 		user.role = req.body.editRole;
 		user.classAdvisory = req.body.editClassAdvisory;
-		user.profilePicture = profilePicturePath
+		user.profilePicture = profilePicturePath;
 
 		// Save the updated record
 		await user.save();
@@ -1117,17 +1115,17 @@ router.post('/edit-users/:_id', upload, async (req, res, next) => {
 	}
 });
 
-
-
 router.post('/edit-profile/:id', upload, async (req, res) => {
 	try {
 		const userId = req.params.id;
 		const { editLName, editFName, editEmail, editRole, editClassAdvisory } =
 			req.body;
 
-		const profilePicturePath = req.file ? await uploadProfilePicture(req.file) : user.profilePicture;
+		const profilePicturePath = req.file
+			? await uploadProfilePicture(req.file)
+			: userId.profilePicture;
 
-		const currentRole = req.user.role; 
+		const currentRole = req.user.role;
 
 		if (editRole !== currentRole) {
 			if (currentRole === 'System Admin') {
@@ -1216,7 +1214,7 @@ router.post('/edit-profile/:id', upload, async (req, res) => {
 			email: editEmail,
 			role: editRole,
 			classAdvisory: editClassAdvisory,
-            profilePicture: profilePicturePath,
+			profilePicture: profilePicturePath,
 		});
 
 		req.flash('success', 'Profile updated successfully');
@@ -1591,38 +1589,39 @@ router.get('/calendar', async (req, res, next) => {
 });
 
 router.post('/events', async (req, res) => {
-    try {
-        const { date, eventName } = req.body;
+	try {
+		const { date, eventName } = req.body;
 
-        // Convert date string to a Date object
-        const eventDate = new Date(date);
+		// Convert date string to a Date object
+		const eventDate = new Date(date);
 
-        // Check if the event time is between 9 PM and 5 AM
-        const eventHour = eventDate.getHours();
-        if (eventHour >= 21 || eventHour < 5) {
-            return res.status(400).json({
-                error: 'Events / Announcement cannot be created between 9 PM and 5 AM.'
-            });
-        }
+		// Check if the event time is between 9 PM and 5 AM
+		const eventHour = eventDate.getHours();
+		if (eventHour >= 21 || eventHour < 5) {
+			return res.status(400).json({
+				error: 'Events / Announcement cannot be created between 9 PM and 5 AM.',
+			});
+		}
 
-        // Check if there's already an event with the same date and time
-        const existingEvent = await Event.findOne({ date });
+		// Check if there's already an event with the same date and time
+		const existingEvent = await Event.findOne({ date });
 
-        if (existingEvent) {
-            return res.status(400).json({
-                error: 'An event already exists at this date and time. Please choose a different date or time for your event.'
-            });
-        }
+		if (existingEvent) {
+			return res.status(400).json({
+				error:
+					'An event already exists at this date and time. Please choose a different date or time for your event.',
+			});
+		}
 
-        // If no existing event and event time is valid, create and save the new event
-        const event = new Event({ date, eventName });
-        const savedEvent = await event.save();
+		// If no existing event and event time is valid, create and save the new event
+		const event = new Event({ date, eventName });
+		const savedEvent = await event.save();
 
-        res.status(201).json(savedEvent);
-    } catch (error) {
-        console.error('Error adding event:', error);
-        res.status(500).json({ error: 'Failed to add event' });
-    }
+		res.status(201).json(savedEvent);
+	} catch (error) {
+		console.error('Error adding event:', error);
+		res.status(500).json({ error: 'Failed to add event' });
+	}
 });
 
 // Schedule a task to run daily at midnight (00:00)
@@ -1666,113 +1665,134 @@ router.delete('/events/:date/:eventName', async (req, res) => {
 
 // stop here
 router.get('/generate-pdf', async (req, res, next) => {
-    try {
-        // Fetch activity logs from the database
-        const activityLogs = await Activity.find().sort({ lName: 1 });
+	try {
+		// Fetch activity logs from the database
+		const activityLogs = await Activity.find().sort({ lName: 1 });
 
-        const PDFDocument = require('pdfkit-table'); // Import pdfkit-table module
-        const fs = require('fs'); // Import fs module
+		const PDFDocument = require('pdfkit-table'); // Import pdfkit-table module
+		const fs = require('fs'); // Import fs module
 
-        const doc = new PDFDocument({ margin: 30, size: 'A4' }); // Initialize PDFDocument
+		const doc = new PDFDocument({ margin: 30, size: 'A4' }); // Initialize PDFDocument
 
-        // Set response header for content type
-        res.setHeader('Content-Type', 'application/pdf');
+		// Set response header for content type
+		res.setHeader('Content-Type', 'application/pdf');
 
-        // Set custom file name
-        const fileName = 'Activity logs Report.pdf';
-        res.setHeader('Content-Disposition', `inline; filename=${fileName}`);
+		// Set custom file name
+		const fileName = 'Activity logs Report.pdf';
+		res.setHeader('Content-Disposition', `inline; filename=${fileName}`);
 
-        // Load the logo images
-        const leftLogoData = fs.readFileSync('public/img/logo.png');
-        const rightLogoData = fs.readFileSync('public/img/depedlogo.png');
+		// Load the logo images
+		const leftLogoData = fs.readFileSync('public/img/logo.png');
+		const rightLogoData = fs.readFileSync('public/img/depedlogo.png');
 
-        doc.pipe(res); // Pipe the PDF directly to the response
+		doc.pipe(res); // Pipe the PDF directly to the response
 
-        // Add left logo
-        doc.image(leftLogoData, { x: 50, y: 29, width: 50, height: 50 });
+		// Add left logo
+		doc.image(leftLogoData, { x: 50, y: 29, width: 50, height: 50 });
 
-        // Add right logo
-        doc.image(rightLogoData, { x: doc.page.width - 100, y: 30, width: 50, height: 50 });
+		// Add right logo
+		doc.image(rightLogoData, {
+			x: doc.page.width - 100,
+			y: 30,
+			width: 50,
+			height: 50,
+		});
 
-        // Add text lines in the middle
-        const headerText1 = 'Bethany Christian Academy';
-        const headerText2 = 'Maitim 2nd East, Tagaytay City';
-        const headerText3 = 'bethaychristian2002@yahoo.com';
-        const headerText4 = '09338557850';
+		// Add text lines in the middle
+		const headerText1 = 'Bethany Christian Academy';
+		const headerText2 = 'Maitim 2nd East, Tagaytay City';
+		const headerText3 = 'bethaychristian2002@yahoo.com';
+		const headerText4 = '09338557850';
 
-        const textWidth = doc.widthOfString(headerText1);
-        const textYPosition1 = 50;
-        const textYPosition2 = textYPosition1 + 20;
-        const textYPosition3 = textYPosition2 + 20;
-        const textYPosition4 = textYPosition3 + 20;
+		const textWidth = doc.widthOfString(headerText1);
+		const textYPosition1 = 50;
+		const textYPosition2 = textYPosition1 + 20;
+		const textYPosition3 = textYPosition2 + 20;
+		const textYPosition4 = textYPosition3 + 20;
 
-        doc
-            .fontSize(14)
-            .fillColor('black')
-            .text(headerText1, {
-                x: (doc.page.width - textWidth) / 2,
-                y: textYPosition1,
-                align: 'center',
-            });
-        doc
-            .fontSize(11)
-            .fillColor('black')
-            .text(headerText2, {
-                x: (doc.page.width - textWidth) / 2,
-                y: textYPosition2,
-                align: 'center',
-            });
-        doc
-            .fontSize(10)
-            .fillColor('black')
-            .text(headerText3, {
-                x: (doc.page.width - textWidth) / 2,
-                y: textYPosition3,
-                align: 'center',
-            });
+		doc
+			.fontSize(14)
+			.fillColor('black')
+			.text(headerText1, {
+				x: (doc.page.width - textWidth) / 2,
+				y: textYPosition1,
+				align: 'center',
+			});
+		doc
+			.fontSize(11)
+			.fillColor('black')
+			.text(headerText2, {
+				x: (doc.page.width - textWidth) / 2,
+				y: textYPosition2,
+				align: 'center',
+			});
+		doc
+			.fontSize(10)
+			.fillColor('black')
+			.text(headerText3, {
+				x: (doc.page.width - textWidth) / 2,
+				y: textYPosition3,
+				align: 'center',
+			});
 
-        doc
-            .fontSize(9)
-            .fillColor('black')
-            .text(headerText4, {
-                x: (doc.page.width - textWidth) / 2,
-                y: textYPosition4,
-                align: 'center',
-            });
+		doc
+			.fontSize(9)
+			.fillColor('black')
+			.text(headerText4, {
+				x: (doc.page.width - textWidth) / 2,
+				y: textYPosition4,
+				align: 'center',
+			});
 
-        doc.moveDown(4); // Move down to leave space for the header
+		doc.moveDown(4); // Move down to leave space for the header
 
-        // Define table headers
-        const headers = ['Action', 'Email', 'Adviser Name', 'LRN', 'Last Name', 'First Name', 'Gender', 'Grade Level', 'Date Created'];
+		// Define table headers
+		const headers = [
+			'Action',
+			'Email',
+			'Adviser Name',
+			'LRN',
+			'Last Name',
+			'First Name',
+			'Gender',
+			'Grade Level',
+			'Date Created',
+		];
 
-        // Map activity logs to table rows
-        const rows = activityLogs.map(log => [
-            log.action,
-            log.userEmail,
-            log.adviserName,
-            log.lrn,
-            log.lName,
-            log.fName,
-            log.gender,
-            log.gradeLevel,
-            new Date(log.dateCreated).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }),
-        ]);
+		// Map activity logs to table rows
+		const rows = activityLogs.map((log) => [
+			log.action,
+			log.userEmail,
+			log.adviserName,
+			log.lrn,
+			log.lName,
+			log.fName,
+			log.gender,
+			log.gradeLevel,
+			new Date(log.dateCreated).toLocaleString('en-US', {
+				month: 'long',
+				day: 'numeric',
+				year: 'numeric',
+				hour: 'numeric',
+				minute: 'numeric',
+				hour12: true,
+			}),
+		]);
 
-        // Set table data
-        doc.table({
-            title: 'Activity Logs report',
+		// Set table data
+		doc.table({
+			title: 'Activity Logs report',
 			titleAlign: 'center',
-            headers,
-            rows,
-        });
+			headers,
+			rows,
+		});
 
-        doc.end(); // Finalize the PDF document
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		doc.end(); // Finalize the PDF document
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
-
 
 router.post('/advance-grade-level', async (req, res) => {
 	try {
@@ -2100,89 +2120,91 @@ router.get('/restored-records-list', async (req, res, next) => {
 });
 
 router.post('/restored-to-archive/:id', async (req, res, next) => {
-    try {
-        const restoredRecordId = req.params.id;
+	try {
+		const restoredRecordId = req.params.id;
 
-        const restoredRecord = await RestoredRecordsList.findById(restoredRecordId);
+		const restoredRecord = await RestoredRecordsList.findById(restoredRecordId);
 
-        if (!restoredRecord) {
-            return res.status(404).json({ error: 'Restored record not found' });
-        }
+		if (!restoredRecord) {
+			return res.status(404).json({ error: 'Restored record not found' });
+		}
 
-        const archivedRecord = new Archives({
-            lrn: restoredRecord.lrn,
-            lName: restoredRecord.lName,
-            fName: restoredRecord.fName,
-            mName: restoredRecord.mName,
-            gender: restoredRecord.gender,
-            transferee: restoredRecord.transferee,
-            gradeLevel: restoredRecord.gradeLevel,
-            academicYear: restoredRecord.academicYear, 
-            dateAddedToArchive: restoredRecord.academicYear,
-            oldFiles: restoredRecord.oldFiles,
-            newFiles: restoredRecord.newFiles,
-        });
-        await archivedRecord.save();
+		const archivedRecord = new Archives({
+			lrn: restoredRecord.lrn,
+			lName: restoredRecord.lName,
+			fName: restoredRecord.fName,
+			mName: restoredRecord.mName,
+			gender: restoredRecord.gender,
+			transferee: restoredRecord.transferee,
+			gradeLevel: restoredRecord.gradeLevel,
+			academicYear: restoredRecord.academicYear,
+			dateAddedToArchive: restoredRecord.academicYear,
+			oldFiles: restoredRecord.oldFiles,
+			newFiles: restoredRecord.newFiles,
+		});
+		await archivedRecord.save();
 
-        await RestoredRecordsList.findByIdAndDelete(restoredRecordId);
+		await RestoredRecordsList.findByIdAndDelete(restoredRecordId);
 
-        res.status(200).json({ message: 'Record moved to Archive successfully' });
-    } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Failed to move record to Archive' });
-    }
+		res.status(200).json({ message: 'Record moved to Archive successfully' });
+	} catch (error) {
+		console.error('Error:', error);
+		res.status(500).json({ error: 'Failed to move record to Archive' });
+	}
 });
 
 router.post('/selected-restored', async (req, res, next) => {
-    try {
-        const { recordIds } = req.body;
+	try {
+		const { recordIds } = req.body;
 
-        // Find and retrieve all restored records based on the provided IDs
-        const restoredRecords = await RestoredRecordsList.find({ _id: { $in: recordIds } });
+		// Find and retrieve all restored records based on the provided IDs
+		const restoredRecords = await RestoredRecordsList.find({
+			_id: { $in: recordIds },
+		});
 
-        // If no records are found, return a 404 error
-        if (!restoredRecords || restoredRecords.length === 0) {
-            return res.status(404).json({ error: 'No restored records found' });
-        }
+		// If no records are found, return a 404 error
+		if (!restoredRecords || restoredRecords.length === 0) {
+			return res.status(404).json({ error: 'No restored records found' });
+		}
 
-        // Move each restored record to the archived records collection
-        const archivedRecordsPromises = restoredRecords.map(async (record) => {
-            const archivedRecord = new Archives({
-                lrn: record.lrn,
-                lName: record.lName,
-                fName: record.fName,
-                mName: record.mName,
-                gender: record.gender,
-                transferee: record.transferee,
-                gradeLevel: record.gradeLevel,
-                academicYear: record.academicYear, // Set academicYear to the value of academicYear
-                dateAddedToArchive: record.academicYear, // Set dateAddedToArchive to the value of academicYear
-                oldFiles: record.oldFiles,
-                newFiles: record.newFiles,
-            });
-            await archivedRecord.save();
-        });
+		// Move each restored record to the archived records collection
+		const archivedRecordsPromises = restoredRecords.map(async (record) => {
+			const archivedRecord = new Archives({
+				lrn: record.lrn,
+				lName: record.lName,
+				fName: record.fName,
+				mName: record.mName,
+				gender: record.gender,
+				transferee: record.transferee,
+				gradeLevel: record.gradeLevel,
+				academicYear: record.academicYear, // Set academicYear to the value of academicYear
+				dateAddedToArchive: record.academicYear, // Set dateAddedToArchive to the value of academicYear
+				oldFiles: record.oldFiles,
+				newFiles: record.newFiles,
+			});
+			await archivedRecord.save();
+		});
 
-        // Wait for all archived records to be saved
-        await Promise.all(archivedRecordsPromises);
+		// Wait for all archived records to be saved
+		await Promise.all(archivedRecordsPromises);
 
-        // Delete the restored records from the RestoredRecordsTable collection
-        await RestoredRecordsList.deleteMany({ _id: { $in: recordIds } });
+		// Delete the restored records from the RestoredRecordsTable collection
+		await RestoredRecordsList.deleteMany({ _id: { $in: recordIds } });
 
-        // Return a success message
-        res.status(200).json({ message: 'Records moved to Archive successfully' });
-    } catch (error) {
-        // Handle errors
-        console.error('Error:', error);
-        res.status(500).json({ error: 'Failed to move records to Archive' });
-    }
+		// Return a success message
+		res.status(200).json({ message: 'Records moved to Archive successfully' });
+	} catch (error) {
+		// Handle errors
+		console.error('Error:', error);
+		res.status(500).json({ error: 'Failed to move records to Archive' });
+	}
 });
 
 router.get('/reports2', async (req, res, next) => {
 	try {
 		const person = req.user;
 
-		const activity = await Activity.find({}).populate(); 
+		const activity = await Activity.find({}).populate();
 
 		res.render('system_admn/report2', { person, activity });
 	} catch (error) {
@@ -2192,267 +2214,307 @@ router.get('/reports2', async (req, res, next) => {
 });
 
 router.get('/records-pdf', async (req, res, next) => {
-    try {
-        const records = await Records.find().sort({ lName: 1 });
-        const PDFDocument = require('pdfkit-table');
-        const fs = require('fs');
+	try {
+		const records = await Records.find().sort({ lName: 1 });
+		const PDFDocument = require('pdfkit-table');
+		const fs = require('fs');
 
-        const doc = new PDFDocument({ margin: 30, size: 'A4' });
-        res.setHeader('Content-Type', 'application/pdf');
-        const fileName = 'Records Report.pdf';
-        res.setHeader('Content-Disposition', `inline; filename=${fileName}`);
-        doc.pipe(res);
+		const doc = new PDFDocument({ margin: 30, size: 'A4' });
+		res.setHeader('Content-Type', 'application/pdf');
+		const fileName = 'Records Report.pdf';
+		res.setHeader('Content-Disposition', `inline; filename=${fileName}`);
+		doc.pipe(res);
 
-        // Load the logo images
-        const leftLogoData = fs.readFileSync('public/img/logo.png');
-        const rightLogoData = fs.readFileSync('public/img/depedlogo.png');
+		// Load the logo images
+		const leftLogoData = fs.readFileSync('public/img/logo.png');
+		const rightLogoData = fs.readFileSync('public/img/depedlogo.png');
 
-        // Function to add header
-        function addHeader() {
-            doc.image(leftLogoData, { x: 50, y: 28, width: 50, height: 50 });
-            doc.image(rightLogoData, { x: doc.page.width - 100, y: 30, width: 50, height: 50 });
+		// Function to add header
+		function addHeader() {
+			doc.image(leftLogoData, { x: 50, y: 28, width: 50, height: 50 });
+			doc.image(rightLogoData, {
+				x: doc.page.width - 100,
+				y: 30,
+				width: 50,
+				height: 50,
+			});
 
-            const headerText1 = 'Bethany Christian Academy';
-            const headerText2 = 'Maitim 2nd East, Tagaytay City';
-            const headerText3 = 'bethaychristian2002@yahoo.com';
-            const headerText4 = '09338557850';
+			const headerText1 = 'Bethany Christian Academy';
+			const headerText2 = 'Maitim 2nd East, Tagaytay City';
+			const headerText3 = 'bethaychristian2002@yahoo.com';
+			const headerText4 = '09338557850';
 
-            const textWidth = doc.widthOfString(headerText1);
-            const textYPosition1 = 50;
-            const textYPosition2 = textYPosition1 + 20;
-            const textYPosition3 = textYPosition2 + 20;
-            const textYPosition4 = textYPosition3 + 20;
+			const textWidth = doc.widthOfString(headerText1);
+			const textYPosition1 = 50;
+			const textYPosition2 = textYPosition1 + 20;
+			const textYPosition3 = textYPosition2 + 20;
+			const textYPosition4 = textYPosition3 + 20;
 
-            doc.fontSize(14).fillColor('black').text(headerText1, {
-                x: (doc.page.width - textWidth) / 2,
-                y: textYPosition1,
-                align: 'center',
-            });
-            doc.fontSize(11).fillColor('black').text(headerText2, {
-                x: (doc.page.width - textWidth) / 2,
-                y: textYPosition2,
-                align: 'center',
-            });
-            doc.fontSize(10).fillColor('black').text(headerText3, {
-                x: (doc.page.width - textWidth) / 2,
-                y: textYPosition3,
-                align: 'center',
-            });
-            doc.fontSize(9).fillColor('black').text(headerText4, {
-                x: (doc.page.width - textWidth) / 2,
-                y: textYPosition4,
-                align: 'center',
-            });
+			doc
+				.fontSize(14)
+				.fillColor('black')
+				.text(headerText1, {
+					x: (doc.page.width - textWidth) / 2,
+					y: textYPosition1,
+					align: 'center',
+				});
+			doc
+				.fontSize(11)
+				.fillColor('black')
+				.text(headerText2, {
+					x: (doc.page.width - textWidth) / 2,
+					y: textYPosition2,
+					align: 'center',
+				});
+			doc
+				.fontSize(10)
+				.fillColor('black')
+				.text(headerText3, {
+					x: (doc.page.width - textWidth) / 2,
+					y: textYPosition3,
+					align: 'center',
+				});
+			doc
+				.fontSize(9)
+				.fillColor('black')
+				.text(headerText4, {
+					x: (doc.page.width - textWidth) / 2,
+					y: textYPosition4,
+					align: 'center',
+				});
 
-            doc.moveDown(6); // Move down to leave space for the header
-        }
+			doc.moveDown(6); // Move down to leave space for the header
+		}
 
-        addHeader(); // Call the function to add the header
+		addHeader(); // Call the function to add the header
 
-        let startY = doc.y + 20; // Set the starting y-coordinate for the tables
+		let startY = doc.y + 20; // Set the starting y-coordinate for the tables
 
-        // Define numerical values for grade levels
-        const gradeLevels = {
-            Kinder: 1,
-            'Grade 1': 2,
-            'Grade 2': 3,
-            'Grade 3': 4,
-            'Grade 4': 5,
-            'Grade 5': 6,
-            'Grade 6': 7,
-        };
+		// Define numerical values for grade levels
+		const gradeLevels = {
+			Kinder: 1,
+			'Grade 1': 2,
+			'Grade 2': 3,
+			'Grade 3': 4,
+			'Grade 4': 5,
+			'Grade 5': 6,
+			'Grade 6': 7,
+		};
 
-        // Sort records by grade level
-        records.sort((a, b) => gradeLevels[a.gradeLevel] - gradeLevels[b.gradeLevel]);
+		// Sort records by grade level
+		records.sort(
+			(a, b) => gradeLevels[a.gradeLevel] - gradeLevels[b.gradeLevel]
+		);
 
-        // Group records by grade level
-        const recordsByGradeLevel = {};
-        records.forEach(record => {
-            if (!recordsByGradeLevel[record.gradeLevel]) {
-                recordsByGradeLevel[record.gradeLevel] = [];
-            }
-            recordsByGradeLevel[record.gradeLevel].push(record);
-        });
+		// Group records by grade level
+		const recordsByGradeLevel = {};
+		records.forEach((record) => {
+			if (!recordsByGradeLevel[record.gradeLevel]) {
+				recordsByGradeLevel[record.gradeLevel] = [];
+			}
+			recordsByGradeLevel[record.gradeLevel].push(record);
+		});
 
-        // Iterate over each grade level and create a table for it
-        Object.keys(recordsByGradeLevel).forEach(gradeLevel => {
-            // Move to the next page if the current table doesn't fit on the current page
-            if (doc.y > doc.page.height - 100) {
-                doc.addPage();
-                addHeader(); // Add header on the new page
-                startY = 50; // Reset startY for the new page
-            }
+		// Iterate over each grade level and create a table for it
+		Object.keys(recordsByGradeLevel).forEach((gradeLevel) => {
+			// Move to the next page if the current table doesn't fit on the current page
+			if (doc.y > doc.page.height - 100) {
+				doc.addPage();
+				addHeader(); // Add header on the new page
+				startY = 50; // Reset startY for the new page
+			}
 
-            // Add title for the grade level
-            doc.fontSize(16).text(`${gradeLevel}`, { align: 'center' });
-            doc.moveDown(); // Move down to leave space for the title
+			// Add title for the grade level
+			doc.fontSize(16).text(`${gradeLevel}`, { align: 'center' });
+			doc.moveDown(); // Move down to leave space for the title
 
-            // Define table headers
-            const headers = ['LRN', 'Last Name', 'First Name', 'Middle Name', 'Gender', 'Transferee', 'Grade level'];
+			// Define table headers
+			const headers = [
+				'LRN',
+				'Last Name',
+				'First Name',
+				'Middle Name',
+				'Gender',
+				'Transferee',
+				'Grade level',
+			];
 
-            // Map records to table rows
-            const rows = recordsByGradeLevel[gradeLevel].map(record => [
-                record.lrn,
-                record.lName,
-                record.fName,
-                record.mName,
-                record.gender,
-                record.transferee,
-                record.gradeLevel,
-            ]);
+			// Map records to table rows
+			const rows = recordsByGradeLevel[gradeLevel].map((record) => [
+				record.lrn,
+				record.lName,
+				record.fName,
+				record.mName,
+				record.gender,
+				record.transferee,
+				record.gradeLevel,
+			]);
 
-            // Set table data
-            doc.table({
-                headers,
-                rows,
-                startY,
-                margin: { top: 20 },
-            });
+			// Set table data
+			doc.table({
+				headers,
+				rows,
+				startY,
+				margin: { top: 20 },
+			});
 
-            startY = doc.y + 20; // Update the starting y-coordinate for the next table
-        });
+			startY = doc.y + 20; // Update the starting y-coordinate for the next table
+		});
 
-        doc.end(); // Finalize the PDF document
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		doc.end(); // Finalize the PDF document
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
-
 router.get('/records-pdf/:gradeLevel', async (req, res, next) => {
-    try {
-        const gradeLevel = req.params.gradeLevel;
-        
-        // Fetch records from the database based on the provided grade level
-        const records = await Records.find({ gradeLevel }).sort({ gradeLevel: 1, lName: 1 });
+	try {
+		const gradeLevel = req.params.gradeLevel;
 
-		
-        const PDFDocument = require('pdfkit-table'); // Import pdfkit-table module
-        const fs = require('fs'); // Import fs module
-        // Create a new PDF document
-        const doc = new PDFDocument({ margin: 30, size: 'A4' });
+		// Fetch records from the database based on the provided grade level
+		const records = await Records.find({ gradeLevel }).sort({
+			gradeLevel: 1,
+			lName: 1,
+		});
 
-        // Set response header for content type
-        res.setHeader('Content-Type', 'application/pdf');
+		const PDFDocument = require('pdfkit-table'); // Import pdfkit-table module
+		const fs = require('fs'); // Import fs module
+		// Create a new PDF document
+		const doc = new PDFDocument({ margin: 30, size: 'A4' });
 
-        // Set custom file name
-        const fileName = `Records_${gradeLevel}.pdf`;
-        res.setHeader('Content-Disposition', `inline; filename=${fileName}`);
+		// Set response header for content type
+		res.setHeader('Content-Type', 'application/pdf');
 
-        doc.pipe(res); // Pipe the PDF directly to the response
+		// Set custom file name
+		const fileName = `Records_${gradeLevel}.pdf`;
+		res.setHeader('Content-Disposition', `inline; filename=${fileName}`);
 
-        // Add left logo
-        const leftLogoData = fs.readFileSync('public/img/logo.png');
-        doc.image(leftLogoData, { x: 50, y: 28, width: 50, height: 50 });
+		doc.pipe(res); // Pipe the PDF directly to the response
 
-        // Add right logo
-        const rightLogoData = fs.readFileSync('public/img/depedlogo.png');
-        doc.image(rightLogoData, { x: doc.page.width - 100, y: 30, width: 50, height: 50 });
+		// Add left logo
+		const leftLogoData = fs.readFileSync('public/img/logo.png');
+		doc.image(leftLogoData, { x: 50, y: 28, width: 50, height: 50 });
 
-        // Add text lines in the middle
-        const headerText1 = 'Bethany Christian Academy';
-        const headerText2 = 'Maitim 2nd East, Tagaytay City';
-        const headerText3 = 'bethaychristian2002@yahoo.com';
-        const headerText4 = '09338557850';
+		// Add right logo
+		const rightLogoData = fs.readFileSync('public/img/depedlogo.png');
+		doc.image(rightLogoData, {
+			x: doc.page.width - 100,
+			y: 30,
+			width: 50,
+			height: 50,
+		});
 
-        const textWidth = doc.widthOfString(headerText1);
-        const textYPosition1 = 50;
-        const textYPosition2 = textYPosition1 + 20;
-        const textYPosition3 = textYPosition2 + 20;
-        const textYPosition4 = textYPosition3 + 20;
+		// Add text lines in the middle
+		const headerText1 = 'Bethany Christian Academy';
+		const headerText2 = 'Maitim 2nd East, Tagaytay City';
+		const headerText3 = 'bethaychristian2002@yahoo.com';
+		const headerText4 = '09338557850';
 
-        doc
-            .fontSize(14)
-            .fillColor('black')
-            .text(headerText1, {
-                x: (doc.page.width - textWidth) / 2,
-                y: textYPosition1,
-                align: 'center',
-            });
-        doc
-            .fontSize(11)
-            .fillColor('black')
-            .text(headerText2, {
-                x: (doc.page.width - textWidth) / 2,
-                y: textYPosition2,
-                align: 'center',
-            });
-        doc
-            .fontSize(10)
-            .fillColor('black')
-            .text(headerText3, {
-                x: (doc.page.width - textWidth) / 2,
-                y: textYPosition3,
-                align: 'center',
-            });
+		const textWidth = doc.widthOfString(headerText1);
+		const textYPosition1 = 50;
+		const textYPosition2 = textYPosition1 + 20;
+		const textYPosition3 = textYPosition2 + 20;
+		const textYPosition4 = textYPosition3 + 20;
 
-        doc
-            .fontSize(9)
-            .fillColor('black')
-            .text(headerText4, {
-                x: (doc.page.width - textWidth) / 2,
-                y: textYPosition4,
-                align: 'center',
-            });
-        
-        // Move to the next page if the header doesn't fit on the current page
-        if (doc.y > doc.page.height - 100) {
-            doc.addPage();
-        }
+		doc
+			.fontSize(14)
+			.fillColor('black')
+			.text(headerText1, {
+				x: (doc.page.width - textWidth) / 2,
+				y: textYPosition1,
+				align: 'center',
+			});
+		doc
+			.fontSize(11)
+			.fillColor('black')
+			.text(headerText2, {
+				x: (doc.page.width - textWidth) / 2,
+				y: textYPosition2,
+				align: 'center',
+			});
+		doc
+			.fontSize(10)
+			.fillColor('black')
+			.text(headerText3, {
+				x: (doc.page.width - textWidth) / 2,
+				y: textYPosition3,
+				align: 'center',
+			});
 
-		doc.moveDown(5)
-        // Add title for the grade level
-        doc.fontSize(16).text(`${gradeLevel}`, { align: 'center' });
+		doc
+			.fontSize(9)
+			.fillColor('black')
+			.text(headerText4, {
+				x: (doc.page.width - textWidth) / 2,
+				y: textYPosition4,
+				align: 'center',
+			});
 
-		doc.moveDown()
-		
-        // Define table headers
-        const headers = ['LRN', 'Last Name', 'First Name', 'Middle Name', 'Gender', 'Transferee'];
+		// Move to the next page if the header doesn't fit on the current page
+		if (doc.y > doc.page.height - 100) {
+			doc.addPage();
+		}
 
-        // Map records to table rows
-        const rows = records.map(record => [
-            record.lrn,
-            record.lName,
-            record.fName,
-            record.mName,
-            record.gender,
-            record.transferee
-        ]);
+		doc.moveDown(5);
+		// Add title for the grade level
+		doc.fontSize(16).text(`${gradeLevel}`, { align: 'center' });
 
-        // Set table data
-        doc.table({
-            headers,
-            rows,
-            startY: doc.y + 20,
-            margin: { top: 10 },
-        });
+		doc.moveDown();
 
-        doc.end(); // Finalize the PDF document
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		// Define table headers
+		const headers = [
+			'LRN',
+			'Last Name',
+			'First Name',
+			'Middle Name',
+			'Gender',
+			'Transferee',
+		];
+
+		// Map records to table rows
+		const rows = records.map((record) => [
+			record.lrn,
+			record.lName,
+			record.fName,
+			record.mName,
+			record.gender,
+			record.transferee,
+		]);
+
+		// Set table data
+		doc.table({
+			headers,
+			rows,
+			startY: doc.y + 20,
+			margin: { top: 10 },
+		});
+
+		doc.end(); // Finalize the PDF document
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 // not yet belong
 router.get('/calendar2', async (req, res, next) => {
-    try {
-        const person = req.user;
-        const events = await Event.find();
+	try {
+		const person = req.user;
+		const events = await Event.find();
 
-        // Convert events to the format expected by FullCalendar
-        const eventData = events.map(event => ({
-            title: event.eventName,
-            start: event.date,
-            // You can add more properties here if needed
-        }));
+		// Convert events to the format expected by FullCalendar
+		const eventData = events.map((event) => ({
+			title: event.eventName,
+			start: event.date,
+			// You can add more properties here if needed
+		}));
 
-        res.render('system_admn/calendar2', { person, eventData });
-    } catch (error) {
-        console.error('Error:', error);
-        next(error);
-    }
+		res.render('system_admn/calendar2', { person, eventData });
+	} catch (error) {
+		console.error('Error:', error);
+		next(error);
+	}
 });
 
 // Delete an event
@@ -2498,9 +2560,5 @@ router.get('/calendar2', async (req, res, next) => {
 //         res.status(400).json({ message: error.message });
 //     }
 // });
-
-
-
-
 
 module.exports = router;

@@ -197,19 +197,7 @@
 						<div>Error: <%= error.message %></div>
 						<% } %>
 
-						<a
-							class="btn btn-sm mb-2"
-							href="/systemAdmin/goBackToFolder?_id=<%= student._id %>"
-						>
-							<span
-								class="material-symbols-outlined"
-								data-bs-toggle="tooltip"
-								data-bs-placement="top"
-								data-bs-title="Go back"
-							>
-								arrow_back
-							</span>
-						</a>
+						
 
 						<!-- Loop to display up to 2 PDF files -->
 						<% if (filenames.length === 0) { %>

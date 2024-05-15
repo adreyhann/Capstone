@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const createHttpError = require('http-errors');
 
+// const User = require('../models/user.model');
 const UserSchema = new mongoose.Schema({
 	email: {
 		type: String,

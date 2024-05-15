@@ -1,9 +1,9 @@
 $(document).ready(function () {
 	function handleCheckboxClick() {
 		const numChecked = $('input[name="selectedRecords"]:checked').length;
-		const buttonsVisible = numChecked >= 2;
+		const buttonsEnabled = numChecked >= 2;
 
-		$('#archiveButton, #advancedButton').toggle(buttonsVisible);
+		$('#archiveButton, #advancedButton').prop('disabled', !buttonsEnabled);
 	}
 
 	$('#selectAll').click(function () {
@@ -15,6 +15,7 @@ $(document).ready(function () {
 	$('input[name="selectedRecords"]').click(function () {
 		handleCheckboxClick();
 	});
+
 	$('#selectAllArchive').click(function () {
 		$('input[name="archivedRecords"]').prop('checked', this.checked);
 
@@ -35,6 +36,9 @@ $(document).ready(function () {
 		const anyCheckboxChecked =
 			$('input[name="archivedRecords"]:checked').length > 0;
 
-		$('#archiveButton, #advancedButton').toggle(anyCheckboxChecked);
+		$('#archiveButton, #advancedButton').prop('disabled', !anyCheckboxChecked);
 	}
+
+	// Initialize buttons to be disabled by default
+	$('#archiveButton, #advancedButton').prop('disabled', true);
 });

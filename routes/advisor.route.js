@@ -10,6 +10,7 @@ const { Records, Archives } = require('../models/records.model');
 const RestoredRecordsList = require('../models/restored.records.table.model');
 const History = require('../models/history.model');
 const Activity = require('../models/activity.model')
+const Folder = require('../models/records.folder.model');
 
 router.get('/dashboard', async (req, res, next) => {
 	// console.log(req.user)
@@ -110,6 +111,7 @@ router.get('/studentFolders/:id', async (req, res, next) => {
     }
 });
 
+// oldFiles = transferee student files
 router.get('/oldFiles/:id', async (req, res, next) => {
     try {
         const studentId = req.params.id;
@@ -121,7 +123,6 @@ router.get('/oldFiles/:id', async (req, res, next) => {
         }
 
         const oldFiles = student.oldFiles || []; // Retrieve old files from the separate field
-
         const base64PDF = await Promise.all(
             oldFiles.map(async (fileData) => {
                 const pdfData = await fs.promises.readFile(fileData.filePath);
@@ -132,13 +133,15 @@ router.get('/oldFiles/:id', async (req, res, next) => {
         );
 
         const filenames = oldFiles.map(fileData => fileData.fileName);
-
+        const uploadedByEmails = oldFiles.map(fileData => fileData.uploadedBy);
         const person = req.user;
+
         res.render('class-advisor/old-files', {
             student,
             person,
             base64PDF,
             filenames,
+            uploadedByEmails
         });
     } catch (error) {
         console.error('Error:', error);
@@ -146,23 +149,25 @@ router.get('/oldFiles/:id', async (req, res, next) => {
     }
 });
 
-
+// view-files = current files or grade level
 router.get('/view-files/:id', async (req, res, next) => {
     try {
         const studentId = req.params.id;
         const student = await Records.findById(studentId);
-
-        console.log('Student:', student);
 
         if (!student) {
             res.status(404).send('Record not found');
             return;
         }
 
+        const classAdvisory = req.user.classAdvisory;
         const newFiles = student.newFiles || []; // Retrieve new files from the separate field
 
+        // Filter newFiles based on the classAdvisory of the user
+        const filteredFiles = newFiles.filter(file => file.gradeLevel === classAdvisory);
+
         const base64PDF = await Promise.all(
-            newFiles.map(async (fileData) => {
+            filteredFiles.map(async (fileData) => {
                 if (fileData && fileData.filePath) {
                     const pdfData = await fs.promises.readFile(fileData.filePath);
                     const pdfDoc = await PDFLibDocument.load(pdfData);
@@ -174,7 +179,7 @@ router.get('/view-files/:id', async (req, res, next) => {
             })
         );
 
-        const filenames = newFiles.map(fileData => fileData.fileName);
+        const filenames = filteredFiles.map(fileData => fileData.fileName);
 
         const person = req.user;
         res.render('class-advisor/view-files', {
@@ -188,6 +193,7 @@ router.get('/view-files/:id', async (req, res, next) => {
         next(error);
     }
 });
+
 
 
 router.post('/submit-form', async (req, res, next) => {
@@ -319,11 +325,10 @@ router.post('/submit-form', async (req, res, next) => {
     }
 });
 
+// Route to add new files (transferee student files)
 router.post('/addFile/:recordId', upload.single('newPdf'), async (req, res, next) => {
     try {
         const recordId = req.params.recordId;
-
-        // Find the record by ID
         const record = await Records.findById(recordId);
 
         if (!record) {
@@ -331,21 +336,22 @@ router.post('/addFile/:recordId', upload.single('newPdf'), async (req, res, next
             return;
         }
 
-        // Check if a file was uploaded
         if (req.file) {
-            // Get the number of files already uploaded in the 'new-files' directory
-            const newFilesCount = record.newFiles.length;
+            // Filter newFiles by grade level
+            const gradeLevel = record.gradeLevel;
+            const filesForGradeLevel = record.newFiles.filter(file => file.gradeLevel === gradeLevel);
 
-            // Check if the number of files is less than 2
-            if (newFilesCount < 2) {
+            if (filesForGradeLevel.length < 2) {
                 const newPdfPath = req.file.path;
-
-                // Update the existing record with the new file data
-                record.newFiles.push({ fileName: req.file.originalname, filePath: newPdfPath });
+                record.newFiles.push({
+                    fileName: req.file.originalname,
+                    filePath: newPdfPath,
+                    uploadedBy: req.user.email,
+                    gradeLevel: gradeLevel // Save the current grade level
+                });
                 await record.save();
 
                 const lrn = record.lrn;
-
                 const historyLog = new History({
                     userEmail: req.user.email,
                     userFirstName: req.user.fname,
@@ -355,16 +361,14 @@ router.post('/addFile/:recordId', upload.single('newPdf'), async (req, res, next
                 });
                 await historyLog.save();
 
-                // Redirect back to the view-files page
                 req.flash('success', 'File successfully uploaded');
                 res.redirect(`/classAdvisor/view-files/${recordId}`);
             } else {
-                // Display a flash message for exceeding the maximum allowed files
-                req.flash('error', 'You can only upload up to 2 files.');
+                req.flash('error', `You can only upload up to 2 files for grade level ${gradeLevel}.`);
                 res.redirect(`/classAdvisor/view-files/${recordId}`);
             }
         } else {
-            // No file uploaded, redirect back to the view-files page
+            req.flash('error', 'Please select a file to upload');
             res.redirect(`/classAdvisor/view-files/${recordId}`);
         }
     } catch (error) {
@@ -373,11 +377,11 @@ router.post('/addFile/:recordId', upload.single('newPdf'), async (req, res, next
     }
 });
 
+
+// Route to add old files (current grade level files)
 router.post('/addOldFile/:recordId', upload.single('oldPdf'), async (req, res, next) => {
     try {
         const recordId = req.params.recordId;
-
-        // Find the record by ID
         const record = await Records.findById(recordId);
 
         if (!record) {
@@ -385,22 +389,22 @@ router.post('/addOldFile/:recordId', upload.single('oldPdf'), async (req, res, n
             return;
         }
 
-        // Check if the number of old files exceeds 2
         if (record.oldFiles.length >= 2) {
             req.flash('error', 'You can only upload up to 2 files.');
             return res.redirect(`/classAdvisor/oldFiles/${recordId}`);
         }
 
-        // Check if a file was uploaded
         if (req.file) {
             const newPdfPath = req.file.path;
-
-            // Update the existing record with the new file data
-            record.oldFiles.push({ fileName: req.file.originalname, filePath: newPdfPath });
+            record.oldFiles.push({
+                fileName: req.file.originalname,
+                filePath: newPdfPath,
+                uploadedBy: req.user.email,
+                gradeLevel: record.gradeLevel // Save the current grade level
+            });
             await record.save();
 
             const lrn = record.lrn;
-
             const historyLog = new History({
                 userEmail: req.user.email,
                 userFirstName: req.user.fname,
@@ -410,7 +414,6 @@ router.post('/addOldFile/:recordId', upload.single('oldPdf'), async (req, res, n
             });
             await historyLog.save();
 
-            // Redirect back to the view-files page
             req.flash('success', 'File successfully uploaded');
             res.redirect(`/classAdvisor/oldFiles/${recordId}`);
         } else {
@@ -792,5 +795,163 @@ router.get('/records-pdf', async (req, res, next) => {
         next(error);
     }
 });
+
+router.post('/advance-grade-level', async (req, res) => {
+	try {
+		const selectedRecordIds = req.body.selectedRecords;
+
+		if (!selectedRecordIds || selectedRecordIds.length === 0) {
+			return res.status(400).json({
+				error: 'Please select at least one record to advance grade level.',
+			});
+		}
+
+		const gradeLevelMap = {
+			Kinder: 0,
+			'Grade 1': 1,
+			'Grade 2': 2,
+			'Grade 3': 3,
+			'Grade 4': 4,
+			'Grade 5': 5,
+			'Grade 6': 6,
+		};
+
+		const records = await Records.find({ _id: { $in: selectedRecordIds } });
+
+		for (const record of records) {
+			const currentGradeLevel = gradeLevelMap[record.gradeLevel];
+			if (currentGradeLevel === 6) {
+				return res.status(400).json({
+					error: 'Selected student(s) are already in Grade 6 and cannot be promoted higher.',
+				});
+			}
+
+			const newGradeLevel = currentGradeLevel + 1;
+			const newGradeLevelName = newGradeLevel === 0 ? 'Kinder' : `Grade ${newGradeLevel}`;
+
+			// Check if a folder with the same name already exists
+			const existingFolder = await Folder.findOne({ name: `${record.gradeLevel} records` });
+			if (!existingFolder) {
+				// Create a new folder if it doesn't exist
+				const newFolder = new Folder({
+					name: `${record.gradeLevel} records`,
+					description: `Records for ${record.gradeLevel}`,
+				});
+				await newFolder.save();
+			}
+
+			// Update the grade level of the record
+			await Records.updateOne(
+				{ _id: record._id },
+				{ $set: { gradeLevel: newGradeLevelName } }
+			);
+		}
+
+		return res.status(200).json({ success: true, message: 'Grade level advanced successfully.' });
+	} catch (error) {
+		console.error('Error advancing grade level:', error);
+		return res.status(500).json({ error: 'An error occurred while advancing grade level.' });
+	}
+});
+
+
+router.post('/advance-grade-level/:recordId', async (req, res) => {
+	try {
+		const recordId = req.params.recordId;
+
+		const record = await Records.findById(recordId);
+
+		if (!record) {
+			return res.status(404).json({ error: 'Record not found.' });
+		}
+
+		const gradeLevelMap = {
+			Kinder: 0,
+			'Grade 1': 1,
+			'Grade 2': 2,
+			'Grade 3': 3,
+			'Grade 4': 4,
+			'Grade 5': 5,
+			'Grade 6': 6,
+		};
+
+		const currentGradeLevel = gradeLevelMap[record.gradeLevel];
+		if (currentGradeLevel === 6) {
+			return res.status(400).json({
+				error: 'Selected student is already in Grade 6 and cannot be promoted higher.',
+			});
+		}
+
+		const newGradeLevel = currentGradeLevel + 1;
+		const newGradeLevelName = newGradeLevel === 0 ? 'Kinder' : `Grade ${newGradeLevel}`;
+
+		// Create a new folder for the current grade level if it doesn't exist
+		const currentFolder = await Folder.findOne({ name: `${record.gradeLevel} records` });
+		if (!currentFolder) {
+			const newCurrentFolder = new Folder({
+				name: `${record.gradeLevel} records`,
+				description: `Records for ${record.gradeLevel}`,
+			});
+			await newCurrentFolder.save();
+		}
+
+		// Create a new folder for the next grade level if it doesn't exist
+		const nextFolder = await Folder.findOne({ name: `${newGradeLevelName} records` });
+		if (!nextFolder) {
+			const newNextFolder = new Folder({
+				name: `${newGradeLevelName} records`,
+				description: `Records for ${newGradeLevelName}`,
+			});
+			await newNextFolder.save();
+		}
+
+		// Update the grade level of the record
+		record.gradeLevel = newGradeLevelName;
+		await record.save();
+
+		return res.status(200).json({ success: true, message: 'Grade level advanced successfully.' });
+	} catch (error) {
+		console.error('Error advancing grade level:', error);
+		return res.status(500).json({ error: 'An error occurred while advancing grade level.' });
+	}
+});
+
+router.get('/records-folder/:recordId', async (req, res, next) => {
+    try {
+        const person = req.user;
+        const recordId = req.params.recordId;
+
+        // Retrieve the record based on the record ID
+        const record = await Records.findById(recordId);
+        if (!record) {
+            return res.status(404).send('Record not found.');
+        }
+
+        const gradeLevelMap = {
+            'Kinder': 0,
+            'Grade 1': 1,
+            'Grade 2': 2,
+            'Grade 3': 3,
+            'Grade 4': 4,
+            'Grade 5': 5,
+            'Grade 6': 6,
+        };
+
+        const currentGradeLevelNumber = gradeLevelMap[record.gradeLevel];
+        const gradeLevels = Object.keys(gradeLevelMap).filter(level => gradeLevelMap[level] <= currentGradeLevelNumber);
+
+        // Find folders for all grade levels up to the current grade level
+        const folders = await Folder.find({ name: { $in: gradeLevels.map(level => `${level} records`) } });
+
+        res.render('class-advisor/records-folder', {
+            person,
+            folders,
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
 
 module.exports = router;

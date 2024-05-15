@@ -15,7 +15,7 @@ async function advanceSelectedGradeLevel() {
 
         try {
             // Send a POST request to the server to advance the grade level of selected records
-            const response = await fetch('/systemAdmin/advance-grade-level', {
+            const response = await fetch('/classAdvisor/advance-grade-level', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

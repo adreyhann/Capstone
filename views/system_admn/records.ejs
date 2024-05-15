@@ -204,8 +204,8 @@
 				</nav>
 				<div class="container-lg">
 					<h2 class="my-1"><%= gradeLevel %></h2>
-					<hr class="mb-0" />
-					<div class="mt-1 mb-0 d-flex justify-content-start">
+					<hr />
+					<div class="my-2">
 						<a class="btn btn-sm" href="/systemAdmin/records-menu">
 							<span
 								class="material-symbols-outlined"
@@ -219,44 +219,25 @@
 
 						<button
 							type="button"
-							class="btn btn-sm"
+							class="btn btn-outline-info btn-sm"
 							id="archiveButton"
-							style="display: none"
 							onclick="archiveSelected()"
 						>
-							<span
-								class="material-symbols-outlined"
-								data-bs-toggle="tooltip"
-								data-bs-placement="right"
-								data-bs-title="Archive all selected students"
-							>
-								archive
-							</span>
+							Archive
 						</button>
 
-						<button
-							type="button"
-							class="btn btn-sm"
-							id="advancedButton"
-							style="display: none"
-							data-bs-toggle="tooltip"
-							data-bs-placement="top"
-							data-bs-title="Promote all selected students"
-							onclick="advanceSelectedGradeLevel()"
-						>
-							<span class="material-symbols-outlined">move_item</span>
-						</button>
+						
 
 						<a
 							type="button"
-							class="btn btn-sm"
+							class="btn btn-outline-info btn-sm"
 							data-bs-toggle="tooltip"
 							data-bs-placement="top"
 							data-bs-title="Print"
 							href="/systemAdmin/records-pdf/<%= gradeLevel %>"
 							target="_blank"
 						>
-							<span class="material-symbols-outlined">print</span>
+							Print
 						</a>
 
 					</div>
@@ -335,18 +316,7 @@
 											<span class="material-symbols-outlined"> archive </span>
 										</button>
 
-										<% if (record.gradeLevel !== 'Grade 6') { %>
-										<button
-											type="button"
-											class="btn btn-sm"
-											data-bs-toggle="tooltip"
-											data-bs-placement="top"
-											data-bs-title="Promote"
-											onclick="moveToHigherGrade('<%= record._id %>')"
-										>
-											<span class="material-symbols-outlined">move_item</span>
-										</button>
-										<% } %>
+										
 									</td>
 
 								</tr>

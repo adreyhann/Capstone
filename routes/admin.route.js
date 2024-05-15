@@ -9,6 +9,7 @@ const { Records, Archives } = require('../models/records.model');
 const Event = require('../models/events.model');
 const Activity = require('../models/activity.model');
 const Card = require('../models/card.model');
+const Folder = require('../models/records.folder.model');
 const ArchiveAcademicYear = require('../models/academic.year.model');
 require('dotenv').config();
 
@@ -153,19 +154,18 @@ router.get('/oldFiles/:id', async (req, res, next) => {
     }
 });
 
-router.get('/view-files/:id', async (req, res, next) => {
+router.get('/view-files', async (req, res, next) => {
     try {
-        const studentId = req.params.id;
+        const { studentId, gradeLevel } = req.query;
+
         const student = await Records.findById(studentId);
-
-        console.log('Student:', student);
-
         if (!student) {
             res.status(404).send('Record not found');
             return;
         }
 
-        const newFiles = student.newFiles || []; // Retrieve new files from the separate field
+        // Filter newFiles by gradeLevel
+        const newFiles = student.newFiles.filter(file => file.gradeLevel === gradeLevel);
 
         const base64PDF = await Promise.all(
             newFiles.map(async (fileData) => {
@@ -175,12 +175,12 @@ router.get('/view-files/:id', async (req, res, next) => {
                     const pdfBytes = await pdfDoc.save();
                     return Buffer.from(pdfBytes).toString('base64');
                 } else {
-                    return null; 
+                    return null;
                 }
             })
         );
 
-        const filenames = newFiles.map(fileData => fileData.fileName);
+        const filenames = newFiles.map((fileData) => fileData.fileName);
 
         const person = req.user;
         res.render('admin/view-files', {
@@ -858,6 +858,44 @@ router.get('/academic-year', async (req, res, next) => {
             person,
             academicYear,
 			archivedRecord,
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
+});
+
+router.get('/records-folder/:recordId', async (req, res, next) => {
+    try {
+        const person = req.user;
+        const recordId = req.params.recordId;
+
+        // Retrieve the record based on the record ID
+        const record = await Records.findById(recordId);
+        if (!record) {
+            return res.status(404).send('Record not found.');
+        }
+
+        const gradeLevelMap = {
+            'Kinder': 0,
+            'Grade 1': 1,
+            'Grade 2': 2,
+            'Grade 3': 3,
+            'Grade 4': 4,
+            'Grade 5': 5,
+            'Grade 6': 6,
+        };
+
+        const currentGradeLevelNumber = gradeLevelMap[record.gradeLevel];
+        const gradeLevels = Object.keys(gradeLevelMap).filter(level => gradeLevelMap[level] <= currentGradeLevelNumber);
+
+        // Find folders for all grade levels up to the current grade level
+        const folders = await Folder.find({ name: { $in: gradeLevels.map(level => `${level} records`) } });
+
+        res.render('admin/records-folder', {
+			record,
+            person,
+            folders,
         });
     } catch (error) {
         console.error('Error:', error);

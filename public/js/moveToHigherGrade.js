@@ -7,7 +7,7 @@ function moveToHigherGrade(recordId) {
 	// If the user confirms the action
 	if (confirmed) {
 		// Send a POST request to the server to advance the grade level of the selected record
-		fetch(`/systemAdmin/advance-grade-level/${recordId}`, {
+		fetch(`/classAdvisor/advance-grade-level/${recordId}`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

@@ -188,7 +188,6 @@ router.get('/oldFiles/:id', async (req, res, next) => {
     }
 });
 
-
 router.get('/view-files', async (req, res, next) => {
     try {
         const { studentId, gradeLevel } = req.query;
@@ -229,9 +228,6 @@ router.get('/view-files', async (req, res, next) => {
         next(error);
     }
 });
-
-
-
 
 router.get('/goBackToRecords', (req, res) => {
 	const gradeLevel = req.query.gradeLevel || ''; // Get the grade level from the query parameter

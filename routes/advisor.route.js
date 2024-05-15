@@ -240,7 +240,7 @@ router.post('/submit-form', async (req, res, next) => {
 
             // Check if oldPdfFiles are required when transferee is not 'No'
             if (transferee !== 'No') {
-                const oldPdfFiles = req.files['oldPdf'] || [];
+                const oldPdfFiles = req.files['oldPdf'] || []; 
                 if (oldPdfFiles.length === 0) {
                     req.flash('error', 'Please upload the transferee student files.');
                     return res.redirect('/classAdvisor/addRecords');
@@ -256,18 +256,21 @@ router.post('/submit-form', async (req, res, next) => {
             }
 
             
- 
-            const processFiles = async (files) => {
+  
+            const processFiles = async (files, gradeLevel, uploadedBy) => {
                 return Promise.all(files.map(async (file) => {
                     return {
                         fileName: file.originalname,
                         filePath: file.path,
+                        uploadedBy: uploadedBy,
+                        gradeLevel: gradeLevel
                     }; 
                 }));
             };
+            
 
-            const oldPdfFilesData = await processFiles(oldPdfFiles);
-            const newPdfFilesData = await processFiles(newPdfFiles);
+            const oldPdfFilesData = await processFiles(oldPdfFiles, gradeLevel, req.user.email);
+            const newPdfFilesData = await processFiles(newPdfFiles, gradeLevel, req.user.email);
 
             const newRecord = new Records({
                 lrn: parseInt(lrn),
@@ -341,6 +344,15 @@ router.post('/addFile/:recordId', upload.single('newPdf'), async (req, res, next
             const gradeLevel = record.gradeLevel;
             const filesForGradeLevel = record.newFiles.filter(file => file.gradeLevel === gradeLevel);
 
+            // Check if filename already exists
+            const filenameExists = filesForGradeLevel.some(file => file.fileName === req.file.originalname);
+
+            if (filenameExists) {
+                req.flash('error', `This file already exist`);
+                res.redirect(`/classAdvisor/view-files/${recordId}`);
+                return;
+            }
+
             if (filesForGradeLevel.length < 2) {
                 const newPdfPath = req.file.path;
                 record.newFiles.push({
@@ -376,6 +388,7 @@ router.post('/addFile/:recordId', upload.single('newPdf'), async (req, res, next
         next(error);
     }
 });
+
 
 
 // Route to add old files (current grade level files)
@@ -445,7 +458,7 @@ router.post('/deleteOldFile/:recordId/:index', async (req, res, next) => {
         if (index >= 0 && index < record.oldFiles.length) {
             // Retrieve the path of the deleted file
             const deletedFile = record.oldFiles[index];
-            
+
             // Remove the file at the specified index
             record.oldFiles.splice(index, 1);
             await record.save();
@@ -484,6 +497,7 @@ router.post('/deleteOldFile/:recordId/:index', async (req, res, next) => {
         next(error);
     }
 });
+
 
 
 router.post('/deleteNewFile/:recordId/:index', async (req, res, next) => {

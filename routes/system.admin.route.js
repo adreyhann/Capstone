@@ -1588,7 +1588,7 @@ router.post('/events', async (req, res) => {
 		const eventHour = eventDate.getHours();
 		if (eventHour >= 21 || eventHour < 5) {
 			return res.status(400).json({
-				error: 'Events / Announcement cannot be created between 9 PM and 5 AM.',
+				error: 'Events / Announcement cannot be created between 9 PM to 5 AM.',
 			});
 		}
 

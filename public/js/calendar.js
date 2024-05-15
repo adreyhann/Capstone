@@ -163,6 +163,9 @@ flatpickr('#datepicker', {
 	enableTime: true,
 	dateFormat: 'Y-m-d H:i',
 	minDate: 'today',
+	disableTime: [ // Disable specific time ranges
+    { from: "21:00", to: "04:59" } // From 9pm to 5am (exclusive)
+  ]
 });
 
 

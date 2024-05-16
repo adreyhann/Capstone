@@ -2,7 +2,7 @@ const router = require('express').Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { PDFDocument: PDFLibDocument, rgb } = require('pdf-lib');
+const PDFLibDocument = require('pdf-lib').PDFDocument;
 const PDFDocument = require('pdfkit');
 const { PDFTable, PDFTableText } = require('pdfkit-table');
 const User = require('../models/user.model');
@@ -162,14 +162,19 @@ router.get('/oldFiles/:id', async (req, res, next) => {
         }
 
         const oldFiles = student.oldFiles || []; // Retrieve old files from the separate field
-        const base64PDF = await Promise.all(
-            oldFiles.map(async (fileData) => {
-                const pdfData = await fs.promises.readFile(fileData.filePath);
-                const pdfDoc = await PDFLibDocument.load(pdfData);
-                const pdfBytes = await pdfDoc.save();
-                return Buffer.from(pdfBytes).toString('base64');
-            })
-        );
+        const base64PDFPromises = oldFiles.map(async (fileData) => {
+            const storageRef = ref(storage, fileData.filePath);
+            const downloadURL = await getDownloadURL(storageRef);
+
+            // Download the file contents
+            const response = await fetch(downloadURL);
+            const pdfData = await response.arrayBuffer();
+
+            // Convert to base64
+            return Buffer.from(pdfData).toString('base64');
+        });
+
+        const base64PDF = await Promise.all(base64PDFPromises);
 
         const filenames = oldFiles.map(fileData => fileData.fileName);
         const uploadedByEmails = oldFiles.map(fileData => fileData.uploadedBy);
@@ -188,6 +193,7 @@ router.get('/oldFiles/:id', async (req, res, next) => {
     }
 });
 
+
 router.get('/view-files', async (req, res, next) => {
     try {
         const { studentId, gradeLevel } = req.query;
@@ -201,18 +207,23 @@ router.get('/view-files', async (req, res, next) => {
         // Filter newFiles by gradeLevel
         const newFiles = student.newFiles.filter(file => file.gradeLevel === gradeLevel);
 
-        const base64PDF = await Promise.all(
-            newFiles.map(async (fileData) => {
-                if (fileData && fileData.filePath) {
-                    const pdfData = await fs.promises.readFile(fileData.filePath);
-                    const pdfDoc = await PDFLibDocument.load(pdfData);
-                    const pdfBytes = await pdfDoc.save();
-                    return Buffer.from(pdfBytes).toString('base64');
-                } else {
-                    return null;
-                }
-            })
-        );
+        const base64PDFPromises = newFiles.map(async (fileData) => {
+            if (fileData && fileData.filePath) {
+                const storageRef = ref(storage, fileData.filePath);
+                const downloadURL = await getDownloadURL(storageRef);
+
+                // Download the file contents
+                const response = await fetch(downloadURL);
+                const pdfData = await response.arrayBuffer();
+
+                // Convert to base64
+                return Buffer.from(pdfData).toString('base64');
+            } else {
+                return null;
+            }
+        });
+
+        const base64PDF = await Promise.all(base64PDFPromises);
 
         const filenames = newFiles.map((fileData) => fileData.fileName);
 
@@ -228,6 +239,7 @@ router.get('/view-files', async (req, res, next) => {
         next(error);
     }
 });
+
 
 router.get('/goBackToRecords', (req, res) => {
 	const gradeLevel = req.query.gradeLevel || ''; // Get the grade level from the query parameter

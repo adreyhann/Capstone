@@ -631,22 +631,34 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
             return;
         }
 
-        const base64OldPDF = await Promise.all(
-            archivedRecord.oldFiles.map(async (file) => {
-                const pdfData = await fs.promises.readFile(file.filePath);
-                return Buffer.from(pdfData).toString('base64');
-            })
-        );
+        const base64OldPDFPromises = archivedRecord.oldFiles.map(async (file) => {
+            const storageRef = ref(storage, file.filePath);
+            const downloadURL = await getDownloadURL(storageRef);
+
+            // Download the file contents
+            const response = await fetch(downloadURL);
+            const pdfData = await response.arrayBuffer();
+
+            // Convert to base64
+            return Buffer.from(pdfData).toString('base64');
+        });
+
+        const base64NewPDFPromises = archivedRecord.newFiles.map(async (file) => {
+            const storageRef = ref(storage, file.filePath);
+            const downloadURL = await getDownloadURL(storageRef);
+
+            // Download the file contents
+            const response = await fetch(downloadURL);
+            const pdfData = await response.arrayBuffer();
+
+            // Convert to base64
+            return Buffer.from(pdfData).toString('base64');
+        });
+
+        const base64OldPDF = await Promise.all(base64OldPDFPromises);
+        const base64NewPDF = await Promise.all(base64NewPDFPromises);
 
         const filenameOld = archivedRecord.oldFiles.map((file) => path.basename(file.filePath));
-
-        const base64NewPDF = await Promise.all(
-            archivedRecord.newFiles.map(async (file) => {
-                const pdfData = await fs.promises.readFile(file.filePath);
-                return Buffer.from(pdfData).toString('base64');
-            })
-        );
-
         const filenameNew = archivedRecord.newFiles.map((file) => path.basename(file.filePath));
 
         const person = req.user;
@@ -664,6 +676,7 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
         next(error);
     }
 });
+
 
 const storage = getStorage();
 const storageConfig = multer.memoryStorage();

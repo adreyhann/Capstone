@@ -79,20 +79,18 @@ const ArchivedRecords = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    oldFiles: {
-        type: [{
-            fileName: { type: String, required: true },
-            filePath: { type: String, required: true },
-        }],
-        default: [],
-    },
-    newFiles: {
-        type: [{
-            fileName: { type: String, required: true },
-            filePath: { type: String, required: true },
-        }],
-        default: [],
-    },
+    newFiles: [{
+        fileName: String,
+        filePath: String,
+        uploadedBy: String, // email or ID of the user who uploaded the file
+        gradeLevel: String // Grade level when the file was uploaded
+    }],
+    oldFiles: [{
+        fileName: String,
+        filePath: String,
+        uploadedBy: String, // email or ID of the user who uploaded the file
+        gradeLevel: String // Grade level when the file was uploaded
+    }],
 })
 
 

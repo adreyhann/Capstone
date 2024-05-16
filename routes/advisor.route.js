@@ -115,6 +115,20 @@ router.get('/studentFolders/:id', async (req, res, next) => {
     }
 });
 
+async function downloadFile(url, filePath) {
+    const axios = require('axios');
+    const writer = fs.createWriteStream(filePath);
+    const response = await axios({
+        url,
+        method: 'GET',
+        responseType: 'stream'
+    });
+    response.data.pipe(writer);
+    return new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+    });
+}
 // oldFiles = transferee student files
 router.get('/oldFiles/:id', async (req, res, next) => {
     try {
@@ -165,20 +179,7 @@ router.get('/oldFiles/:id', async (req, res, next) => {
 });
 
 // Function to download file
-async function downloadFile(url, filePath) {
-    const axios = require('axios');
-    const writer = fs.createWriteStream(filePath);
-    const response = await axios({
-        url,
-        method: 'GET',
-        responseType: 'stream'
-    });
-    response.data.pipe(writer);
-    return new Promise((resolve, reject) => {
-        writer.on('finish', resolve);
-        writer.on('error', reject);
-    });
-}
+
 
 
 // view-files = current files or grade level

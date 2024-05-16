@@ -632,54 +632,63 @@ router.post('/unarchive/:archivedRecordId', async (req, res, next) => {
 });
 
 router.get('/archived-files/:recordId', async (req, res, next) => {
-	try {
-		const recordId = req.params.recordId;
+    try {
+        const recordId = req.params.recordId;
 
-		// Find the archived record by ID
-		const archivedRecord = await Archives.findById(recordId);
+        // Find the archived record by ID
+        const archivedRecord = await Archives.findById(recordId);
 
-		if (!archivedRecord) {
-			res.status(404).send('Archived Record not found');
-			return;
-		}
+        if (!archivedRecord) {
+            res.status(404).send('Archived Record not found');
+            return;
+        }
 
-		const base64OldPDF = await Promise.all(
-			archivedRecord.oldFiles.map(async (file) => {
-				const pdfData = await fs.promises.readFile(file.filePath);
-				return Buffer.from(pdfData).toString('base64');
-			})
-		);
+        const base64OldPDFPromises = archivedRecord.oldFiles.map(async (file) => {
+            const storageRef = ref(storage, file.filePath);
+            const downloadURL = await getDownloadURL(storageRef);
 
-		const filenameOld = archivedRecord.oldFiles.map((file) =>
-			path.basename(file.filePath)
-		);
+            // Download the file contents
+            const response = await fetch(downloadURL);
+            const pdfData = await response.arrayBuffer();
 
-		const base64NewPDF = await Promise.all(
-			archivedRecord.newFiles.map(async (file) => {
-				const pdfData = await fs.promises.readFile(file.filePath);
-				return Buffer.from(pdfData).toString('base64');
-			})
-		);
+            // Convert to base64
+            return Buffer.from(pdfData).toString('base64');
+        });
 
-		const filenameNew = archivedRecord.newFiles.map((file) =>
-			path.basename(file.filePath)
-		);
+        const base64NewPDFPromises = archivedRecord.newFiles.map(async (file) => {
+            const storageRef = ref(storage, file.filePath);
+            const downloadURL = await getDownloadURL(storageRef);
 
-		const person = req.user;
+            // Download the file contents
+            const response = await fetch(downloadURL);
+            const pdfData = await response.arrayBuffer();
 
-		res.render('system_admn/archived-files', {
-			archivedRecord,
-			person,
-			base64OldPDF,
-			filenameOld,
-			base64NewPDF,
-			filenameNew,
-		});
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
+            // Convert to base64
+            return Buffer.from(pdfData).toString('base64');
+        });
+
+        const base64OldPDF = await Promise.all(base64OldPDFPromises);
+        const base64NewPDF = await Promise.all(base64NewPDFPromises);
+
+        const filenameOld = archivedRecord.oldFiles.map((file) => path.basename(file.filePath));
+        const filenameNew = archivedRecord.newFiles.map((file) => path.basename(file.filePath));
+
+        const person = req.user;
+
+        res.render('system_admn/archived-files', {
+            archivedRecord,
+            person,
+            base64OldPDF,
+            filenameOld,
+            base64NewPDF,
+            filenameNew,
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
+
 
 router.get('/restored-files/:recordId', async (req, res, next) => {
 	try {

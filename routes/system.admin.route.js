@@ -1642,15 +1642,36 @@ router.put('/events/:date/:eventName', async (req, res) => {
 });
 
 router.delete('/events/:date/:eventName', async (req, res) => {
-	try {
-		const { date, eventName } = req.params;
-		await Event.findOneAndDelete({ date, eventName });
-		res.sendStatus(204);
-	} catch (error) {
-		console.error('Error deleting event:', error);
-		res.status(500).json({ error: 'Failed to delete event' });
-	}
+    try {
+        const { date, eventName } = req.params;
+        const event = await Event.findOne({ date, eventName });
+
+        if (!event) {
+            return res.status(404).json({ error: 'Event not found' });
+        }
+
+        console.log('Current user role:', req.user.role); // Log the user role
+
+        // Check if the current user is an admin
+        if (req.user.role === 'Admin') {
+            console.log('User is an Admin'); // Log that the user is an Admin
+
+            // Check if the event was created by a System Admin
+            if (event.createdBy === 'System Admin') {
+                console.log('Event was created by a System Admin'); // Log that the event was created by a System Admin
+                return res.status(403).json({ error: 'You do not have permission to delete this event' });
+            }
+        }
+
+        await Event.findOneAndDelete({ date, eventName });
+        res.sendStatus(204);
+    } catch (error) {
+        console.error('Error deleting event:', error);
+        res.status(500).json({ error: 'Failed to delete event' });
+    }
 });
+
+
 
 // stop here
 router.get('/generate-pdf', async (req, res, next) => {

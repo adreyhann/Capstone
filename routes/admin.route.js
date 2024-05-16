@@ -2,7 +2,7 @@ const router = require('express').Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { PDFDocument: PDFLibDocument } = require('pdf-lib');
+const PDFLibDocument = require('pdf-lib').PDFDocument;
 const User = require('../models/user.model');
 const History = require('../models/history.model');
 const { Records, Archives } = require('../models/records.model');
@@ -11,6 +11,12 @@ const Activity = require('../models/activity.model');
 const Card = require('../models/card.model');
 const Folder = require('../models/records.folder.model');
 const ArchiveAcademicYear = require('../models/academic.year.model');
+const {
+	getStorage,
+	ref,
+	uploadBytes,
+	getDownloadURL,
+} = require('firebase/storage');
 require('dotenv').config();
 
 function countVisibleUsers(users, currentUser) {
@@ -130,14 +136,19 @@ router.get('/oldFiles/:id', async (req, res, next) => {
 
         const oldFiles = student.oldFiles || []; // Retrieve old files from the separate field
 
-        const base64PDF = await Promise.all(
-            oldFiles.map(async (fileData) => {
-                const pdfData = await fs.promises.readFile(fileData.filePath);
-                const pdfDoc = await PDFLibDocument.load(pdfData);
-                const pdfBytes = await pdfDoc.save();
-                return Buffer.from(pdfBytes).toString('base64');
-            })
-        );
+        const base64PDFPromises = oldFiles.map(async (fileData) => {
+            const storageRef = ref(storage, fileData.filePath);
+            const downloadURL = await getDownloadURL(storageRef);
+
+            // Download the file contents
+            const response = await fetch(downloadURL);
+            const pdfData = await response.arrayBuffer();
+
+            // Convert to base64
+            return Buffer.from(pdfData).toString('base64');
+        });
+
+        const base64PDF = await Promise.all(base64PDFPromises);
 
         const filenames = oldFiles.map(fileData => fileData.fileName);
 
@@ -154,6 +165,7 @@ router.get('/oldFiles/:id', async (req, res, next) => {
     }
 });
 
+
 router.get('/view-files', async (req, res, next) => {
     try {
         const { studentId, gradeLevel } = req.query;
@@ -167,18 +179,19 @@ router.get('/view-files', async (req, res, next) => {
         // Filter newFiles by gradeLevel
         const newFiles = student.newFiles.filter(file => file.gradeLevel === gradeLevel);
 
-        const base64PDF = await Promise.all(
-            newFiles.map(async (fileData) => {
-                if (fileData && fileData.filePath) {
-                    const pdfData = await fs.promises.readFile(fileData.filePath);
-                    const pdfDoc = await PDFLibDocument.load(pdfData);
-                    const pdfBytes = await pdfDoc.save();
-                    return Buffer.from(pdfBytes).toString('base64');
-                } else {
-                    return null;
-                }
-            })
-        );
+        const base64PDFPromises = newFiles.map(async (fileData) => {
+            const storageRef = ref(storage, fileData.filePath);
+            const downloadURL = await getDownloadURL(storageRef);
+
+            // Download the file contents
+            const response = await fetch(downloadURL);
+            const pdfData = await response.arrayBuffer();
+
+            // Convert to base64
+            return Buffer.from(pdfData).toString('base64');
+        });
+
+        const base64PDF = await Promise.all(base64PDFPromises);
 
         const filenames = newFiles.map((fileData) => fileData.fileName);
 
@@ -194,6 +207,7 @@ router.get('/view-files', async (req, res, next) => {
         next(error);
     }
 });
+
 
 router.get('/goBackToRecords', (req, res) => {
 	const gradeLevel = req.query.gradeLevel || ''; // Get the grade level from the query parameter
@@ -651,19 +665,13 @@ router.get('/archived-files/:recordId', async (req, res, next) => {
     }
 });
 
-const storage = multer.diskStorage({
-	destination: function (req, file, cb) {
-		cb(null, 'public/uploads/profile-picture'); 
-	},
-	filename: function (req, file, cb) {
-		cb(null, Date.now() + '-' + file.originalname);
-	},
-});
+const storage = getStorage();
+const storageConfig = multer.memoryStorage();
 
 const upload = multer({
-	storage: storage,
+	storage: storageConfig,
 	limits: {
-		fileSize: 1024 * 1024 * 2, 
+		fileSize: 1024 * 1024 * 2, // 2MB file size limit
 	},
 	fileFilter: function (req, file, cb) {
 		// Accept only image files
@@ -679,116 +687,152 @@ const upload = multer({
 			req.flash('error', 'Only JPEG, JPG, or PNG files are allowed');
 			cb(null, false);
 		}
-		
 	},
 }).single('profilePicture');
 
+// Function to upload profile picture to Firebase Storage
+async function uploadProfilePicture(file) {
+	const storageRef = ref(storage, `profile-picture/${file.originalname}`);
+	const snapshot = await uploadBytes(storageRef, file.buffer);
+	const downloadURL = await getDownloadURL(snapshot.ref);
+	return downloadURL;
+}
+
 router.post('/edit-users/:_id', upload, async (req, res, next) => {
-	try {
-		const userId = req.params._id;
-
-		const profilePicturePath = req.file ? req.file.path.replace('public', '') : req.user.profilePicture;
-		// Find the record by ID
-		const user = await User.findById(userId);
-
-		if (!user) {
-			res.status(404).send('Record not found');
-			return;
-		}
-
-		// Check for duplicate email
-		const existingUserWithSameEmail = await User.findOne({
-			email: req.body.editEmail,
-			_id: { $ne: userId }, // Exclude the current user
-		});
-
-		if (existingUserWithSameEmail) {
-			req.flash('error', 'Another user with the same email already exists.');
-			return res.redirect('/admin/accounts');
-		}
-
-		// Validate the new email using Hunter.io API
-		try {
-			const isEmailValid = await validateEmail(req.body.editEmail);
-
-			if (!isEmailValid) {
-				req.flash('error', 'Invalid email! Please enter a valid email.');
-				return res.redirect('/admin/accounts');
-			}
-		} catch (validationError) {
-			console.error(validationError);
-			req.flash('error', 'Error validating email. Please try again later.');
-			return res.redirect('/admin/accounts');
-		}
-
-		// If the new classAdvisory is not 'None', check for uniqueness
-		if (req.body.editClassAdvisory !== 'None') {
-			const existingUserWithSameClassAdvisory = await User.findOne({
-				classAdvisory: req.body.editClassAdvisory,
-				_id: { $ne: userId }, // Exclude the current user
-			});
-
-			if (existingUserWithSameClassAdvisory) {
-				req.flash(
-					'error',
-					'Another user with the same class advisory already exists.'
-				);
-				return res.redirect('/admin/accounts');
-			}
-		}
-
-		const changes = [];
-		if (user.lname !== req.body.editLName) {
-			changes.push(
-				`Last name changed from ${user.lname} to ${req.body.editLName}`
-			);
-		}
-		if (user.fname !== req.body.editFName) {
-			changes.push(
-				`First name changed from ${user.fname} to ${req.body.editFName}`
-			);
-		}
-		if (user.email !== req.body.editEmail) {
-			changes.push(`Email changed from ${user.email} to ${req.body.editEmail}`);
-		}
-		if (user.role !== req.body.editRole) {
-			changes.push(`Role changed from ${user.role} to ${req.body.editRole}`);
-		}
-		if (user.classAdvisory !== req.body.editClassAdvisory) {
-			changes.push(
-				`Class advisory changed from ${user.classAdvisory} to ${req.body.editClassAdvisory}`
-			);
-		}
-
-		// Update the record with new values
-		user.lname = req.body.editLName;
-		user.fname = req.body.editFName;
-		user.role = req.body.editRole;
-		user.classAdvisory = req.body.editClassAdvisory;
-		user.email = req.body.editEmail;
-		user.profilePicture = profilePicturePath
-
-		// Save the updated record
-		await user.save();
-
-		const historyLog = new History({
-			userEmail: req.user.email,
-			userFirstName: req.user.fname,
-			userLastName: req.user.lname,
-			action: `${req.user.fname} ${req.user.lname} edited user details for ${user.email}`,
-			details: changes.join(', '),
-		});
-
-		await historyLog.save();
-
-		// Redirect back to the records page
-		req.flash('success', 'Record updated successfully');
-		res.redirect('/admin/accounts');
-	} catch (error) {
-		console.error('Error:', error);
-		next(error);
-	}
+    try {
+        const userId = req.params._id;
+        const user = await User.findById(userId);
+        if (!user) return redirectWithError(res, '/admin/accounts', 'Record not found');
+        const profilePicturePath = req.file ? await uploadProfilePicture(req.file) : user.profilePicture;
+        const error = await validateEdit(req, user);
+        if (error) return redirectWithError(res, '/admin/accounts', error);
+        updateUser(user, req.body, profilePicturePath);
+        await user.save();
+        await logHistory(req.user, user, generateChanges(user, req.body));
+        req.flash('success', 'Record updated successfully');
+        res.redirect('/admin/accounts');
+    } catch (error) {
+        console.error('Error:', error);
+        next(error);
+    }
 });
+
+function redirectWithError(res, url, errorMessage) {
+	req.flash('error', errorMessage);
+	return res.redirect(url);
+}
+
+async function validateEdit(req, user) {
+	if (await findUserWithSameEmail(req.body.editEmail, user._id)) {
+		return 'Another user with the same email already exists.';
+	}
+
+	if (await findInactiveUserWithEmail(req.body.editEmail)) {
+		return 'Cannot use a deactivated email. Please choose another one.';
+	}
+
+	if (!(await validateEmail(req.body.editEmail))) {
+		return 'Invalid email! Please enter a valid email.';
+	}
+
+	if (
+		req.body.editRole === 'System Admin' &&
+		(await countSystemAdmins(user._id)) >= 2
+	) {
+		return 'Only two users can have the role "System Admin".';
+	}
+
+	if (req.body.editRole === 'Admin' && (await findExistingAdmin(user._id))) {
+		return 'Only one user can have the role "Admin".';
+	}
+
+	if (
+		req.body.editRole === 'Class Advisor' &&
+		req.body.editClassAdvisory === 'None'
+	) {
+		return 'Invalid selection! Please choose a class advisory.';
+	}
+
+	if (
+		(req.body.editRole === 'System Admin' || req.body.editRole === 'Admin') &&
+		req.body.editClassAdvisory !== 'None'
+	) {
+		return 'Invalid Selection';
+	}
+
+	if (
+		req.body.editClassAdvisory !== 'None' &&
+		(await findUserWithSameClassAdvisory(req.body.editClassAdvisory, user._id))
+	) {
+		return 'Another user with the same class advisory already exists.';
+	}
+
+	return null;
+}
+
+async function findUserWithSameEmail(email, userId) {
+	return await User.findOne({ email, _id: { $ne: userId } });
+}
+
+async function findInactiveUserWithEmail(email) {
+	return await InactiveUser.findOne({ email });
+}
+
+async function countSystemAdmins(userId) {
+	return await User.countDocuments({
+		role: 'System Admin',
+		_id: { $ne: userId },
+	});
+}
+
+async function findExistingAdmin(userId) {
+	return await User.findOne({ role: 'Admin', _id: { $ne: userId } });
+}
+
+async function findUserWithSameClassAdvisory(classAdvisory, userId) {
+	return await User.findOne({ classAdvisory, _id: { $ne: userId } });
+}
+
+function generateChanges(user, formData) {
+	const changes = [];
+
+	if (user.lname !== formData.editLName) {
+		changes.push(
+			`Last name changed from ${user.lname} to ${formData.editLName}`
+		);
+	}
+
+	if (user.fname !== formData.editFName) {
+		changes.push(
+			`First name changed from ${user.fname} to ${formData.editFName}`
+		);
+	}
+
+	if (user.email !== formData.editEmail) {
+		changes.push(`Email changed from ${user.email} to ${formData.editEmail}`);
+	}
+
+	if (user.role !== formData.editRole) {
+		changes.push(`Role changed from ${user.role} to ${formData.editRole}`);
+	}
+
+	if (user.classAdvisory !== formData.editClassAdvisory) {
+		changes.push(
+			`Class advisory changed from ${user.classAdvisory} to ${formData.editClassAdvisory}`
+		);
+	}
+
+	return changes;
+}
+
+function updateUser(user, formData, profilePicturePath) {
+	user.lname = formData.editLName;
+	user.fname = formData.editFName;
+	user.email = formData.editEmail;
+	user.role = formData.editRole;
+	user.classAdvisory = formData.editClassAdvisory;
+	user.profilePicture = profilePicturePath;
+}
 
 // Add this route to get record counts
 router.get('/get-record-counts', async (req, res, next) => {

@@ -2,7 +2,7 @@ const router = require('express').Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { PDFDocument: PDFLibDocument } = require('pdf-lib');
+const PDFLibDocument = require('pdf-lib').PDFDocument;
 const { PDFTable, PDFTableText } = require('pdfkit-table');
 const Event = require('../models/events.model');
 const User = require('../models/user.model');
@@ -11,6 +11,8 @@ const RestoredRecordsList = require('../models/restored.records.table.model');
 const History = require('../models/history.model');
 const Activity = require('../models/activity.model')
 const Folder = require('../models/records.folder.model');
+const { ref, uploadBytes, getBlob, getDownloadURL, deleteObject } = require('firebase/storage');
+const { storage } = require('../firebaseConfig');
 
 router.get('/dashboard', async (req, res, next) => {
 	// console.log(req.user)
@@ -69,32 +71,34 @@ router.get('/addRecords', async (req, res, next) => {
 	res.render('class-advisor/addRecords', { person });
 });
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
         
-        if (file.fieldname === 'oldPdf') {
-            cb(null, 'public/uploads/old-files');
-        } else if (file.fieldname === 'newPdf') {
-            cb(null, 'public/uploads/new-files');
-        }
-    },
-    filename: function (req, file, cb) {
-        cb(null, file.originalname);
-    },
-});
+//         if (file.fieldname === 'oldPdf') {
+//             cb(null, 'public/uploads/old-files');
+//         } else if (file.fieldname === 'newPdf') {
+//             cb(null, 'public/uploads/new-files');
+//         }
+//     },
+//     filename: function (req, file, cb) {
+//         cb(null, file.originalname);
+//     },
+// });
 
-const upload = multer({
-	storage: storage,
-	limits: { fileSize: 5 * 1024 * 1024 },
-	fileFilter: function (req, file, cb) {
-		if (file.mimetype === 'application/pdf') {
-			cb(null, true);
-		} else {
-			req.flash('error', 'Only PDF files are allowed!');
-			cb(null, false);
-		}
-	},
-});
+// const upload = multer({
+// 	storage: storage,
+// 	limits: { fileSize: 5 * 1024 * 1024 },
+// 	fileFilter: function (req, file, cb) {
+// 		if (file.mimetype === 'application/pdf') {
+// 			cb(null, true);
+// 		} else {
+// 			req.flash('error', 'Only PDF files are allowed!');
+// 			cb(null, false);
+// 		}
+// 	},
+// });
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 router.get('/studentFolders/:id', async (req, res, next) => {
     try {
@@ -122,12 +126,23 @@ router.get('/oldFiles/:id', async (req, res, next) => {
             return;
         }
 
-        const oldFiles = student.oldFiles || []; // Retrieve old files from the separate field
+        const oldFiles = student.oldFiles || [];
         const base64PDF = await Promise.all(
             oldFiles.map(async (fileData) => {
-                const pdfData = await fs.promises.readFile(fileData.filePath);
+                const storageRef = ref(storage, fileData.filePath);
+                const downloadURL = await getDownloadURL(storageRef);
+                const filename = path.basename(fileData.filePath);
+                const tempFilePath = path.join(__dirname, '..', 'temp', filename);
+
+                // Download the file to a temporary location
+                await downloadFile(downloadURL, tempFilePath);
+
+                // Read the file from the temporary location
+                const pdfData = fs.readFileSync(tempFilePath);
                 const pdfDoc = await PDFLibDocument.load(pdfData);
                 const pdfBytes = await pdfDoc.save();
+                fs.unlinkSync(tempFilePath); // Delete the temporary file
+
                 return Buffer.from(pdfBytes).toString('base64');
             })
         );
@@ -149,6 +164,23 @@ router.get('/oldFiles/:id', async (req, res, next) => {
     }
 });
 
+// Function to download file
+async function downloadFile(url, filePath) {
+    const axios = require('axios');
+    const writer = fs.createWriteStream(filePath);
+    const response = await axios({
+        url,
+        method: 'GET',
+        responseType: 'stream'
+    });
+    response.data.pipe(writer);
+    return new Promise((resolve, reject) => {
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+    });
+}
+
+
 // view-files = current files or grade level
 router.get('/view-files/:id', async (req, res, next) => {
     try {
@@ -169,10 +201,15 @@ router.get('/view-files/:id', async (req, res, next) => {
         const base64PDF = await Promise.all(
             filteredFiles.map(async (fileData) => {
                 if (fileData && fileData.filePath) {
-                    const pdfData = await fs.promises.readFile(fileData.filePath);
-                    const pdfDoc = await PDFLibDocument.load(pdfData);
-                    const pdfBytes = await pdfDoc.save();
-                    return Buffer.from(pdfBytes).toString('base64');
+                    const storageRef = ref(storage, fileData.filePath);
+                    const downloadURL = await getDownloadURL(storageRef);
+
+                    // Download the file contents
+                    const response = await fetch(downloadURL);
+                    const pdfData = await response.arrayBuffer();
+
+                    // Convert to base64
+                    return Buffer.from(pdfData).toString('base64');
                 } else {
                     return null; 
                 }
@@ -196,12 +233,11 @@ router.get('/view-files/:id', async (req, res, next) => {
 
 
 
+
 router.post('/submit-form', async (req, res, next) => {
     try {
-        // Check if files are uploaded with multer
         upload.fields([{ name: 'oldPdf', maxCount: 2 }, { name: 'newPdf', maxCount: 2 }])(req, res, async (err) => {
             if (err) {
-                // Handle multer errors
                 if (err instanceof multer.MulterError) {
                     if (err.code === 'LIMIT_UNEXPECTED_FILE') {
                         req.flash('error', 'You can only upload up to 2 files for each category.');
@@ -213,13 +249,11 @@ router.post('/submit-form', async (req, res, next) => {
 
             const { lrn, lName, fName, mName, gender, transferee, gradeLevel } = req.body;
 
-            // Validate LRN: should be a 12-digit number
             if (!/^\d{12}$/.test(lrn)) {
                 req.flash('error', 'LRN should be a 12-digit number.');
                 return res.redirect('/classAdvisor/addRecords');
             }
 
-            // Check if LRN already exists
             const existingRecord = await Records.findOne({ lrn: parseInt(lrn) });
             if (existingRecord) {
                 req.flash('error', 'LRN already exists. Please enter a different LRN.');
@@ -238,9 +272,8 @@ router.post('/submit-form', async (req, res, next) => {
                 return res.redirect('/classAdvisor/addRecords');
             }
 
-            // Check if oldPdfFiles are required when transferee is not 'No'
             if (transferee !== 'No') {
-                const oldPdfFiles = req.files['oldPdf'] || []; 
+                const oldPdfFiles = req.files['oldPdf'] || [];
                 if (oldPdfFiles.length === 0) {
                     req.flash('error', 'Please upload the transferee student files.');
                     return res.redirect('/classAdvisor/addRecords');
@@ -255,22 +288,26 @@ router.post('/submit-form', async (req, res, next) => {
                 return res.redirect('/classAdvisor/addRecords');
             }
 
-            
-  
-            const processFiles = async (files, gradeLevel, uploadedBy) => {
+            const uploadToFirebase = async (file, folder) => {
+                const storageRef = ref(storage, `${folder}/${file.originalname}`);
+                await uploadBytes(storageRef, file.buffer);
+                return storageRef.fullPath;
+            };
+
+            const processFiles = async (files, folder) => {
                 return Promise.all(files.map(async (file) => {
+                    const filePath = await uploadToFirebase(file, folder);
                     return {
                         fileName: file.originalname,
-                        filePath: file.path,
-                        uploadedBy: uploadedBy,
+                        filePath: filePath,
+                        uploadedBy: req.user.email,
                         gradeLevel: gradeLevel
-                    }; 
+                    };
                 }));
             };
-            
 
-            const oldPdfFilesData = await processFiles(oldPdfFiles, gradeLevel, req.user.email);
-            const newPdfFilesData = await processFiles(newPdfFiles, gradeLevel, req.user.email);
+            const oldPdfFilesData = await processFiles(oldPdfFiles, 'old-files');
+            const newPdfFilesData = await processFiles(newPdfFiles, 'new-files');
 
             const newRecord = new Records({
                 lrn: parseInt(lrn),
@@ -280,8 +317,8 @@ router.post('/submit-form', async (req, res, next) => {
                 gender: gender,
                 transferee: transferee,
                 gradeLevel: gradeLevel,
-                oldFiles: oldPdfFilesData, 
-                newFiles: newPdfFilesData, 
+                oldFiles: oldPdfFilesData,
+                newFiles: newPdfFilesData,
             });
 
             const studentName = `${lName}, ${fName}`;
@@ -291,7 +328,7 @@ router.post('/submit-form', async (req, res, next) => {
 
             const details = `Details:\n\n\tLRN: ${lrn}\n\tLast Name: ${lName}\n\tFirst Name: ${fName}\n\tGender: ${gender}\n\tGrade Level: ${gradeLevel}`;
 
-            const AdviserName = `${req.user.fname} ${req.user.lname}`
+            const AdviserName = `${req.user.fname} ${req.user.lname}`;
 
             const newActivity = new Activity({
                 userEmail: req.user.email,
@@ -305,9 +342,8 @@ router.post('/submit-form', async (req, res, next) => {
                 gradeLevel: gradeLevel,
                 action: `Record added in ${gradeLevel}`,
                 details: details,
-                // Include other fields as needed
             });
-             
+
             await newActivity.save();
 
             const historyEntry = new History({
@@ -348,16 +384,21 @@ router.post('/addFile/:recordId', upload.single('newPdf'), async (req, res, next
             const filenameExists = filesForGradeLevel.some(file => file.fileName === req.file.originalname);
 
             if (filenameExists) {
-                req.flash('error', `This file already exist`);
+                req.flash('error', `This file already exists`);
                 res.redirect(`/classAdvisor/view-files/${recordId}`);
                 return;
             }
 
             if (filesForGradeLevel.length < 2) {
+                // Upload the file to Firebase Storage in the "new-files" folder
+                const storageRef = ref(storage, `new-files/${req.file.originalname}`);
+                await uploadBytes(storageRef, req.file.buffer);
+
                 const newPdfPath = req.file.path;
                 record.newFiles.push({
                     fileName: req.file.originalname,
-                    filePath: newPdfPath,
+                    // Update the file path to point to the "new-files" folder in Firebase Storage
+                    filePath: `new-files/${req.file.originalname}`,
                     uploadedBy: req.user.email,
                     gradeLevel: gradeLevel // Save the current grade level
                 });
@@ -376,7 +417,7 @@ router.post('/addFile/:recordId', upload.single('newPdf'), async (req, res, next
                 req.flash('success', 'File successfully uploaded');
                 res.redirect(`/classAdvisor/view-files/${recordId}`);
             } else {
-                req.flash('error', `You can only upload up to 2 files for grade level ${gradeLevel}.`);
+                req.flash('error', `You can only upload up to 2 files.`);
                 res.redirect(`/classAdvisor/view-files/${recordId}`);
             }
         } else {
@@ -388,6 +429,7 @@ router.post('/addFile/:recordId', upload.single('newPdf'), async (req, res, next
         next(error);
     }
 });
+
 
 
 
@@ -409,9 +451,15 @@ router.post('/addOldFile/:recordId', upload.single('oldPdf'), async (req, res, n
 
         if (req.file) {
             const newPdfPath = req.file.path;
+
+            // Upload the file to Firebase Storage in the "old-files" folder
+            const storageRef = ref(storage, `old-files/${req.file.originalname}`);
+            await uploadBytes(storageRef, req.file.buffer);
+
             record.oldFiles.push({
                 fileName: req.file.originalname,
-                filePath: newPdfPath,
+                // Update the file path to point to the "old-files" folder in Firebase Storage
+                filePath: `old-files/${req.file.originalname}`,
                 uploadedBy: req.user.email,
                 gradeLevel: record.gradeLevel // Save the current grade level
             });
@@ -440,6 +488,7 @@ router.post('/addOldFile/:recordId', upload.single('oldPdf'), async (req, res, n
 });
 
 
+
 router.post('/deleteOldFile/:recordId/:index', async (req, res, next) => {
     try {
         const recordId = req.params.recordId;
@@ -456,10 +505,10 @@ router.post('/deleteOldFile/:recordId/:index', async (req, res, next) => {
 
         // Check if the index is valid
         if (index >= 0 && index < record.oldFiles.length) {
-            // Retrieve the path of the deleted file
+            // Retrieve the file data at the specified index
             const deletedFile = record.oldFiles[index];
 
-            // Remove the file at the specified index
+            // Remove the file data from the record
             record.oldFiles.splice(index, 1);
             await record.save();
 
@@ -475,28 +524,23 @@ router.post('/deleteOldFile/:recordId/:index', async (req, res, next) => {
 
             await historyLog.save();
 
-            // Delete the file from the file system
-            fs.unlink(deletedFile.filePath, (err) => {
-                if (err) {
-                    console.error('Error deleting file:', err);
-                    req.flash('error', 'Failed to delete the file');
-                } else {
-                    console.log('File successfully deleted:', deletedFile.filePath);
-                    req.flash('success', 'File successfully deleted');
-                }
-                // Redirect back to the oldFiles page
-                res.redirect(`/classAdvisor/oldFiles/${recordId}`);
-            });
+            // Delete the file from Firebase Storage
+            const storageRef = ref(storage, deletedFile.filePath);
+            await deleteObject(storageRef);
+
+            req.flash('success', 'File successfully deleted');
         } else {
             // Set error flash message for an invalid file index
             req.flash('error', 'Invalid file index');
-            res.redirect(`/classAdvisor/oldFiles/${recordId}`);
         }
+        // Redirect back to the oldFiles page
+        res.redirect(`/classAdvisor/oldFiles/${recordId}`);
     } catch (error) {
         console.error('Error:', error);
         next(error);
     }
 });
+
 
 
 
@@ -515,10 +559,10 @@ router.post('/deleteNewFile/:recordId/:index', async (req, res, next) => {
 
         // Check if the index is valid
         if (index >= 0 && index < record.newFiles.length) {
-            // Retrieve the path of the file to be deleted
+            // Retrieve the file data at the specified index
             const fileToDelete = record.newFiles[index];
 
-            // Remove the file from the newFiles array
+            // Remove the file data from the record
             record.newFiles.splice(index, 1);
             await record.save();
 
@@ -534,29 +578,24 @@ router.post('/deleteNewFile/:recordId/:index', async (req, res, next) => {
             });
             await historyLog.save();
 
-            // Delete the file from the file system
-            fs.unlink(fileToDelete.filePath, (err) => {
-                if (err) {
-                    console.error('Error deleting file:', err);
-                    req.flash('error', 'Failed to delete the file');
-                } else {
-                    console.log('File successfully deleted:', fileToDelete.filePath);
-                    req.flash('success', 'File successfully deleted');
-                }
-                // Redirect back to the view-files page
-                res.redirect(`/classAdvisor/view-files/${recordId}`);
-            });
+            // Delete the file from Firebase Storage
+            const storageRef = ref(storage, fileToDelete.filePath);
+            await deleteObject(storageRef);
+
+            req.flash('success', 'File successfully deleted');
         } else {
             // Set error flash message for an invalid file index
             req.flash('error', 'Invalid file index');
-            res.redirect(`/classAdvisor/view-files/${recordId}`);
         }
+        // Redirect back to the view-files page
+        res.redirect(`/classAdvisor/view-files/${recordId}`);
     } catch (error) {
-        console.error('Error deleting file:', error);
+        console.error('Error:', error);
         req.flash('error', 'An error occurred while deleting the file');
         res.redirect(`/classAdvisor/view-files/${recordId}`);
     }
 });
+
 
 router.post('/edit-record/:recordId', async (req, res, next) => {
 	try {

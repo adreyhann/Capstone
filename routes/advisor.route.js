@@ -968,7 +968,7 @@ router.post('/advance-grade-level/:recordId', async (req, res) => {
 		console.error('Error advancing grade level:', error);
 		return res.status(500).json({ error: 'An error occurred while advancing grade level.' });
 	}
-}); 
+});
 
 router.get('/records-folder/:recordId', async (req, res, next) => {
     try {

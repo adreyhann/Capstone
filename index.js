@@ -5,12 +5,12 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const session = require('express-session');
 const connectFlash = require('connect-flash');
-const passport = require('passport'); 
+const passport = require('passport');
 const MongoStore = require('connect-mongo');
 const MongoClient = require('mongodb').MongoClient;
 const path = require('path');
 const cors = require('cors');
-require("./firebaseConfig");
+require('./firebaseConfig');
 const app = express();
 
 app.use(cors());
@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.engine('ejs', require('ejs').renderFile);
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs'); 
+app.set('view engine', 'ejs');
 
 app.use(express.static('public'));
 app.use('/css', express.static(__dirname + '/public/css'));
@@ -37,7 +37,6 @@ app.use(
 		store: mongoStore,
 		saveUninitialized: false,
 		cookie: {
-			// secure: true, 
 			httpOnly: true,
 		},
 	})
@@ -92,19 +91,19 @@ app.use((req, res, next) => {
 app.use((error, req, res, next) => {
 	error.status = error.status || 500;
 
-    if (error.status === 404) {
-        res.status(404).render('error_404', { error: error.message });
-    } else if (error.status === 500) {
-        res.status(500).render('error_500', { error: error.message });
-    } else {
-        res.status(error.status).render('error_40x', { error: error.message });
-    }
+	if (error.status === 404) {
+		res.status(404).render('error_404', { error: error.message });
+	} else if (error.status === 500) {
+		res.status(500).render('error_500', { error: error.message });
+	} else {
+		res.status(error.status).render('error_40x', { error: error.message });
+	}
 });
- 
+
 app.use((error, req, res, next) => {
 	error.status = error.status || 500;
 	res.status(error.status);
-	res.json({ error: error.message }); // Send the error message as JSON
+	res.json({ error: error.message });
 });
 
 mongoose
@@ -127,7 +126,7 @@ function ensureAuthenticated(req, res, next) {
 	} else {
 		res.redirect('/auth/login');
 	}
-} 
+}
 
 function ensureSystemAdmin(req, res, next) {
 	if (req.user && req.user.role === 'System Admin') {
@@ -152,5 +151,3 @@ function ensureClassAdvisor(req, res, next) {
 		res.status(403).render('error_403');
 	}
 }
-
-
